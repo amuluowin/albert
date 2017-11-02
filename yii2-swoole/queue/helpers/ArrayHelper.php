@@ -1,7 +1,7 @@
 <?php
 
 
-namespace yii\queue\helpers;
+namespace yii\swoole\queue\helpers;
 
 /**
  * 数组处理辅助类

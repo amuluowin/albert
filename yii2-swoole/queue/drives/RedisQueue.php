@@ -1,10 +1,10 @@
 <?php
 
-namespace yii\queue\drives;
+namespace yii\swoole\queue\drives;
 
 use Yii;
-use yii\queue\helpers\ArrayHelper;
-use yii\queue\Queue;
+use yii\swoole\queue\helpers\ArrayHelper;
+use yii\swoole\queue\Queue;
 use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\helpers\SerializeHelper;
 use yii\swoole\redis\coredis\Connection;
@@ -74,7 +74,7 @@ class RedisQueue extends Queue implements ICoroutine
         if (!is_null($job) && $job !== false) {
             $this->connector->zadd($queue . ':reserved', time() + $this->expire, $job);
             $config = array_merge($this->jobEvent, [
-                'class' => 'yii\queue\jobs\RedisJob',
+                'class' => 'yii\swoole\queue\jobs\RedisJob',
                 'queue' => $original,
                 'job' => $job,
                 'queueInstance' => $this,

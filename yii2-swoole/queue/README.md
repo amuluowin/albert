@@ -32,7 +32,7 @@ Usage
 redis队列
 ```php
 'queue' => [
-            'class' => 'yii\queue\drives\RedisQueue',
+            'class' => 'yii\swoole\queue\drives\RedisQueue',
             'hostname' => '127.0.0.1',
             'port' => 6379,
             'database' => 2,
@@ -48,7 +48,7 @@ redis队列
 延时任务入队列：这样的任务入队列后不会立刻被队列监听进程之行，需要等待 $delay秒后任务才就绪。
 
 目前支持的handler有：
- 1，新建自己的队列处理handler，继承、yii\queue\JobHandler,并实现任务处理方法handle()和失败处理方法failed()。
+ 1，新建自己的队列处理handler，继承、yii\swoole\queue\JobHandler,并实现任务处理方法handle()和失败处理方法failed()。
  2, 一个php闭包，形如 function($job,$data){}
 
 ```php
@@ -59,7 +59,7 @@ redis队列
 \Yii::$app->queue->pushOn(120,function($job,$data){var_dump($data)},['email'=>'4006690@qq.com','title'=>'test','content'=>'email test'],'email');
 ```
 
-3:新建自己的队列处理handler，继承yii\queue\JobHandler,并实现任务处理方法handle和失败处理方法failed，一个发邮件的jobhandler类似：
+3:新建自己的队列处理handler，继承yii\swoole\queue\JobHandler,并实现任务处理方法handle和失败处理方法failed，一个发邮件的jobhandler类似：
 
 ```php
 class SendMail extends JobHandler
@@ -104,9 +104,9 @@ yii worker/listen default 10 128 3 0
 
 5：关于任务失败处理：
 默认情况下，一个任务在执行时出现异常或者一个任务失败时并不是认为它真正失败了，此时会检测它的尝试次数是否已经超出设置的attempt，如果没超出会重新入队列尝试，如果超出了，
-则该任务才是真正失败，这是会先调用任务处理handler类的failed()方法处理失败操作,如果没有failed()方法（比如handler为闭包或者您自定义的继承自yii\queue\JobHandler
+则该任务才是真正失败，这是会先调用任务处理handler类的failed()方法处理失败操作,如果没有failed()方法（比如handler为闭包或者您自定义的继承自yii\swoole\queue\JobHandler
 的类没有写failed()方法），则会尝试使用扩展自身的失败日志处理机制（配置项里的failed配置），会尝试把失败任务的详细信息写入到数据库表中（目前只支持数据库方式）。
-建议您采用继承yii\queue\JobHandler的方式生成任务处理handler并写自己的failed方法处理失败任务。
+建议您采用继承yii\swoole\queue\JobHandler的方式生成任务处理handler并写自己的failed方法处理失败任务。
 
 
 6：任务事件支持:

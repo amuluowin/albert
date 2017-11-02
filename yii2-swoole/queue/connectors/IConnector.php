@@ -1,6 +1,6 @@
 <?php
 
-namespace yii\queue\connectors;
+namespace yii\swoole\queue\connectors;
 
 Interface IConnector
 {

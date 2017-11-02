@@ -816,7 +816,7 @@ namespace yii\swoole\work {
  *
  */
 
-namespace yii\queue {
+namespace yii\swoole\queue {
     function call_user_func_array(...$params)
     {
         return \albert\yii\func_array(...$params);
@@ -828,7 +828,7 @@ namespace yii\queue {
     }
 }
 
-namespace yii\queue\connectors {
+namespace yii\swoole\queue\connectors {
     function call_user_func_array(...$params)
     {
         return \albert\yii\func_array(...$params);
@@ -840,7 +840,7 @@ namespace yii\queue\connectors {
     }
 }
 
-namespace yii\queue\drives {
+namespace yii\swoole\queue\drives {
     function call_user_func_array(...$params)
     {
         return \albert\yii\func_array(...$params);
@@ -852,7 +852,7 @@ namespace yii\queue\drives {
     }
 }
 
-namespace yii\queue\helpers {
+namespace yii\swoole\queue\helpers {
     function call_user_func_array(...$params)
     {
         return \albert\yii\func_array(...$params);
@@ -864,7 +864,7 @@ namespace yii\queue\helpers {
     }
 }
 
-namespace yii\queue\jobs {
+namespace yii\swoole\queue\jobs {
     function call_user_func_array(...$params)
     {
         return \albert\yii\func_array(...$params);

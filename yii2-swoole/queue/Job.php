@@ -1,6 +1,6 @@
 <?php
 
-namespace yii\queue;
+namespace yii\swoole\queue;
 
 use yii\base\Component;
 use yii\swoole\helpers\SerializeHelper;

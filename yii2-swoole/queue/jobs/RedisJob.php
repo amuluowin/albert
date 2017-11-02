@@ -1,9 +1,9 @@
 <?php
 
-namespace yii\queue\jobs;
+namespace yii\swoole\queue\jobs;
 
-use yii\queue\helpers\ArrayHelper;
-use yii\queue\Job;
+use yii\swoole\queue\helpers\ArrayHelper;
+use yii\swoole\queue\Job;
 use yii\swoole\helpers\SerializeHelper;
 
 /**

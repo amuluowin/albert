@@ -1,6 +1,6 @@
 <?php
 
-namespace yii\queue;
+namespace yii\swoole\queue;
 
 /**
  * 任务处理handler基类，至少需要实现handle方法用于处理任务，可选实现failed方法用于任务执行失败处理

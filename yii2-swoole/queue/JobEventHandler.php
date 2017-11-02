@@ -1,6 +1,6 @@
 <?php
 
-namespace yii\queue;
+namespace yii\swoole\queue;
 
 /**
  * job 事件 handler

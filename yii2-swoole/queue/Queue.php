@@ -1,6 +1,6 @@
 <?php
 
-namespace yii\queue;
+namespace yii\swoole\queue;
 
 use yii\di\ServiceLocator;
 use yii\swoole\redis\copredis\Connection;

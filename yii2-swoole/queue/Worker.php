@@ -1,7 +1,7 @@
 <?php
 
-namespace yii\queue;
-use yii\queue\drives\RedisQueue;
+namespace yii\swoole\queue;
+use yii\swoole\queue\drives\RedisQueue;
 
 /**
  * 队列监听进程类,用户后台启动监听队列
