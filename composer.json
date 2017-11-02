@@ -1,5 +1,5 @@
 {
-  "name": "albert/yii2-swoole",
+  "name": "albertwxy/yii2-swoole",
   "version": "dev-master",
   "version_normalized": "9999999-dev",
   "require": {
