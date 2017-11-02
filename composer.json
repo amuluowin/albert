@@ -4,8 +4,7 @@
   "version_normalized": "9999999-dev",
   "require": {
     "yiisoft/yii2": "*",
-    "yiisoft/yii2-redis": "*",
-    "yiisoft/httpclient": "*"
+    "yiisoft/yii2-redis": "*"
   },
   "time": "2017-01-18T03:47:18+00:00",
   "type": "yii2-extension",
