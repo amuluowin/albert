@@ -15,6 +15,8 @@ class Connection extends \yii\swoole\db\Connection implements ICoroutine
 
     private $key;
 
+    public $pdo = [];
+
     private $_master = [];
 
     private $_slave = [];
