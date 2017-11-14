@@ -11,6 +11,8 @@ namespace yii\swoole\web;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\caching\Cache;
+use yii\caching\CacheInterface;
+use yii\web\UrlNormalizer;
 
 class UrlManager extends \yii\web\UrlManager
 {
@@ -33,7 +35,7 @@ class UrlManager extends \yii\web\UrlManager
         if (is_string($this->cache)) {
             $this->cache = Yii::$app->get($this->cache, false);
         }
-        if ($this->cache instanceof Cache) {
+        if ($this->cache instanceof CacheInterface || $this->cache instanceof Cache) {
             $cacheKey = $this->cacheKey;
             $hash = md5(json_encode($this->rules));
             if (($data = $this->cache->get($cacheKey)) !== false && isset($data[1]) && $data[1] === $hash) {

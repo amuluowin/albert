@@ -7,12 +7,15 @@ use yii\base\BootstrapInterface;
 use yii\base\Component;
 use yii\base\Event;
 use yii\base\InvalidConfigException;
+use yii\base\InvalidRouteException;
 use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\db\ActiveRecord;
 use yii\swoole\helpers\CoroHelper;
 use yii\swoole\web\Request;
 use yii\swoole\web\Response;
 use yii\swoole\web\Session;
+use yii\web\NotFoundHttpException;
+use yii\web\UrlNormalizerRedirectException;
 
 /**
  * @property swoole_http_request swooleRequest
