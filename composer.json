@@ -7,6 +7,7 @@
     "yiisoft/yii2-redis": "*"
   },
   "time": "2017-01-18T03:47:18+00:00",
+  "type": "yii2-extension",
   "installation-source": "dist",
   "autoload": {
     "psr-4": {
