@@ -116,11 +116,6 @@ abstract class Server extends Component
     public function onWorkerStart($server, $worker_id)
     {
         if (!$server->taskworker) {
-            \Swoole\Coroutine::Create(function () {
-                if (($db = Yii::$app->getDb())) {
-                    $db->initSchema();
-                }
-            });
             //worker
             $this->setProcessTitle($this->name . ': worker' . ": {$worker_id}");
         } else {
