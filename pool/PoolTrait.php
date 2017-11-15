@@ -96,7 +96,6 @@ trait PoolTrait
 
         if (count($this->busyConns[$connName]) + $this->spareConns[$connName]->count() == $this->connsConfig[$connName]['pool_size']) {
             $this->pendingFetchCount[$connName]++;
-            print_r(123);
             if (\Swoole\Coroutine::suspend($connName) == false) {
                 $this->pendingFetchCount[$connName]--;
                 throw new Exception('Reach max connections! Can not pending fetch!');
