@@ -67,19 +67,20 @@ class Connection extends \yii\redis\Connection implements ICoroutine
             Yii::$container->setSingleton('redisclient', [
                 'class' => 'yii\swoole\pool\RedisPool',
             ]);
+            $this->setClient(Yii::$container->get('redisclient')->create($this->key,
+                [
+                    'hostname' => $this->hostname,
+                    'port' => $this->port,
+                    'password' => $this->password,
+                    'database' => $this->database,
+                    'timeout' => $this->timeout,
+                    'serialize' => $this->serialize,
+                    'pool_size' => $this->maxPoolSize,
+                    'busy_size' => $this->busy_pool
+                ])->fetch($this->key));
+        } else {
+            $this->setClient(Yii::$container->get('redisclient')->fetch($this->key));
         }
-
-        $this->setClient(Yii::$container->get('redisclient')->create($this->key,
-            [
-                'hostname' => $this->hostname,
-                'port' => $this->port,
-                'password' => $this->password,
-                'database' => $this->database,
-                'timeout' => $this->timeout,
-                'serialize' => $this->serialize,
-                'pool_size' => $this->maxPoolSize,
-                'busy_size' => $this->busy_pool
-            ])->fetch($this->key));
 
         return $this->getClient();
     }

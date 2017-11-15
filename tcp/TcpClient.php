@@ -60,19 +60,20 @@ class TcpClient extends BaseClient implements ICoroutine
             Yii::$container->setSingleton('tcpclient', [
                 'class' => 'yii\swoole\pool\TcpPool'
             ]);
+            $conn = Yii::$container->get('tcpclient')->create($key,
+                [
+                    'hostname' => $uri,
+                    'port' => $port,
+                    'timeout' => $this->timeout,
+                    'async' => $this->async,
+                    'pool_size' => $this->maxPoolSize,
+                    'busy_size' => $this->busy_pool
+                ])
+                ->fetch($key);
+        } else {
+            $conn = Yii::$container->get('tcpclient')->fetch($key);
         }
-
-        $conn = Yii::$container->get('tcpclient')->create($key,
-            [
-                'hostname' => $uri,
-                'port' => $port,
-                'timeout' => $this->timeout,
-                'async' => $this->async,
-                'pool_size' => $this->maxPoolSize,
-                'busy_size' => $this->busy_pool
-            ])
-            ->fetch($key);
-
+        
         $this->setClient($conn);
         $this->setData($data);
         $this->trigger(self::EVENT_BEFORE_SEND);

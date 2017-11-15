@@ -216,28 +216,29 @@ class Connection extends \yii\swoole\db\Connection implements ICoroutine
             Yii::$container->setSingleton('mysqlclient', [
                 'class' => 'yii\swoole\pool\MysqlPool',
             ]);
+            $uri = str_replace('mysql:', '', $this->dsn);
+            $uri = str_replace('host=', '', $uri);
+            $uri = str_replace('dbname=', '', $uri);
+            $uri = explode(';', $uri);
+            $hostAndport = explode(':', array_shift($uri));
+            $dbname = array_shift($uri);
+            $host = array_shift($hostAndport);
+            $port = $hostAndport ?: 3306;
+            return Yii::$container->get('mysqlclient')->create($this->key,
+                [
+                    'host' => $host,
+                    'port' => $port,
+                    'database' => $dbname,
+                    'user' => $this->username,
+                    'password' => $this->password,
+                    'charset' => $this->charset,
+                    'timeout' => $this->timeout,
+                    'pool_size' => $this->maxPoolSize,
+                    'busy_size' => $this->busy_pool
+                ])->fetch($this->key);
         }
+        return Yii::$container->get('mysqlclient')->fetch($this->key);
 
-        $uri = str_replace('mysql:', '', $this->dsn);
-        $uri = str_replace('host=', '', $uri);
-        $uri = str_replace('dbname=', '', $uri);
-        $uri = explode(';', $uri);
-        $hostAndport = explode(':', array_shift($uri));
-        $dbname = array_shift($uri);
-        $host = array_shift($hostAndport);
-        $port = $hostAndport ?: 3306;
-        return Yii::$container->get('mysqlclient')->create($this->key,
-            [
-                'host' => $host,
-                'port' => $port,
-                'database' => $dbname,
-                'user' => $this->username,
-                'password' => $this->password,
-                'charset' => $this->charset,
-                'timeout' => $this->timeout,
-                'pool_size' => $this->maxPoolSize,
-                'busy_size' => $this->busy_pool
-            ])->fetch($this->key);
     }
 
     protected function initConnection()

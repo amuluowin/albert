@@ -73,6 +73,7 @@ trait PoolTrait
         if (!$conn) {
             $conn = $this->createConn($connName);
         }
+        $id = spl_object_hash($conn);
         if ((($conn instanceof \Swoole\Coroutine\MySQL) && $conn->connect_errno !== 0) ||
             (!($conn instanceof \Swoole\Coroutine\MySQL) && $conn->errCode !== 0)
         ) {
@@ -80,7 +81,6 @@ trait PoolTrait
             unset($this->connsNameMap[$id]);
             throw new ServerErrorHttpException('can not connect to ' . var_export($this->connsConfig[$connName]));
         }
-        $id = spl_object_hash($conn);
         $this->connsNameMap[$id] = $connName;
         $this->busyConns[$connName][$id] = $conn;
         return $conn;
@@ -96,6 +96,7 @@ trait PoolTrait
 
         if (count($this->busyConns[$connName]) + $this->spareConns[$connName]->count() == $this->connsConfig[$connName]['pool_size']) {
             $this->pendingFetchCount[$connName]++;
+            print_r(123);
             if (\Swoole\Coroutine::suspend($connName) == false) {
                 $this->pendingFetchCount[$connName]--;
                 throw new Exception('Reach max connections! Can not pending fetch!');
