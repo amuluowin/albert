@@ -8,10 +8,9 @@
 
 namespace yii\swoole\tablecache;
 
+use Swoole\Table;
 use Yii;
 use yii\base\InvalidValueException;
-use yii\base\Exception;
-use Swoole\Table;
 
 /**
  * Class SwooleCache

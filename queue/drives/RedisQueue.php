@@ -3,10 +3,10 @@
 namespace yii\swoole\queue\drives;
 
 use Yii;
-use yii\swoole\queue\helpers\ArrayHelper;
-use yii\swoole\queue\Queue;
 use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\helpers\SerializeHelper;
+use yii\swoole\queue\helpers\ArrayHelper;
+use yii\swoole\queue\Queue;
 use yii\swoole\redis\coredis\Connection;
 
 /**

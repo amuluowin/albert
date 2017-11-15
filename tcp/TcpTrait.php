@@ -3,7 +3,6 @@
 namespace yii\swoole\tcp;
 
 use Yii;
-use yii\base\ErrorException;
 use yii\base\InvalidParamException;
 use yii\helpers\BaseJson;
 use yii\swoole\helpers\ArrayHelper;

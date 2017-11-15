@@ -4,7 +4,6 @@ namespace yii\swoole\debug\filedebug;
 
 use yii\base\InvalidConfigException;
 use yii\swoole\Application;
-use yii\swoole\async\Task;
 use yii\swoole\helpers\FileHelper;
 use yii\swoole\helpers\SerializeHelper;
 

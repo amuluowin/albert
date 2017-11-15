@@ -4,8 +4,6 @@ namespace yii\swoole\redis;
 
 use Yii;
 use yii\helpers\Inflector;
-use yii\redis\LuaScriptBuilder;
-use yii\swoole\coroutine\BaseClient;
 use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\helpers\CallHelper;
 use yii\swoole\helpers\CoroHelper;

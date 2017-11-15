@@ -2,9 +2,9 @@
 
 namespace yii\swoole\queue\jobs;
 
+use yii\swoole\helpers\SerializeHelper;
 use yii\swoole\queue\helpers\ArrayHelper;
 use yii\swoole\queue\Job;
-use yii\swoole\helpers\SerializeHelper;
 
 /**
  * redis 列队任务处理类
