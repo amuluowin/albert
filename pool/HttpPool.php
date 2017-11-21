@@ -17,6 +17,9 @@ class HttpPool extends \yii\swoole\pool\IPool
             if ($conn->errCode !== 0) {
                 throw new ServerErrorHttpException("Can not connect to {$connName}: " . $config['hostname'] . ':' . $config['port']);
             }
+            $id = spl_object_hash($conn);
+            $this->connsNameMap[$id] = $connName;
+            $this->busyConns[$connName][$id] = $conn;
             return $conn;
         }
         throw new ServerErrorHttpException("Can not connect to {$connName}: " . $config['hostname'] . ':' . $config['port']);

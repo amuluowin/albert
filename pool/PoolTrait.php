@@ -73,16 +73,15 @@ trait PoolTrait
         if (!$conn) {
             $conn = $this->createConn($connName);
         }
-        $id = spl_object_hash($conn);
+
         if ((($conn instanceof \Swoole\Coroutine\MySQL) && $conn->connect_errno !== 0) ||
             (!($conn instanceof \Swoole\Coroutine\MySQL) && $conn->errCode !== 0)
         ) {
+            $id = spl_object_hash($conn);
             unset($this->busyConns[$connName][$id]);
             unset($this->connsNameMap[$id]);
             throw new ServerErrorHttpException('can not connect to ' . var_export($this->connsConfig[$connName]));
         }
-        $this->connsNameMap[$id] = $connName;
-        $this->busyConns[$connName][$id] = $conn;
         return $conn;
     }
 

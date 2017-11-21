@@ -13,6 +13,9 @@ class MysqlPool extends \yii\swoole\pool\IPool
     public function createConn(string $connName)
     {
         $conn = new \Swoole\Coroutine\MySQL();
+        $id = spl_object_hash($conn);
+        $this->connsNameMap[$id] = $connName;
+        $this->busyConns[$connName][$id] = $conn;
         $this->reconnect($conn, $connName);
         return $conn;
     }

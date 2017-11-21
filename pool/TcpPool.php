@@ -16,6 +16,9 @@ class TcpPool extends \yii\swoole\pool\IPool
         } else {
             $conn = new \swoole_client(SWOOLE_SOCK_TCP | SWOOLE_KEEP);
         }
+        $id = spl_object_hash($conn);
+        $this->connsNameMap[$id] = $connName;
+        $this->busyConns[$connName][$id] = $conn;
         $conn->connect($config['hostname'], $config['port'], $config['timeout']);
         return $conn;
     }
