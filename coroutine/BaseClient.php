@@ -5,7 +5,7 @@ namespace yii\swoole\coroutine;
 abstract class BaseClient extends \yii\base\Component
 {
     public $maxPoolSize = 30;
-    public $busy_pool = 15;
+    public $busy_pool = 30;
 
     const EVENT_BEFORE_SEND = 'beforeSend';
     const EVENT_AFTER_SEND = 'afterSend';

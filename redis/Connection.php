@@ -29,7 +29,7 @@ class Connection extends \yii\redis\Connection implements ICoroutine
     private $key;
 
     public $maxPoolSize = 30;
-    public $busy_pool = 15;
+    public $busy_pool = 30;
 
     public function getClient()
     {
