@@ -9,7 +9,7 @@ use yii\swoole\helpers\CoroHelper;
 class Connection extends \yii\swoole\db\Connection implements ICoroutine
 {
     public $maxPoolSize = 30;
-    public $busy_pool = 15;
+    public $busy_pool = 30;
 
     public $timeout = 1;
 
