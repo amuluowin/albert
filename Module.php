@@ -12,7 +12,7 @@ class Module extends \yii\base\Module
     /**
      * @var is debug this module
      */
-    public $is_debug = 0;
+    public $isService= true;
 
     public $use_default_doc = true;
 
