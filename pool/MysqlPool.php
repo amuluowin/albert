@@ -18,7 +18,7 @@ class MysqlPool extends \yii\swoole\pool\IPool
         return $conn;
     }
 
-    private function reConnect(\Swoole\Coroutine\MySQL $conn, string $connName)
+    private function reConnect(\Swoole\Coroutine\MySQL &$conn, string $connName)
     {
         $config = $this->connsConfig[$connName];
         if (!$conn->connected && $conn->connect(['host' => $config['host'], 'port' => $config['port'], 'user' => $config['user'], 'password' => $config['password'],
@@ -27,7 +27,7 @@ class MysqlPool extends \yii\swoole\pool\IPool
         ) {
             if ($this->reconnect <= $this->curconnect) {
                 $this->curconnect = 0;
-                throw new ServerErrorHttpException($conn->connect_error);
+                throw new ServerErrorHttpException($conn->error);
             } else {
                 $this->curconnect++;
                 $this->reConnect($conn, $connName);

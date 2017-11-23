@@ -112,7 +112,7 @@ class FileTarget extends \yii\log\FileTarget
                 } else {
                     if ($this->rotateByCopy) {
                         @copy($rotateFile, $file . '.' . ($i + 1));
-                        \Swoole\Async::writeFile($rotateFile, '', function ($filename) use ($file) {
+                        \Swoole\Async::writeFile($rotateFile, '', function ($filename) use ($file, $i) {
                             if ($this->fileMode !== null) {
                                 @chmod($file . '.' . ($i + 1), $this->fileMode);
                             }

@@ -74,7 +74,7 @@ trait PoolTrait
             $conn = $this->createConn($connName);
         }
 
-        if ((($conn instanceof \Swoole\Coroutine\MySQL) && $conn->connect_errno !== 0) ||
+        if ((($conn instanceof \Swoole\Coroutine\MySQL) && $conn->errno !== 0) ||
             (!($conn instanceof \Swoole\Coroutine\MySQL) && $conn->errCode !== 0)
         ) {
             $id = spl_object_hash($conn);
