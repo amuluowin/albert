@@ -15,9 +15,7 @@ class RedisPool extends \yii\swoole\pool\IPool
         $cons = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['password', 'database', 'timeout'], [null, 0, 0.5]);
 
         $conn = new \Swoole\Coroutine\Redis($cons);
-        $id = spl_object_hash($conn);
-        $this->connsNameMap[$id] = $connName;
-        $this->busyConns[$connName][$id] = $conn;
+        $this->saveConn($connName, $conn);
         $conn->connect($config['hostname'], $config['port'], false);
         return $conn;
     }

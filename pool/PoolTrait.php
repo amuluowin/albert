@@ -109,4 +109,11 @@ trait PoolTrait
             }
         }
     }
+
+    protected function saveConn($connName, $conn)
+    {
+        $id = spl_object_hash($conn);
+        $this->connsNameMap[$id] = $connName;
+        $this->busyConns[$connName][$id] = $conn;
+    }
 }
