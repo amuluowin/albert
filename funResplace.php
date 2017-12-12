@@ -429,6 +429,22 @@ namespace yii\gii\generators\module {
  *
  */
 
+namespace yii\httpclient {
+    function call_user_func_array(...$params)
+    {
+        return \albert\yii\func_array(...$params);
+    }
+
+    function call_user_func(...$params)
+    {
+        return \albert\yii\func(...$params);
+    }
+}
+
+/**
+ *
+ */
+
 namespace yii\swoole {
     function call_user_func_array(...$params)
     {

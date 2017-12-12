@@ -80,9 +80,9 @@ class SwooleTransport extends \yii\httpclient\Transport
             }
             $cli->setDefer();
             if (strtolower($method) === 'get') {
-                $cli->execute($urlarr['path'] . '?' . $content);
+                $cli->execute(isset($urlarr['path']) ? $urlarr['path'] . '?' . $content : '/');
             } else {
-                $cli->execute($urlarr['path']);
+                $cli->execute(isset($urlarr['path']) ? $urlarr['path'] : '/');
             }
         } catch (\Exception $e) {
             Yii::endProfile($token, __METHOD__);
