@@ -4,6 +4,7 @@ namespace yii\swoole\log;
 
 use yii\base\InvalidConfigException;
 use yii\swoole\Application;
+use yii\swoole\helpers\FileHelper;
 
 /**
  * Class FileTarget
@@ -82,17 +83,13 @@ class FileTarget extends \yii\log\FileTarget
             // this may result in rotating twice when cached file size is used on subsequent calls
             clearstatcache();
         }
+        $fileList = FileHelper::mbStrSplit($text, 2048);
         if ($this->enableRotation && @filesize($this->logFile) > $this->maxFileSize * 1024) {
             $this->rotateFiles();
-            \Swoole\Async::writeFile($this->logFile, $text, function ($filename) {
-                if ($this->fileMode !== null) {
-                    @chmod($this->logFile, $this->fileMode);
-                }
-
-            }, FILE_APPEND);
-        } else {
-            \Swoole\Async::writeFile($this->logFile, $text, function ($filename) {
-                if ($this->fileMode !== null) {
+        }
+        foreach ($fileList as $index => $text) {
+            \Swoole\Async::write($this->logFile, $text, -1, function ($filename) use ($index, $fileList) {
+                if ($this->fileMode !== null && $index == count($fileList)) {
                     @chmod($this->logFile, $this->fileMode);
                 }
             });
@@ -116,7 +113,6 @@ class FileTarget extends \yii\log\FileTarget
                             if ($this->fileMode !== null) {
                                 @chmod($file . '.' . ($i + 1), $this->fileMode);
                             }
-
                         });
                     } else {
                         @rename($rotateFile, $file . '.' . ($i + 1));

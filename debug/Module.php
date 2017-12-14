@@ -39,15 +39,15 @@ class Module extends \yii\swoole\debug\filedebug\Module
         ], false);
     }
 
-    protected function corePanels()
-    {
-        $panels = parent::corePanels();
-
-        $components = Yii::$app->getComponents();
-        if (isset($components['user']['identityClass'])) {
-            $panels['user'] = ['class' => 'yii\debug\panels\UserPanel'];
-        }
-
-        return $panels;
-    }
+//    protected function corePanels()
+//    {
+//        $panels = parent::corePanels();
+//
+//        $components = Yii::$app->getComponents();
+//        if (isset($components['user']['identityClass'])) {
+//            $panels['user'] = ['class' => 'yii\debug\panels\UserPanel'];
+//        }
+//
+//        return $panels;
+//    }
 }

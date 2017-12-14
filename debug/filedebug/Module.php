@@ -3,6 +3,7 @@
 namespace yii\swoole\debug\filedebug;
 
 use Yii;
+use yii\debug\Panel;
 use yii\swoole\Application;
 use yii\swoole\Refreshable;
 use yii\swoole\web\View;
@@ -18,6 +19,7 @@ class Module extends \yii\debug\Module implements Refreshable
 
     public $controllerMap = ['default' => 'yii\swoole\debug\filedebug\controllers\DefaultController'];
 
+    public $isService = true;
     /**
      * @var LogTarget
      */
@@ -31,6 +33,9 @@ class Module extends \yii\debug\Module implements Refreshable
         //echo __METHOD__ . " init.\n";
         parent::init();
         $this->setViewPath('@yii/debug/views');
+        if (Yii::$app instanceof Application) {
+            $this->initPanels();
+        }
     }
 
     /**
@@ -67,6 +72,37 @@ class Module extends \yii\debug\Module implements Refreshable
                 'pattern' => $this->id . '/<controller:[\w\-]+>/<action:[\w\-]+>',
             ]
         ], false);
+    }
+
+    protected function initPanels()
+    {
+        // merge custom panels and core panels so that they are ordered mainly by custom panels
+        if (empty($this->panels)) {
+            $this->panels = $this->corePanels();
+        } else {
+            $corePanels = $this->corePanels();
+            foreach ($corePanels as $id => $config) {
+                if (isset($this->panels[$id])) {
+                    unset($corePanels[$id]);
+                }
+            }
+            $this->panels = array_filter(array_merge($corePanels, $this->panels));
+        }
+
+        foreach ($this->panels as $id => $config) {
+            if (is_string($config)) {
+                $config = ['class' => $config];
+            }
+            if (is_array($config)) {
+                $config['module'] = $this;
+                $config['id'] = $id;
+                $this->panels[$id] = Yii::createObject($config);
+            }
+
+            if ($this->panels[$id] instanceof Panel && !$this->panels[$id]->isEnabled()) {
+                unset($this->panels[$id]);
+            }
+        }
     }
 
     /**

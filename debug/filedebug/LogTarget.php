@@ -72,7 +72,7 @@ class LogTarget extends \yii\debug\LogTarget
         }
         $manifest[$this->tag] = $summary;
         if (count($manifest) > $this->module->historySize + 10) {
-            $n = count($manifest) - $historySize;
+            $n = count($manifest) - $this->module->historySize;
             foreach (array_keys($manifest) as $tag) {
                 $file = $this->module->dataPath . "/$tag.data";
                 @unlink($file);
@@ -102,7 +102,6 @@ class LogTarget extends \yii\debug\LogTarget
      * @param $summary
      * @throws \yii\base\InvalidConfigException
      */
-    public
     static function saveDebugData($tag, $dataPath, $data, $fileMode, $historySize, $summary)
     {
         $dataFile = "$dataPath/{$tag}.data";
