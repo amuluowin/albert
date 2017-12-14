@@ -16,10 +16,10 @@ class SrvHeartbeat implements \yii\swoole\work\IHeartbeat
     {
         if (Yii::$app->mserver) {
             swoole_timer_tick(Yii::$app->params['BeatConfig']['Srvhbtick'] * 1000, function () {
-                \Swoole\Coroutine::create(function () {
+//                \Swoole\Coroutine::create(function () {
                     Yii::$app->mserver->dealServer();
-                    Yii::$app->clearComponents();
-                });
+//                    Yii::$app->clearComponents();
+//                });
             });
         }
     }
