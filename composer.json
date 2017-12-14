@@ -1,7 +1,7 @@
 {
   "name": "albertwxy/yii2-swoole",
-  "version": "dev-master",
-  "version_normalized": "9999999-dev",
+  "version": "1.0.0",
+  "version_normalized": "1.0.0",
   "require": {
     "yiisoft/yii2": "*",
     "yiisoft/yii2-redis": "*"
