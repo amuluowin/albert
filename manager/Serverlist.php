@@ -4,14 +4,14 @@ namespace yii\swoole\manager;
 
 use Yii;
 use yii\behaviors\TimestampBehavior;
-use yii\redis\ActiveRecord;
+use yii\swoole\redis\ActiveRecord;
 
 class Serverlist extends ActiveRecord
 {
 
     public static function getDb()
     {
-        return Yii::$app->get('syncredis');
+        return Yii::$app->get('redis');
     }
 
     /**
