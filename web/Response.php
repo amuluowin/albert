@@ -481,13 +481,13 @@ class Response extends \yii\base\Response
                 if ($pos + $chunkSize > $end) {
                     $chunkSize = $end - $pos + 1;
                 }
-                Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->write(fread($handle, $chunkSize));
+                Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->write(\Swoole\Coroutine::fread($handle, $chunkSize));
             }
             fclose($handle);
             Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->end();
         } else {
             while (!feof($this->getStream())) {
-                Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->write(fread($this->getStream(), $chunkSize));
+                Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->write(\Swoole\Coroutine::fread($this->getStream(), $chunkSize));
             }
             fclose($this->getStream());
             Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->end();

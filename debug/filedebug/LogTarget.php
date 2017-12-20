@@ -39,6 +39,7 @@ class LogTarget extends \yii\debug\LogTarget
 
         $fp = @fopen($dataFile, "a+");
         \Swoole\Coroutine::fwrite($fp, SerializeHelper::serialize($data));
+        @fclose($fp);
         if ($this->module->fileMode !== null) {
             @chmod($dataFile, $this->module->fileMode);
         }
@@ -68,7 +69,7 @@ class LogTarget extends \yii\debug\LogTarget
         ftruncate($fp, 0);
         rewind($fp);
         \Swoole\Coroutine::fwrite($fp, SerializeHelper::serialize($manifest));
-
+        @fclose($fp);
         if ($this->module->fileMode !== null) {
             @chmod($indexFile, $this->module->fileMode);
         }

@@ -59,14 +59,15 @@ class DefaultController extends \yii\debug\controllers\DefaultController
             $content = '';
             $fp = @fopen($indexFile, 'r');
             if ($fp !== false) {
+                @flock($fp, LOCK_SH);
                 if (!Application::$workerApp) {
-                    @flock($fp, LOCK_SH);
                     $content = fread($fp, filesize($indexFile));
-                    @flock($fp, LOCK_UN);
-                    fclose($fp);
+
                 } else {
-                    $content = \Swoole\Coroutine::fread($fp, filesize($indexFile));
+                    $content = \Swoole\Coroutine::fread($fp);
                 }
+                @flock($fp, LOCK_UN);
+                fclose($fp);
             }
 
             if ($content !== '') {
@@ -84,7 +85,6 @@ class DefaultController extends \yii\debug\controllers\DefaultController
         // retry loading debug data because the debug data is logged in shutdown function
         // which may be delayed in some environment if xdebug is enabled.
         // See: https://github.com/yiisoft/yii2/issues/1504
-
         for ($retry = 0; $retry <= $maxRetry; ++$retry) {
             $manifest = $this->getManifest($retry > 0);
             if (isset($manifest[$tag])) {
@@ -93,13 +93,19 @@ class DefaultController extends \yii\debug\controllers\DefaultController
                     $data = SerializeHelper::unserialize(file_get_contents($dataFile));
                 } else {
                     $fp = @fopen($dataFile, 'r');
-                    $data = SerializeHelper::unserialize(fread($fp));
+                    @flock($fp, LOCK_SH);
+                    $data = SerializeHelper::unserialize(\Swoole\Coroutine::fread($fp));
+                    @flock($fp, LOCK_UN);
+                    fclose($fp);
                 }
-
+                $exceptions = $data['exceptions'];
                 foreach ($this->module->panels as $id => $panel) {
                     if (isset($data[$id])) {
                         $panel->tag = $tag;
-                        $panel->load($data[$id]);
+                        $panel->load(SerializeHelper::unserialize($data[$id]));
+                    }
+                    if (isset($exceptions[$id])) {
+                        $panel->setError($exceptions[$id]);
                     }
                 }
                 $this->summary = $data['summary'];

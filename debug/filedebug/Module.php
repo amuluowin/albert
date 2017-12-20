@@ -117,6 +117,7 @@ class Module extends \yii\debug\Module implements Refreshable
     {
         $panels = parent::corePanels();
         unset($panels['user']);
+        unset($panels['timeline']);
         return $panels;
     }
 }
