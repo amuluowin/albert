@@ -48,106 +48,65 @@ class DefaultController extends \yii\debug\controllers\DefaultController
 
     protected function getManifest($forceReload = false)
     {
-        if (!Application::$workerApp) {
-            if ($this->_manifest === null || $forceReload) {
-                if ($forceReload) {
-                    clearstatcache();
-                }
-                $indexFile = $this->module->dataPath . '/index.data';
 
-                $content = '';
-                $fp = @fopen($indexFile, 'r');
-                if ($fp !== false) {
-                    @flock($fp, LOCK_SH);
-                    $content = fread($fp, filesize($indexFile));
-                    @flock($fp, LOCK_UN);
-                    fclose($fp);
-                }
 
-                if ($content !== '') {
-                    $this->_manifest = array_reverse(SerializeHelper::unserialize($content), true);
-                } else {
-                    $this->_manifest = [];
-                }
-            }
-
-            return $this->_manifest;
-        }
         if ($this->_manifest === null || $forceReload) {
             if ($forceReload) {
                 clearstatcache();
             }
             $indexFile = $this->module->dataPath . '/index.data';
-            if (\Swoole\Async::readFile($indexFile, function ($filename, $content) {
-                    if ($content !== '') {
-                        $this->_manifest = array_reverse(SerializeHelper::unserialize($content), true);
-                    } else {
-                        $this->_manifest = [];
-                    }
-                }) === false
-            ) {
-                throw new InvalidConfigException("Unable to open debug data index file: $indexFile");
+
+            $content = '';
+            $fp = @fopen($indexFile, 'r');
+            if ($fp !== false) {
+                if (!Application::$workerApp) {
+                    @flock($fp, LOCK_SH);
+                    $content = fread($fp, filesize($indexFile));
+                    @flock($fp, LOCK_UN);
+                    fclose($fp);
+                } else {
+                    $content = \Swoole\Coroutine::fread($fp, filesize($indexFile));
+                }
+            }
+
+            if ($content !== '') {
+                $this->_manifest = array_reverse(SerializeHelper::unserialize($content), true);
+            } else {
+                $this->_manifest = [];
             }
         }
-        while (!is_array($this->_manifest)) {
-            \Swoole\Coroutine::sleep(0.001);
-        }
+
         return $this->_manifest;
     }
-
-    private $data;
 
     public function loadData($tag, $maxRetry = 0)
     {
         // retry loading debug data because the debug data is logged in shutdown function
         // which may be delayed in some environment if xdebug is enabled.
         // See: https://github.com/yiisoft/yii2/issues/1504
-        if (!Application::$workerApp) {
-            for ($retry = 0; $retry <= $maxRetry; ++$retry) {
-                $manifest = $this->getManifest($retry > 0);
-                if (isset($manifest[$tag])) {
-                    $dataFile = $this->module->dataPath . "/$tag.data";
-                    $data = SerializeHelper::unserialize(file_get_contents($dataFile));
-                    foreach ($this->module->panels as $id => $panel) {
-                        if (isset($data[$id])) {
-                            $panel->tag = $tag;
-                            $panel->load($data[$id]);
-                        }
-                    }
-                    $this->summary = $data['summary'];
 
-                    return;
-                }
-                sleep(1);
-            }
-
-            throw new NotFoundHttpException("Unable to find debug data tagged with '$tag'.");
-        }
         for ($retry = 0; $retry <= $maxRetry; ++$retry) {
             $manifest = $this->getManifest($retry > 0);
             if (isset($manifest[$tag])) {
                 $dataFile = $this->module->dataPath . "/$tag.data";
-                $this->data = null;
-                if (\Swoole\Async::readFile($dataFile, function ($filename, $content) {
-                        $this->data = SerializeHelper::unserialize($content);
-                    }) === false
-                ) {
-                    throw new InvalidConfigException("Unable to open debug data index file: $indexFile");
+                if (!Application::$workerApp) {
+                    $data = SerializeHelper::unserialize(file_get_contents($dataFile));
+                } else {
+                    $fp = @fopen($dataFile, 'r');
+                    $data = SerializeHelper::unserialize(fread($fp));
                 }
-                while ($this->data === null) {
-                    \Swoole\Coroutine::sleep(0.001);
-                }
+
                 foreach ($this->module->panels as $id => $panel) {
-                    if (isset($this->data[$id])) {
+                    if (isset($data[$id])) {
                         $panel->tag = $tag;
-                        $panel->load($this->data[$id]);
+                        $panel->load($data[$id]);
                     }
                 }
-                $this->summary = $this->data['summary'];
+                $this->summary = $data['summary'];
 
                 return;
             }
-            \Swoole\Coroutine::sleep(0.001);
+            \Swoole\Coroutine::sleep(1);
         }
 
         throw new NotFoundHttpException("Unable to find debug data tagged with '$tag'.");
