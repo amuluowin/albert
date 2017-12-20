@@ -49,11 +49,11 @@ class RpcRoute
         Yii::beginProfile($token, __METHOD__);
         try {
             foreach ($module->getModules() as $id => $child) {
-                if (($child = $module->getModule($id)) !== null && $child->hasProperty('isService') && $child->isService !== false) {
+                if (($child = $module->getModule($id)) !== null) {
                     self::getRouteRecrusive($child, $result);
                 }
             }
-            if ($module instanceof Module && $module->hasProperty('isService') && $module->isService !== false) {
+            if ($module instanceof Module) {
                 foreach ($module->controllerMap as $id => $type) {
                     self::getControllerActions($type, $id, $module, $result);
                 }
