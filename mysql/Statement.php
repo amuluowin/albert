@@ -3,12 +3,13 @@
 namespace yii\swoole\mysql;
 
 use Yii;
+use yii\web\ServerErrorHttpException;
 
 class Statement
 {
     private $sql;
     private $pdo;
-    private $value;
+    private $params;
     private $mode;
     private $data;
 
@@ -25,15 +26,29 @@ class Statement
 
     public function bindValue($parameter, $value, $data_type = \PDO::PARAM_STR)
     {
-
+        $this->params[$parameter] = $value;
     }
 
     public function execute($timeout = 10)
     {
         try {
-            $this->pdo->setDefer();
+//            $this->pdo->setDefer();
             $this->data = $this->pdo->query($this->sql, $timeout);
-            $this->data = $this->pdo->recv();
+//            $this->data = $this->pdo->recv();
+//            if (empty($this->params)) {
+//                $this->data = $this->pdo->query($this->sql, $timeout);
+//            } else {
+//                foreach ($this->params as $name => $value) {
+//                    $this->sql = str_replace($name, '?', $this->sql);
+//                    $values[] = $value;
+//                }
+//                if ($this->pdo->prepare($this->sql)) {
+//                    $this->data = $this->pdo->execute($this->values, $timeout);
+//                } else {
+//                    throw new ServerErrorHttpException($this->pdo->errno);
+//                }
+//            }
+
         } catch (\Exception $e) {
             Yii::warning($e->getMessage());
         }
