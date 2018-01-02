@@ -1,5 +1,7 @@
 <?php
 
+namespace yii\swoole\behaviors;
+
 class DatetimeBehavior extends \yii\behaviors\TimestampBehavior
 {
     protected function getValue($event)
