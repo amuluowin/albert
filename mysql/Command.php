@@ -34,7 +34,7 @@ class Command extends \yii\db\Command
             return;
         }
 
-        $sql = $this->getRawSql();
+        $sql = $this->getSql();
 
         if ($this->db->getTransaction()) {
             // master is in a transaction. use the same connection.

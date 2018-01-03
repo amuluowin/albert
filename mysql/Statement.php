@@ -33,29 +33,23 @@ class Statement
     {
         try {
 //            $this->pdo->setDefer();
-            $this->data = $this->pdo->query($this->sql, $timeout);
+//            $this->data = $this->pdo->query($this->sql, $timeout);
 //            $this->data = $this->pdo->recv();
-//            if (empty($this->params)) {
-//                $this->data = $this->pdo->query($this->sql, $timeout);
-//            } else {
-//                foreach ($this->params as $name => $value) {
-//                    $this->sql = str_replace($name, '?', $this->sql);
-//                    $values[] = $value;
-//                }
-//                if ($this->pdo->prepare($this->sql)) {
-//                    $this->data = $this->pdo->execute($this->values, $timeout);
-//                } else {
-//                    throw new ServerErrorHttpException($this->pdo->errno);
-//                }
-//            }
-
+            if (empty($this->params)) {
+                $this->data = $this->pdo->query($this->sql, $timeout);
+            } else {
+                $values = [];
+                foreach ($this->params as $name => $value) {
+                    $this->sql = str_replace($name, '?', $this->sql);
+                    $values[] = $value;
+                }
+                if ($this->pdo->prepare($this->sql) == false || ($this->data = $this->pdo->execute($values)) == false) {
+                    throw new ServerErrorHttpException($this->pdo->errno);
+                }
+            }
         } catch (\Exception $e) {
             Yii::warning($e->getMessage());
         }
-
-//        $stmt = spl_object_hash($this->pdo);
-//        $this->pdo->query("PREPARE {$stmt} FROM {$this->sql};");
-//        $this->pdo->query($this->sql);
     }
 
     public function fetch($fetch_style = null, $cursor_orientation = \PDO::FETCH_ORI_NEXT, $cursor_offset = 0)
