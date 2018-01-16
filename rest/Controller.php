@@ -76,30 +76,6 @@ class Controller extends \yii\web\Controller
         ];
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function actions()
-    {
-        if (Yii::$app->params['enable_apidoc']) {
-            $path = Yii::$app->BaseHelper->getPath($this->module);
-            $api = [
-                'api' => [
-                    'class' => 'yii\swoole\swagger\SwaggerApiAction',
-                    'scanDir' => [
-                        Yii::getAlias('@vendor/albert/yii2-swoole/swagger/public'),
-                        Yii::getAlias('@addons' . $path)
-                    ]
-                ]
-            ];
-            if ($this->module->use_default_doc) {
-                $api['api']['scanDir'][] = Yii::getAlias('@vendor/albert/yii2-swoole/swagger/defaultapi');
-            }
-            return $api;
-        }
-        return [];
-    }
-
     public function beforeAction($action)
     {
         $result = parent::beforeAction($action);
