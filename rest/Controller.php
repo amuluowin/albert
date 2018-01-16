@@ -9,8 +9,11 @@
 namespace yii\swoole\rest;
 
 use Yii;
+use yii\filters\auth\CompositeAuth;
+use yii\filters\auth\HttpBearerAuth;
 use yii\filters\ContentNegotiator;
 use yii\filters\Cors;
+use yii\filters\RateLimiter;
 use yii\filters\VerbFilter;
 use yii\swoole\controllers\CreateActionTrait;
 use yii\web\Response;
@@ -64,28 +67,12 @@ class Controller extends \yii\web\Controller
             [
                 'class' => Cors::className()
             ],
-//            'access' => [
-//                'class' => AccessControl::className(),
-//                'only' => ['login', 'logout', 'signup'],
-//                'rules' => [
-//                    [
-//                        'allow' => true,
-//                        'actions' => ['login', 'signup'],
-//                        'roles' => ['?'],
-//                    ],
-//                    [
-//                        'allow' => true,
-//                        'actions' => ['logout'],
-//                        'roles' => ['@'],
-//                    ],
-//                ],
-//            ],
-//            'authenticator' => [
-//                'class' => CompositeAuth::className(),
-//            ],
-//            'rateLimiter' => [
-//                'class' => RateLimiter::className(),
-//            ],
+            'authenticator' => [
+                'class' => CompositeAuth::className(),
+            ],
+            'rateLimiter' => [
+                'class' => RateLimiter::className(),
+            ],
         ];
     }
 
