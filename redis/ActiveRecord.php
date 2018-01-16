@@ -1,17 +1,25 @@
 <?php
+
 namespace yii\swoole\redis;
 
 use Yii;
+use yii\swoole\Application;
 
 class ActiveRecord extends \yii\redis\ActiveRecord
 {
     public static function find()
     {
+        if (!Application::$workerApp) {
+            return parent::find();
+        }
         return Yii::createObject(ActiveQuery::className(), [get_called_class()]);
     }
 
     public function insert($runValidation = true, $attributes = null)
     {
+        if (!Application::$workerApp) {
+            return parent::insert($runValidation, $attributes);
+        }
         if ($runValidation && !$this->validate($attributes)) {
             return false;
         }
@@ -66,6 +74,9 @@ class ActiveRecord extends \yii\redis\ActiveRecord
 
     public static function updateAll($attributes, $condition = null)
     {
+        if (!Application::$workerApp) {
+            return parent::updateAll($attributes, $condition);
+        }
         if (empty($attributes)) {
             return 0;
         }
