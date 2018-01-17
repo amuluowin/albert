@@ -32,23 +32,24 @@ class Statement
     public function execute($timeout = 10)
     {
         try {
-//            $this->pdo->setDefer();
-//            $this->data = $this->pdo->query($this->sql, $timeout);
-//            $this->data = $this->pdo->recv();
-            if (empty($this->params)) {
-                $this->data = $this->pdo->query($this->sql, $timeout);
-            } else {
-                $values = [];
-                foreach ($this->params as $name => $value) {
-                    $this->sql = preg_replace('/' . $name . '/', '?', $this->sql, 1);
-                    $values[] = $value;
-                }
-
-                if (($statement = $this->pdo->prepare($this->sql)) == false || ($this->data = $statement->execute($values)) == false) {
-                    throw new ServerErrorHttpException($this->pdo->errno);
-                }
-            }
-
+            $this->pdo->setDefer();
+            $this->data = $this->pdo->query($this->sql, $timeout);
+            $this->data = $this->pdo->recv();
+//            if (empty($this->params)) {
+//                $this->data = $this->pdo->query($this->sql, $timeout);
+//            } else {
+//                $values = [];
+//                foreach ($this->params as $name => $value) {
+//                    $this->sql = preg_replace('/' . $name . '/', '?', $this->sql, 1);
+//                    $values[] = $value;
+//                }
+//                $statement = $this->pdo->prepare($this->sql);
+//                if ($statement == false) {
+//                    throw new ServerErrorHttpException($this->pdo->errno);
+//                } else {
+//                    $this->data = $statement->execute($values);
+//                }
+//            }
         } catch (\Exception $e) {
             Yii::warning($e->getMessage());
         }
