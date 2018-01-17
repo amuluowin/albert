@@ -9,7 +9,7 @@ class ActiveRecord extends \yii\redis\ActiveRecord
 {
     public static function find()
     {
-        if (!Application::$workerApp) {
+        if (!Application::$workerApp && !PHP_SAPI == 'cli') {
             return parent::find();
         }
         return Yii::createObject(ActiveQuery::className(), [get_called_class()]);
@@ -17,7 +17,7 @@ class ActiveRecord extends \yii\redis\ActiveRecord
 
     public function insert($runValidation = true, $attributes = null)
     {
-        if (!Application::$workerApp) {
+        if (!Application::$workerApp && !PHP_SAPI == 'cli') {
             return parent::insert($runValidation, $attributes);
         }
         if ($runValidation && !$this->validate($attributes)) {
@@ -74,7 +74,7 @@ class ActiveRecord extends \yii\redis\ActiveRecord
 
     public static function updateAll($attributes, $condition = null)
     {
-        if (!Application::$workerApp) {
+        if (!Application::$workerApp && !PHP_SAPI == 'cli') {
             return parent::updateAll($attributes, $condition);
         }
         if (empty($attributes)) {

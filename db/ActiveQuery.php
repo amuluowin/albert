@@ -1,4 +1,5 @@
 <?php
+
 namespace yii\swoole\db;
 
 use Yii;
@@ -40,7 +41,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
         }
 
         $row = $this->createCommand($db)->queryOne();
-        if ($row !== false) {
+        if ($row !== false && !empty($row)) {
             $models = $this->populate([$row]);
             return reset($models) ?: null;
         } else {

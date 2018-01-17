@@ -40,13 +40,15 @@ class Statement
             } else {
                 $values = [];
                 foreach ($this->params as $name => $value) {
-                    $this->sql = str_replace($name, '?', $this->sql);
+                    $this->sql = preg_replace('/' . $name . '/', '?', $this->sql, 1);
                     $values[] = $value;
                 }
-                if ($this->pdo->prepare($this->sql) == false || ($this->data = $this->pdo->execute($values)) == false) {
+
+                if (($statement = $this->pdo->prepare($this->sql)) == false || ($this->data = $statement->execute($values)) == false) {
                     throw new ServerErrorHttpException($this->pdo->errno);
                 }
             }
+
         } catch (\Exception $e) {
             Yii::warning($e->getMessage());
         }
