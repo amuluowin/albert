@@ -468,7 +468,6 @@ class Response extends \yii\base\Response
         $id = CoroHelper::getId();
         if ($this->getStream() === null) {
             Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->end($this->content[$id]);
-            unset(Yii::$app->getSwooleServer()->currentSwooleResponse[$id]);
             return;
         }
 
