@@ -97,8 +97,7 @@ class ActiveRecord extends \yii\redis\ActiveRecord
                     if (is_bool($value)) {
                         $value = (int)$value;
                     }
-                    $setArgs[] = $attribute;
-                    $setArgs[] = $value;
+                    $setArgs[$attribute] = $value;
                 } else {
                     $delArgs[] = $attribute;
                 }
@@ -114,7 +113,7 @@ class ActiveRecord extends \yii\redis\ActiveRecord
                 }
                 if (count($delArgs) > 1) {
                     $hash = array_shift($delArgs);
-                    $db->executeCommand('HDEL', [$hash, $delArgs]);
+                    $db->executeCommand('HDEL', [$hash, implode(' ', $delArgs)]);
                 }
                 $db->executeCommand('LINSERT', [static::keyPrefix(), 'AFTER', $pk, $newPk]);
                 $db->executeCommand('LREM', [static::keyPrefix(), 0, $pk]);
@@ -127,7 +126,7 @@ class ActiveRecord extends \yii\redis\ActiveRecord
                 }
                 if (count($delArgs) > 1) {
                     $hash = array_shift($delArgs);
-                    $db->executeCommand('HDEL', [$hash, $delArgs]);
+                    $db->executeCommand('HDEL', [$hash, implode(' ', $delArgs)]);
                 }
             }
             $n++;
