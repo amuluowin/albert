@@ -2,7 +2,9 @@
 
 namespace yii\swoole\httpclient;
 
+use addons\wechat\support\Arr;
 use Yii;
+use yii\swoole\helpers\ArrayHelper;
 use yii\web\ServerErrorHttpException;
 
 class SwooleTransport extends \yii\httpclient\Transport
@@ -24,6 +26,8 @@ class SwooleTransport extends \yii\httpclient\Transport
         $content = $request->getContent();
 
         $headers = $request->composeHeaderLines();
+
+        $options = $request->getOptions();
 
         $token = $request->client->createRequestLogToken($method, $url, $headers, $content);
         Yii::info($token, __METHOD__);
@@ -69,11 +73,15 @@ class SwooleTransport extends \yii\httpclient\Transport
 
             $cli->setHeaders($sendHeaders);
             $cli->setCookies($sendCookies);
-            $cli->set([
-                'timeout' => $request->client_timeout,
+            $cli->set(ArrayHelper::merge([
+                'timeout' => isset($options['timeout']) ? $options['timeout'] : $request->client_timeout,
                 'keep_alive' => $request->keep_alive,
-                'websocket_mask' => $request->websocket_mask
-            ]);
+                'websocket_mask' => $request->websocket_mask,
+                'ssl_cert_file'
+            ], array_filter([
+                'ssl_cert_file' => ArrayHelper::getValue($options, 'sslLocalCert'),
+                'ssl_key_file' => ArrayHelper::getValue($options, 'sslLocalPk')
+            ])));
             $cli->setMethod($method);
             if (strtolower($method) !== 'get') {
                 $cli->setData($content);
