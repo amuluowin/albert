@@ -47,7 +47,7 @@ class Command extends \yii\db\Command
         }
 
         try {
-            $this->pdoStatement = new Statement;
+            $this->pdoStatement = new Statement(['db' => $this->db]);
             $this->pdoStatement->prepare($sql, $pdo);
             $this->bindPendingParams();
         } catch (\Exception $e) {

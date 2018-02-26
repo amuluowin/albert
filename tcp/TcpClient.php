@@ -73,7 +73,7 @@ class TcpClient extends BaseClient implements ICoroutine
         } else {
             $conn = Yii::$container->get('tcpclient')->fetch($key);
         }
-        
+
         $this->setClient($conn);
         $this->setData($data);
         $this->trigger(self::EVENT_BEFORE_SEND);
@@ -86,8 +86,8 @@ class TcpClient extends BaseClient implements ICoroutine
 
     public function release()
     {
-        if (Yii::$container->hasSingleton('tcpclient')) {
-            $id = CoroHelper::getId();
+        $id = CoroHelper::getId();
+        if (Yii::$container->hasSingleton('tcpclient') && isset($this->client[$id])) {
             Yii::$container->get('tcpclient')->recycle($this->client[$id]);
             unset($this->client[$id]);
             unset($this->data[$id]);

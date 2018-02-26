@@ -3,6 +3,9 @@
 namespace yii\swoole\mysql;
 
 use Yii;
+use yii\base\Exception;
+use yii\base\InvalidConfigException;
+use yii\base\NotSupportedException;
 use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\helpers\CoroHelper;
 
@@ -80,6 +83,10 @@ class Connection extends \yii\swoole\db\Connection implements ICoroutine
 
     public function release($conn = null)
     {
+        $transaction = $this->getTransaction();
+        if (!empty($transaction) && $transaction->getIsActive()) {//事务里面不释放连接
+            return;
+        }
         $id = CoroHelper::getId();
         if (Yii::$container->hasSingleton('mysqlclient') && isset($this->pdo[$id])) {
             Yii::$container->get('mysqlclient')->recycle($this->pdo[$id]);

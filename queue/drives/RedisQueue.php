@@ -7,7 +7,7 @@ use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\helpers\SerializeHelper;
 use yii\swoole\queue\helpers\ArrayHelper;
 use yii\swoole\queue\Queue;
-use yii\swoole\redis\coredis\Connection;
+use yii\swoole\redis\Connection;
 
 /**
  * redis 列队驱动器

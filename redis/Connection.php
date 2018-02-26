@@ -133,7 +133,7 @@ class Connection extends \yii\redis\Connection implements ICoroutine
     public function release()
     {
         $id = CoroHelper::getId();
-        if (Yii::$container->hasSingleton('redisclient')) {
+        if (Yii::$container->hasSingleton('redisclient') && isset($this->client[$id])) {
             Yii::$container->get('redisclient')->recycle($this->getClient());
             unset($this->client[$id]);
         }

@@ -3,10 +3,12 @@
 namespace yii\swoole\mysql;
 
 use Yii;
+use yii\base\BaseObject;
 use yii\web\ServerErrorHttpException;
 
-class Statement
+class Statement extends BaseObject
 {
+    public $db;
     private $sql;
     private $pdo;
     private $params;
@@ -52,6 +54,8 @@ class Statement
 //            }
         } catch (\Exception $e) {
             Yii::warning($e->getMessage());
+        } finally {
+            $this->db->release();
         }
     }
 

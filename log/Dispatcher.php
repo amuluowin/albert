@@ -63,7 +63,9 @@ class Dispatcher extends \yii\log\Dispatcher implements ICoroutine
 
     public function release()
     {
-        unset($this->_logger[CoroHelper::getId()]);
+        if (isset($this->_logger[CoroHelper::getId()])) {
+            unset($this->_logger[CoroHelper::getId()]);
+        }
     }
 
 }

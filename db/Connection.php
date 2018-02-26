@@ -35,23 +35,6 @@ class Connection extends \yii\db\Connection implements ICoroutine
         }
     }
 
-//    public function getTransaction()
-//    {
-//        return $this->_transaction && $this->_transaction->getIsActive() ? $this->_transaction : null;
-//    }
-//
-//    public function beginTransaction($isolationLevel = null)
-//    {
-//        $this->open();
-//
-//        if (($transaction = $this->getTransaction()) === null) {
-//            $transaction = $this->_transaction = new Transaction(['db' => $this]);
-//        }
-//        $transaction->begin($isolationLevel);
-//
-//        return $transaction;
-//    }
-
     protected function createPdoInstance()
     {
         $pdoClass = $this->pdoClass;
@@ -334,26 +317,4 @@ class Connection extends \yii\db\Connection implements ICoroutine
             return $result;
         }
     }
-
-//    public function close()
-//    {
-//        parent::close();
-//
-//        if ($this->pdo !== null) {
-//            Yii::trace('Closing DB connection: ' . $this->dsn, __METHOD__);
-//            $this->pdo = null;
-//            $this->_transaction = null;
-//        }
-//    }
-//
-//    public function __clone()
-//    {
-//        parent::__clone();
-//        $this->_transaction = null;
-//        if (strncmp($this->dsn, 'sqlite::memory:', 15) !== 0) {
-//            // reset PDO connection, unless its sqlite in-memory, which can only have one connection
-//            $this->pdo = null;
-//        }
-//    }
-
 }
