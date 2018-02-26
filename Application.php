@@ -224,8 +224,6 @@ class Application extends Module implements ICoroutine
     {
         Yii::$app = $this;
         static::setInstance($this);
-
-
     }
 
     public function initComponent($config = [])

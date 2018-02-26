@@ -1,4 +1,5 @@
 <?php
+
 namespace yii\swoole\helpers;
 
 use Yii;
@@ -33,7 +34,9 @@ class RpcHelper extends \yii\base\Component
     {
         $mod = $mod ? $mod : Yii::$app->getModules(true);
         foreach ($mod as $k => $v) {
-            self::$_modules[] = $v->id;
+            $m = explode('\\', str_replace('\Module', '', $v::className()));
+            $m = $m[count($m) - 1];
+            self::$_modules[$m] = $v->id;
             if ($v->modules) {
                 self::$_modules = ArrayHelper::merge(self::$_modules, $this->getModuleList($v->modules));
             }
@@ -48,13 +51,36 @@ class RpcHelper extends \yii\base\Component
         return $this->getLogicsList($path);
     }
 
+    private function findModule($value)
+    {
+        foreach ($this->getModules() as $namespace => $id) {
+            if (strpos($namespace, $value) !== false) {
+                return $id;
+            }
+        }
+    }
+
     private function getLogicsList($path = null, $logics = [])
     {
         $path = $path ?: Yii::getAlias('@addons');
         foreach (glob($path . '/*') as $file) {
             if (is_dir($file)) {
                 $logics = $this->getLogicsList($file, $logics);
-            } elseif (strpos($file, 'Controller.php') === false && strpos($file, '.php') !== false &&
+            } elseif (strpos($file, 'Controller.php') !== false) {
+                $data = explode('/', str_replace([Yii::getAlias('@addons/'), 'controllers/', 'Controller.php'], ['', '', ''], $file));
+                $basename = '';
+                foreach ($data as $index => $value) {
+                    if ($index === count($data) - 1) {
+                        $basename .= '/' . strtolower($value);
+                    } else {
+                        $module = $this->findModule($value);
+                        $basename .= $module ? '/' . $module : '';
+                    }
+                }
+                if (!in_array($basename, $logics)) {
+                    $logics[] = $basename;
+                }
+            } elseif (strpos($file, '.php') !== false &&
                 (strpos($file, 'modellogic') !== false || strpos($file, 'customba'))
             ) {
                 $basename = 'addons' . substr(str_replace('/', '\\', str_replace(Yii::getAlias('@addons'), '', $file)), 0, -4);
@@ -83,7 +109,7 @@ class RpcHelper extends \yii\base\Component
     public function getRpcClass()
     {
         if (!self::$_rpcClass) {
-            self::$_rpcClass = ArrayHelper::merge($this->getLogics(), $this->getRoutes(), ArrayHelper::getValue(Yii::$app->params, 'extRpc', []));
+            self::$_rpcClass = ArrayHelper::merge($this->getLogics(), ArrayHelper::getValue(Yii::$app->params, 'extRpc', []));
         }
         return self::$_rpcClass;
     }
