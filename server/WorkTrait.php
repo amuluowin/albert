@@ -10,7 +10,7 @@ use yii\swoole\helpers\CoroHelper;
 
 trait WorkTrait
 {
-    public function workerStart($server = null)
+    public function workerStart($server = null, $worker_id)
     {
         $id = CoroHelper::getId();
         // 初始化一些变量, 下面这些变量在进入真实流程时是无效的

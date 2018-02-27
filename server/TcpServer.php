@@ -41,8 +41,8 @@ class TcpServer extends Server
 
     protected function beforeStart()
     {
-        if (Yii::$app->params['Hearbeat']['func']['UpSrv']) {
-            call_user_func_array(Yii::$app->params['Hearbeat']['class'] . '::UpSrv', [$this->server]);
+        if (Yii::$app->params['Hearbeat']['UpSrv']) {
+            \yii\swoole\work\Heartbeat::getInstance(Yii::$app->params['swoole'])->UpSrv();
         }
     }
 
