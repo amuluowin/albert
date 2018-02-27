@@ -79,7 +79,7 @@ class WebsocketServer extends HttpServer
     {
         parent::onClose($server, $fd, $from_id);
         Yii::info("client {$fd} closed\n", __METHOD__);
-        Yii::getLogger()->flush();
+        Yii::getLogger()->flush(true);
     }
 
 

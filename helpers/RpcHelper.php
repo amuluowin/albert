@@ -3,6 +3,7 @@
 namespace yii\swoole\helpers;
 
 use Yii;
+use yii\swoole\Module;
 use yii\swoole\rpc\RpcRoute;
 
 /**
@@ -36,7 +37,9 @@ class RpcHelper extends \yii\base\Component
         foreach ($mod as $k => $v) {
             $m = explode('\\', str_replace('\Module', '', $v::className()));
             $m = $m[count($m) - 1];
-            self::$_modules[$m] = $v->id;
+            if (($v instanceof Module) && $v->isService) {
+                self::$_modules[$m] = $v->id;
+            }
             if ($v->modules) {
                 self::$_modules = ArrayHelper::merge(self::$_modules, $this->getModuleList($v->modules));
             }

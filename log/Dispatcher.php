@@ -4,8 +4,6 @@ namespace yii\swoole\log;
 
 use Yii;
 use yii\swoole\Application;
-use yii\swoole\coroutine\ICoroutine;
-use yii\swoole\helpers\CoroHelper;
 use yii\swoole\web\ErrorHandler;
 
 /**
@@ -13,29 +11,8 @@ use yii\swoole\web\ErrorHandler;
  *
  * @package yii\swoole\log
  */
-class Dispatcher extends \yii\log\Dispatcher implements ICoroutine
+class Dispatcher extends \yii\log\Dispatcher
 {
-    private $_logger;
-
-    public function getLogger()
-    {
-        $id = CoroHelper::getId();
-        if (!isset($this->_logger[$id])) {
-            $this->setLogger(Yii::getLogger());
-        }
-        return $this->_logger[$id];
-    }
-
-    public function setLogger($value)
-    {
-        $id = CoroHelper::getId();
-        if (is_string($value) || is_array($value)) {
-            $value = Yii::createObject($value);
-        }
-        $this->_logger[$id] = $value;
-        $this->_logger[$id]->dispatcher = $this;
-    }
-
     /**
      * @inheritdoc
      */
@@ -60,12 +37,4 @@ class Dispatcher extends \yii\log\Dispatcher implements ICoroutine
             }
         }
     }
-
-    public function release()
-    {
-        if (isset($this->_logger[CoroHelper::getId()])) {
-            unset($this->_logger[CoroHelper::getId()]);
-        }
-    }
-
 }

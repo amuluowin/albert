@@ -77,14 +77,13 @@ abstract class BaseProcess extends \yii\base\Component
 
             }, FILE_APPEND);
             $this->release();
-            $this->stop($process->pid);
+            $this->stop($pid);
         }
     }
 
     public function release()
     {
         if (!$this->server) {
-            Yii::getLogger()->flush();
             Yii::getLogger()->flush(true);
             Yii::$app->clearComponents();
         }

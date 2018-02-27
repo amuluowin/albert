@@ -70,9 +70,6 @@ trait HttpTrait
             } else {
                 Yii::$app->run();
             }
-            //结束
-            Yii::getLogger()->flush();
-            Yii::getLogger()->flush(true);
         } catch (ErrorException $e) {
             if ($this->debug) {
                 echo (string)$e;
@@ -91,6 +88,8 @@ trait HttpTrait
             }
         } finally {
 //            Yii::$app->clog->upload();
+            //结束
+            Yii::getLogger()->flush(true);
             Yii::$app->release();
         }
 //        });
