@@ -3,6 +3,7 @@
 namespace yii\swoole\process;
 
 use Yii;
+use yii\swoole\files\FileIO;
 use yii\swoole\server\WorkTrait;
 
 abstract class BaseProcess extends \yii\base\Component
@@ -32,10 +33,7 @@ abstract class BaseProcess extends \yii\base\Component
     public function savePid()
     {
         if ($this->pidFile) {
-            \Swoole\Async::writeFile($this->pidFile, implode(',', $this->pids), function ($filename) {
-
-            }, FILE_APPEND);
-//            @file_put_contents($this->pidFile, implode(',', $this->pids));
+            FileIO::write($this->pidFile, implode(',', $this->pids), FILE_APPEND);
         }
     }
 
@@ -51,17 +49,14 @@ abstract class BaseProcess extends \yii\base\Component
         foreach ($this->processArray as $pid => $process) {
             $process->exit($status);
         }
-//        $pids = @file_exists($this->pidFile) ? file_get_contents($this->pidFile) : [];
-        \Swoole\Async::readFile($this->pidFile, function ($filename, $content) {
-            if (is_string($content)) {
-                $pids = explode(',', $content);
-            }
-            foreach ($pids as $pid) {
-                \swoole_process::kill(intval($pid));
-            }
-            @unlink($this->pidFile);
-        });
-
+        $content = FileIO::read($this->pidFile);
+        if (is_string($content)) {
+            $pids = explode(',', $content);
+        }
+        foreach ($pids as $pid) {
+            \swoole_process::kill(intval($pid));
+        }
+        @unlink($this->pidFile);
     }
 
     /**
@@ -72,10 +67,7 @@ abstract class BaseProcess extends \yii\base\Component
     public function memoryExceeded($pid, $name)
     {
         if ((memory_get_usage() / 1024 / 1024) >= $this->memory) {
-//            @file_put_contents($this->log_path . '/' . $name . '.log', 'out of memory!', FILE_APPEND);
-            \Swoole\Async::writeFile($this->log_path . '/' . $name . '.log', 'out of memory!', function ($filename) {
-
-            }, FILE_APPEND);
+            FileIO::write($this->log_path . '/' . $name . '.log', 'out of memory!', FILE_APPEND);
             $this->release();
             $this->stop($pid);
         }

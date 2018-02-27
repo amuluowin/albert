@@ -4,6 +4,7 @@ namespace yii\swoole\process;
 
 use Yii;
 use yii\queue\Job;
+use yii\swoole\files\FileIO;
 use yii\swoole\redis\coredis\Connection;
 
 class QueueProcess extends BaseProcess
@@ -77,10 +78,7 @@ class QueueProcess extends BaseProcess
             $this->memoryExceeded($process->pid, $class);
             $this->release();
         } catch (\Exception $e) {
-//            @file_put_contents($this->log_path . '/' . $class . '.log', (string)$e, FILE_APPEND);
-            \Swoole\Async::writeFile($this->log_path . '/' . $class . '.log', (string)$e, function ($filename) {
-
-            }, FILE_APPEND);
+            FileIO::write($this->log_path . '/' . $class . '.log', (string)$e, FILE_APPEND);
             $this->release();
             $this->stop($process->pid);
         }

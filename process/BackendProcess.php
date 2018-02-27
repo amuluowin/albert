@@ -3,6 +3,7 @@
 namespace yii\swoole\process;
 
 use Yii;
+use yii\swoole\files\FileIO;
 
 class BackendProcess extends BaseProcess
 {
@@ -52,10 +53,7 @@ class BackendProcess extends BaseProcess
             $this->memoryExceeded($process->pid, $obj->processName);
             $this->release();
         } catch (\Exception $e) {
-//            @file_put_contents($this->log_path . '/' . $obj->processName . '.log', (string)$e, FILE_APPEND);
-            \Swoole\Async::writeFile($this->log_path . '/' . $obj->processName . '.log', (string)$e, function ($filename) {
-
-            }, FILE_APPEND);
+            FileIO::write($this->log_path . '/' . $obj->processName . '.log', (string)$e, FILE_APPEND);
             $this->release();
             if ($obj->retry <= $process->retry) {
                 $this->stop($process->pid);

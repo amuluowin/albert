@@ -13,11 +13,12 @@ use yii\swoole\Application;
 
 class FileIO
 {
-    public static function write($filename, $data)
+
+    public static function write($filename, $data, $flags = 0)
     {
         if (Application::$workerApp) {
             try {
-                if (($fp = @fopen($filename, "a+")) === false) {
+                if (($fp = @fopen($filename, $flags ? "a" : "w")) === false) {
                     throw new InvalidConfigException("Unable to open file: $filename");
                 }
                 \Swoole\Coroutine::fwrite($fp, $data);
@@ -28,7 +29,7 @@ class FileIO
             }
 
         } else {
-            return file_put_contents($filename, $data);
+            return file_put_contents($filename, $data, $flags);
         }
 
     }
