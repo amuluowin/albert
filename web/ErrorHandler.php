@@ -130,7 +130,7 @@ class ErrorHandler extends \yii\web\ErrorHandler
         // load ErrorException manually here because autoloading them will not work
         // when error occurs while autoloading a class
         if (!class_exists('yii\\base\\ErrorException', false)) {
-            require_once __DIR__ . '/ErrorException.php';
+            require_once Yii::getAlias('@vendor/yiisoft/yii2/base/ErrorException.php');
         }
 
         $error = error_get_last();

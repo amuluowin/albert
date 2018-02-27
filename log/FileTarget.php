@@ -4,7 +4,6 @@ namespace yii\swoole\log;
 
 use yii\base\InvalidConfigException;
 use yii\swoole\Application;
-use yii\swoole\helpers\FileHelper;
 
 /**
  * Class FileTarget

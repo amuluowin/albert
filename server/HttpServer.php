@@ -108,6 +108,11 @@ class HttpServer extends Server
         $this->server->serverTable->create();
     }
 
+    public function onPipeMessage($server, $from_worker_id, $message)
+    {
+        print_r($message);
+    }
+
     public static function getInstance($config)
     {
         if (!self::$instance) {

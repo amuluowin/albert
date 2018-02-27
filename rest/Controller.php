@@ -10,7 +10,6 @@ namespace yii\swoole\rest;
 
 use Yii;
 use yii\filters\auth\CompositeAuth;
-use yii\filters\auth\HttpBearerAuth;
 use yii\filters\ContentNegotiator;
 use yii\filters\Cors;
 use yii\filters\RateLimiter;

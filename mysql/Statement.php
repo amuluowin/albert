@@ -4,7 +4,6 @@ namespace yii\swoole\mysql;
 
 use Yii;
 use yii\base\BaseObject;
-use yii\web\ServerErrorHttpException;
 
 class Statement extends BaseObject
 {

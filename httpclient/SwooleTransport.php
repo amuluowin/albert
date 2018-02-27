@@ -2,7 +2,6 @@
 
 namespace yii\swoole\httpclient;
 
-use addons\wechat\support\Arr;
 use Yii;
 use yii\swoole\helpers\ArrayHelper;
 use yii\web\ServerErrorHttpException;
