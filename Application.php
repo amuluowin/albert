@@ -689,7 +689,7 @@ class Application extends Module implements ICoroutine
         }
 
         try {
-
+            ob_start();
             $this->state = self::STATE_BEFORE_REQUEST;
             $this->trigger(self::EVENT_BEFORE_REQUEST);
 
@@ -700,6 +700,11 @@ class Application extends Module implements ICoroutine
             $this->trigger(self::EVENT_AFTER_REQUEST);
 
             $this->state = self::STATE_SENDING_RESPONSE;
+            $data = ob_get_contents();
+            ob_end_clean();
+            if ($data) {
+                $response->data = $data;
+            }
             $response->send();
 
             $this->state = self::STATE_END;
