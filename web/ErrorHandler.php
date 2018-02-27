@@ -3,16 +3,42 @@
 namespace yii\swoole\web;
 
 use Yii;
+use yii\base\ErrorException;
 use yii\base\UserException;
 use yii\swoole\Application;
 use yii\swoole\helpers\CoroHelper;
 use yii\web\HttpException;
 
-/**
- * @property swoole_http_response swooleResponse
- */
 class ErrorHandler extends \yii\web\ErrorHandler
 {
+    private $_memoryReserve;
+
+    /**
+     * Register this error handler.
+     */
+    public function register()
+    {
+        ini_set('display_errors', false);
+        set_exception_handler([$this, 'handleException']);
+        if (defined('HHVM_VERSION')) {
+            set_error_handler([$this, 'handleHhvmError']);
+        } else {
+            set_error_handler([$this, 'handleError']);
+        }
+        if ($this->memoryReserveSize > 0) {
+            $this->_memoryReserve = str_repeat('x', $this->memoryReserveSize);
+        }
+        register_shutdown_function([$this, 'handleFatalError']);
+    }
+
+    /**
+     * Unregisters this error handler by restoring the PHP error and exception handlers.
+     */
+    public function unregister()
+    {
+        restore_error_handler();
+        restore_exception_handler();
+    }
 
     /**
      * @inheritdoc
@@ -91,6 +117,34 @@ class ErrorHandler extends \yii\web\ErrorHandler
         }
 
         $this->exception = $exception;
+
+        $this->flush($exception);
+
+        $this->exception = null;
+    }
+
+    public function handleFatalError()
+    {
+        unset($this->_memoryReserve);
+
+        // load ErrorException manually here because autoloading them will not work
+        // when error occurs while autoloading a class
+        if (!class_exists('yii\\base\\ErrorException', false)) {
+            require_once __DIR__ . '/ErrorException.php';
+        }
+
+        $error = error_get_last();
+
+        if (ErrorException::isFatalError($error)) {
+            $exception = new ErrorException($error['message'], $error['type'], $error['type'], $error['file'], $error['line']);
+            $this->exception = $exception;
+
+            $this->flush($exception);
+        }
+    }
+
+    private function flush($exception)
+    {
         $id = CoroHelper::getId();
         if (isset(Yii::$app->getSwooleServer()->currentSwooleResponse[$id])) {
             Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->status(500);
@@ -118,8 +172,6 @@ class ErrorHandler extends \yii\web\ErrorHandler
         } else {
             print_r($this->convertExceptionToArray($exception));
         }
-
-        $this->exception = null;
     }
 
 }
