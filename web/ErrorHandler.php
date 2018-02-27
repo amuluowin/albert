@@ -123,6 +123,34 @@ class ErrorHandler extends \yii\web\ErrorHandler
         $this->exception = null;
     }
 
+    public function handleError($code, $message, $file, $line)
+    {
+        if (error_reporting() & $code) {
+            // load ErrorException manually here because autoloading them will not work
+            // when error occurs while autoloading a class
+            if (!class_exists('yii\\base\\ErrorException', false)) {
+                require_once Yii::getAlias('@vendor/yiisoft/yii2/base/ErrorException.php');
+            }
+            $exception = new ErrorException($message, $code, $code, $file, $line);
+
+            // in case error appeared in __toString method we can't throw any exception
+            $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+            array_shift($trace);
+            foreach ($trace as $frame) {
+                if ($frame['function'] === '__toString') {
+                    $this->handleException($exception);
+                    if (defined('HHVM_VERSION')) {
+                        flush();
+                    }
+                }
+            }
+
+            throw $exception;
+        }
+
+        return false;
+    }
+
     public function handleFatalError()
     {
         unset($this->_memoryReserve);

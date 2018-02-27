@@ -8,6 +8,7 @@ use swoole_http_server;
 use swoole_table;
 use Yii;
 use yii\swoole\helpers\ArrayHelper;
+use yii\swoole\helpers\SerializeHelper;
 use yii\swoole\tcp\TcpTrait;
 use yii\swoole\web\HttpTrait;
 
@@ -93,6 +94,9 @@ class HttpServer extends Server
         if (method_exists($this, 'onFinish')) {
             $this->server->on('finish', [$this, 'onFinish']);
         }
+        if (method_exists($this, 'onPipeMessage')) {
+            $this->server->on('pipeMessage', [$this, 'onPipeMessage']);
+        }
 
         $this->server->set($this->config['server']);
         $this->beforeStart();
@@ -110,7 +114,7 @@ class HttpServer extends Server
 
     public function onPipeMessage($server, $from_worker_id, $message)
     {
-        print_r($message);
+        print_r(SerializeHelper::unserialize($message));
     }
 
     public static function getInstance($config)
