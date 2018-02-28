@@ -28,8 +28,7 @@ class MysqlProcess extends BaseProcess
                 $data = $recv['data'];
                 unset($recv);
                 go(function () use ($data, $worker_id) {
-                    Yii::$app->usercache->set('a', $data);
-                    $result = Yii::$app->usercache->get('a');
+                    $result = Yii::$app->db->createCommand($data)->execute();
                     //send data to master
                     $this->server->sendMessage(SerializeHelper::serialize($result), $worker_id);
                 });
