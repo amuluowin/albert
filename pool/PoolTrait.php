@@ -4,6 +4,7 @@ namespace yii\swoole\pool;
 
 use Yii;
 use yii\base\Exception;
+use yii\swoole\web\NoParamsException;
 use yii\web\ServerErrorHttpException;
 
 trait PoolTrait
