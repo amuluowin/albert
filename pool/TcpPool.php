@@ -7,8 +7,11 @@ use yii\swoole\helpers\ArrayHelper;
 
 class TcpPool extends \yii\swoole\pool\IPool
 {
-    public function createConn(string $connName)
+    public function createConn(string $connName, $conn = null)
     {
+        if ($conn) {
+            return $conn;
+        }
         $config = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['async', 'hostname', 'port', 'timeout'],
             [true, 'localhost', Yii::$app->params['swoole']['tcp']['port'], 0.5]);
         if ($config['async']) {

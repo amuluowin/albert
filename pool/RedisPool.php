@@ -7,8 +7,11 @@ use yii\swoole\helpers\ArrayHelper;
 
 class RedisPool extends \yii\swoole\pool\IPool
 {
-    public function createConn(string $connName)
+    public function createConn(string $connName, $conn = null)
     {
+        if ($conn) {
+            return $conn;
+        }
         $config = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['hostname', 'port', 'serialize'],
             ['localhost', 6379, true]);
 

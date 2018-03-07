@@ -8,8 +8,11 @@ use yii\web\ServerErrorHttpException;
 
 class HttpPool extends \yii\swoole\pool\IPool
 {
-    public function createConn(string $connName)
+    public function createConn(string $connName, $conn = null)
     {
+        if ($conn) {
+            return $conn;
+        }
         $config = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['hostname', 'port', 'timeout', 'scheme'],
             ['localhost', 80, 0.5, 'http']);
         if (($ret = swoole_async_dns_lookup_coro($config['hostname'], $config['timeout']))) {

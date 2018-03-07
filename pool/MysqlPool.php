@@ -10,10 +10,12 @@ class MysqlPool extends \yii\swoole\pool\IPool
     private $reconnect = 3;
     private $curconnect = 0;
 
-    public function createConn(string $connName)
+    public function createConn(string $connName, $conn = null)
     {
-        $conn = new \Swoole\Coroutine\MySQL();
-        $this->saveConn($connName, $conn);
+        if (!$conn) {
+            $conn = new \Swoole\Coroutine\MySQL();
+            $this->saveConn($connName, $conn);
+        }
         $this->reconnect($conn, $connName);
         return $conn;
     }

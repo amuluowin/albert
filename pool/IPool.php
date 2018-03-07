@@ -8,5 +8,5 @@ abstract class IPool extends \yii\base\Component
 {
     use PoolTrait;
 
-    abstract public function createConn(string $connName);
+    abstract public function createConn(string $connName, $conn = null);
 }

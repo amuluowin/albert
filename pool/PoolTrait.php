@@ -70,10 +70,8 @@ trait PoolTrait
         if (!isset($this->connsConfig[$connName])) {
             throw new NoParamsException("Unvalid connName: {$connName}.");
         }
-        $conn = $this->getConn($connName);
-        if (!$conn) {
-            $conn = $this->createConn($connName);
-        }
+
+        $conn = $this->createConn($connName, $this->getConn($connName));
 
         if ((($conn instanceof \Swoole\Coroutine\MySQL) && $conn->errno !== 0) ||
             (!($conn instanceof \Swoole\Coroutine\MySQL) && $conn->errCode !== 0)
