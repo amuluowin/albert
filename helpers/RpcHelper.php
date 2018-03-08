@@ -125,7 +125,7 @@ class RpcHelper extends \yii\base\Component
     public function getRpcLen()
     {
         if (!self::$_rpcLen) {
-            self::$_rpcLen = strlen(SerializeHelper::serialize($this->getRpcClass()));
+            self::$_rpcLen = strlen(implode(';', $this->getRpcClass()));
         }
         return self::$_rpcLen;
     }

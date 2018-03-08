@@ -12,6 +12,7 @@ use yii\swoole\helpers\CoroHelper;
 use yii\swoole\web\formatter\JsonResponseFormatter;
 use yii\web\CookieCollection;
 use yii\web\HeaderCollection;
+use yii\web\HttpException;
 use yii\web\RangeNotSatisfiableHttpException;
 use yii\web\ResponseFormatterInterface;
 
@@ -278,7 +279,7 @@ class Response extends \yii\base\Response
 
     public function setStatusCodeByException($e)
     {
-        if ($e instanceof Httpex) {
+        if ($e instanceof HttpException) {
             $this->setStatusCode($e->statusCode);
         } else {
             $this->setStatusCode(500);

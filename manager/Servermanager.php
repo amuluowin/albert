@@ -18,7 +18,7 @@ class Servermanager extends \yii\base\Component implements \yii\swoole\manager\I
         if (!$ser) {
             $ser = new Serverlist();
         }
-        $data['rpcs'] = SerializeHelper::serialize(Yii::$rpcList);
+        $data['rpcs'] = implode(';', Yii::$rpcList);
         $ser->load($data, '');
         Yii::$app->BaseHelper->validate($ser);
         $ser->preupdated_at = $ser->updated_at;
@@ -46,7 +46,7 @@ class Servermanager extends \yii\base\Component implements \yii\swoole\manager\I
         $ips = [];
         $srvlist = $this->getlist(['status' => 1]);
         foreach ($srvlist as $srv) {
-            $rpcs = SerializeHelper::unserialize($srv['rpcs']);
+            $rpcs = explode(';', $srv['rpcs']);
             if (in_array($appname, $rpcs)) {
                 $ips[] = $srv['host'];
             }
@@ -74,7 +74,7 @@ class Servermanager extends \yii\base\Component implements \yii\swoole\manager\I
     {
         $ips = [];
         foreach (Yii::$app->getSwooleServer()->serverTable as $host => $data) {
-            $rpcs = SerializeHelper::unserialize($data['rpcs']);
+            $rpcs = explode(';', $data['rpcs']);
             if (in_array($appname, $rpcs)) {
                 $ips[] = [$data['host'], $data['port']];
             }
