@@ -3,6 +3,7 @@
 namespace yii\swoole\web;
 
 use Yii;
+use yii\filters\ContentNegotiator;
 use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\helpers\CoroHelper;
 
@@ -61,6 +62,11 @@ trait HttpTrait
                 Yii::$app->beforeRun();
                 $appResponse = Yii::$app->getResponse();
                 $data = Yii::$app->rpc->send([$request->server['request_uri'], [Yii::$app->getRequest()->getQueryParams(), Yii::$app->getRequest()->getBodyParams()]])->recv();
+                $filter = new ContentNegotiator(['formats' => [
+                    'application/json' => Response::FORMAT_JSON,
+                    'application/xml' => Response::FORMAT_XML,
+                ]]);
+                $filter->bootstrap(Yii::$app);
                 if ($data instanceof \Exception) {
                     Yii::$app->getErrorHandler()->handleException($data);
                 } else {
