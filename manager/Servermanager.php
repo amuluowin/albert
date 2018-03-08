@@ -65,7 +65,7 @@ class Servermanager extends \yii\base\Component implements \yii\swoole\manager\I
                 $this->addserver($srv);
                 Yii::$app->getSwooleServer()->serverTable->del($srv['ip']);
             } else {
-                Yii::$app->getSwooleServer()->serverTable->set($srv['ip'], ['host' => $srv['host'], 'rpcs' => $srv['rpcs']]);
+                Yii::$app->getSwooleServer()->serverTable->set($srv['ip'], ['host' => $srv['host'], 'port' => $srv['port'], 'rpcs' => $srv['rpcs']]);
             }
         }
     }
