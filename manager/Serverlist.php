@@ -21,7 +21,7 @@ class Serverlist extends ActiveRecord
     {
         return [
             [['ip', 'status', 'updated_at', 'preupdated_at', 'port'], 'integer'],
-            [['rpcs'], 'string', 'max' => Yii::$app->RpcHelper->getRpcLen()],
+            [['rpcs'], 'string', 'max' => 2048],
             [['host'], 'string', 'max' => 16],
         ];
     }
