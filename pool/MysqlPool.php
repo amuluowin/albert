@@ -7,9 +7,6 @@ use yii\web\ServerErrorHttpException;
 
 class MysqlPool extends \yii\swoole\pool\IPool
 {
-    private $reconnect = 3;
-    private $curconnect = 0;
-
     public function createConn(string $connName, $conn = null)
     {
         if (!$conn) {
@@ -20,7 +17,7 @@ class MysqlPool extends \yii\swoole\pool\IPool
         return $conn;
     }
 
-    private function reConnect(\Swoole\Coroutine\MySQL &$conn, string $connName)
+    protected function reConnect(&$conn, string $connName)
     {
         $config = $this->connsConfig[$connName];
         if (!$conn->connected && $conn->connect(['host' => $config['host'], 'port' => $config['port'], 'user' => $config['user'], 'password' => $config['password'],

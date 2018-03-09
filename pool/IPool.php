@@ -9,4 +9,6 @@ abstract class IPool extends \yii\base\Component
     use PoolTrait;
 
     abstract public function createConn(string $connName, $conn = null);
+
+    abstract protected function reConnect(&$conn, string $connName);
 }

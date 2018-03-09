@@ -17,7 +17,6 @@ trait HttpTrait
      */
     public function onRequest($request, $response)
     {
-//        \Swoole\Coroutine::create(function () use ($request, $response) {
         $file = $this->root . '/' . $this->indexFile;
         $id = CoroHelper::getId();
 
@@ -54,12 +53,12 @@ trait HttpTrait
         Yii::$app->getUrlManager()->checkRules();
         //set request
         try {
+            Yii::$app->beforeRun();
             //判断转发RPC
             $route = substr($request->server['request_uri'], 0, strrpos($request->server['request_uri'], '/'));
             if (!in_array($route, Yii::$rpcList)
                 || in_array($route, ArrayHelper::getValue(Yii::$app->params, 'rpcCoR', []))
             ) {
-                Yii::$app->beforeRun();
                 $appResponse = Yii::$app->getResponse();
                 $appResponse->data = Yii::$app->rpc->send([$request->server['request_uri'], [Yii::$app->getRequest()->getQueryParams(), Yii::$app->getRequest()->getBodyParams()]])->recv();
                 $filter = new ContentNegotiator(['formats' => [
@@ -93,6 +92,5 @@ trait HttpTrait
             Yii::getLogger()->flush(true);
             Yii::$app->release();
         }
-//        });
     }
 }

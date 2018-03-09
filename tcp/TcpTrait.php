@@ -12,12 +12,9 @@ trait TcpTrait
 {
     public function onReceive($serv, $fd, $from_id, $data)
     {
-//        \Swoole\Coroutine::create(function () use ($serv, $fd, $from_id, $data) {
         $data = TcpPack::decode($data, 'tcp');
         $data = ArrayHelper::merge([$serv, $fd, $from_id], $data);
         $this->run(...$data);
-
-//        });
     }
 
     public function run($serv, $fd, $form_id, $function, $params, $IP = '127.0.0.1', $traceId = null, $fastcall = false)

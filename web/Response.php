@@ -711,4 +711,9 @@ class Response extends \yii\base\Response
     {
         return in_array($this->getStatusCode(), [201, 204, 304]);
     }
+
+    public function websocketPrepare()
+    {
+        $this->prepare();
+    }
 }

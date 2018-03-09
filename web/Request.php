@@ -58,8 +58,21 @@ class Request extends \yii\web\Request
             foreach ($headers as $name => $value) {
                 $this->_headers[$id]->add($name, $value);
             }
+            $this->filterHeaders($this->_headers[$id]);
         }
         return $this->_headers[$id];
+    }
+
+    public function setHeaders($headers)
+    {
+        $id = CoroHelper::getId();
+        if (!isset($this->_headers[$id])) {
+            $this->_headers[$id] = new HeaderCollection();
+            foreach ($headers as $name => $value) {
+                $this->_headers[$id]->add($name, $value);
+            }
+            $this->filterHeaders($this->_headers[$id]);
+        }
     }
 
     private $_post = [];

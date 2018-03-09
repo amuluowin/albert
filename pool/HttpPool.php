@@ -3,6 +3,7 @@
 namespace yii\swoole\pool;
 
 use Yii;
+use yii\base\NotSupportedException;
 use yii\swoole\helpers\ArrayHelper;
 use yii\web\ServerErrorHttpException;
 
@@ -24,5 +25,10 @@ class HttpPool extends \yii\swoole\pool\IPool
             return $conn;
         }
         throw new ServerErrorHttpException("Can not connect to {$connName}: " . $config['hostname'] . ':' . $config['port']);
+    }
+
+    protected function reConnect(&$conn, string $connName)
+    {
+        throw new NotSupportedException('Coroutine HttpClient Not Supported this function');
     }
 }

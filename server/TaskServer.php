@@ -36,14 +36,12 @@ class TaskServer extends Server
 
     public function onReceive($serv, $fd, $from_id, $data)
     {
-//        \Swoole\Coroutine::create(function () use ($serv, $fd, $from_id, $data) {
-            $param = array(
-                'fd' => $fd,
-                'data' => TcpPack::decode($data, 'task')
-            );
-            // start a task
-            $serv->task(json_encode($param));
-//        });
+        $param = array(
+            'fd' => $fd,
+            'data' => TcpPack::decode($data, 'task')
+        );
+        // start a task
+        $serv->task(json_encode($param));
     }
 
     public function onTask($serv, $task_id, $from_id, $data)

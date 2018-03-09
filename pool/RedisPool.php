@@ -8,8 +8,6 @@ use yii\web\ServerErrorHttpException;
 
 class RedisPool extends \yii\swoole\pool\IPool
 {
-    private $reconnect = 3;
-    private $curconnect = 0;
 
     public function createConn(string $connName, $conn = null)
     {
@@ -22,7 +20,7 @@ class RedisPool extends \yii\swoole\pool\IPool
         return $conn;
     }
 
-    private function reConnect(\Swoole\Coroutine\Redis &$conn, string $connName)
+    protected function reConnect(&$conn, string $connName)
     {
         $config = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['hostname', 'port', 'serialize'],
             ['localhost', 6379, true]);

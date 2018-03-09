@@ -3,7 +3,6 @@
 namespace yii\swoole\manager;
 
 use Yii;
-use yii\swoole\helpers\SerializeHelper;
 
 class Servermanager extends \yii\base\Component implements \yii\swoole\manager\IServermanager
 {

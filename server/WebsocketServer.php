@@ -9,7 +9,9 @@ use swoole_table;
 use swoole_websocket_frame;
 use swoole_websocket_server;
 use Yii;
+use yii\filters\ContentNegotiator;
 use yii\helpers\ArrayHelper;
+use yii\swoole\web\Response;
 
 /**
  * WebSocket服务器
@@ -30,49 +32,52 @@ class WebsocketServer extends HttpServer
 //        if (Yii::$app->getUser()->getIsGuest()) {
 //            $server->close($request->fd);
 //        } else {
-        Yii::$app->cache->set('websocketheaders', $request->header, \ShmCache::NEVER_EXPIRED);
-        Yii::$app->cache->set(Yii::$app->getUser()->getId(), ['fd' => $request->fd]);
+        Yii::$app->cache->set('websocketheaders', $request->header);
+        Yii::$app->usercache->set(Yii::$app->getUser()->getId(), ['fd' => $request->fd]);
 //        }
     }
 
     public function onMessage(swoole_server $server, swoole_websocket_frame $frame)
     {
-//        \Swoole\Coroutine::create(function () use ($server, $frame) {
         $result = ['status' => 503, 'code' => 0, 'message' => '传递参数有误', 'data' => []];
 
         $data = json_decode($frame->data, true);
         if (($cmd = ArrayHelper::getValue($data, 'cmd')) === null) {
-            $server->push($frame->fd, $result);
+            $server->push($frame->fd, json_encode($result));
         } else {
             //准备工作
-            $this->app->getRequest()->setUrl(null);
-            $app = clone $this->app;
-            Yii::$app = &$app;
-            $app->setRequest(clone $this->app->getRequest());
-            $app->setResponse(clone $this->app->getResponse());
-            $data = ArrayHelper::getValue($data, 'data', []);
-            $app->getRequest()->setBodyParams($data);
-            $app->getRequest()->setRawBody(json_encode($data));
-            $app->getRequest()->setHeaders(Yii::$app->cache->get('websocketheaders'));
+            $request = Yii::$app->getRequest();
+            $response = Yii::$app->getResponse();
+
             $query = ArrayHelper::getValue($data, 'query', []);
-            $app->getRequest()->setQueryParams($query);
-            $app->setSession(clone $this->app->getSession());
-            $app->setUser(clone $this->app->getUser());
-            $app->setErrorHandler(clone $this->app->getErrorHandler());
-            $app->refresh();
+            $data = ArrayHelper::getValue($data, 'data', []);
+            $request->setHeaders(Yii::$app->cache->get('websocketheaders'));
+            Yii::$app->beforeRun();
             try {
-                $result = $app->runAction($cmd, $query);
+                //判断转发RPC
+                $route = substr($cmd, 0, strrpos($cmd, '/'));
+                if (!in_array($route, Yii::$rpcList)
+                    || in_array($route, ArrayHelper::getValue(Yii::$app->params, 'rpcCoR', []))
+                ) {
+                    $response->data = Yii::$app->rpc->send([$cmd, [$query, $data]])->recv();
+                    $response->format = 'json';
+                } else {
+                    $request->setBodyParams($data);
+                    $request->setHostInfo(null);
+                    $request->setUrl($cmd);
+                    $request->setRawBody(json_encode($data));
+                    $request->setQueryParams($query);
+                    $response->data = Yii::$app->runAction($cmd, $query);
+                }
             } catch (\Exception $e) {
                 Yii::error($e->getMessage());
             } finally {
-                $app->afterRun();
-                // 还原环境变量
-                Yii::$app = $this->app;
-                unset($app);
-                $server->push($frame->fd, json_encode($result));
+                $response->websocketPrepare();
+                $server->push($frame->fd, $response->content);
+                Yii::getLogger()->flush(true);
+                Yii::$app->release();
             }
         }
-//        });
     }
 
     public function onClose($server, $fd, $from_id)

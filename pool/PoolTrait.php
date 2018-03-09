@@ -16,6 +16,9 @@ trait PoolTrait
     protected $connsConfig = [];
     protected $connsNameMap = [];
 
+    protected $reconnect = 3;
+    protected $curconnect = 0;
+
     public function create(string $connName, array $config)
     {
         $this->connsConfig[$connName] = $config;

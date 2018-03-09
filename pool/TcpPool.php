@@ -4,23 +4,33 @@ namespace yii\swoole\pool;
 
 use Yii;
 use yii\swoole\helpers\ArrayHelper;
+use yii\web\ServerErrorHttpException;
 
 class TcpPool extends \yii\swoole\pool\IPool
 {
     public function createConn(string $connName, $conn = null)
     {
-        if ($conn) {
-            return $conn;
+        if (!$conn) {
+            $conn = new \Swoole\Coroutine\Client(SWOOLE_SOCK_TCP | SWOOLE_KEEP);
+            $this->saveConn($connName, $conn);
         }
+        $this->reConnect($conn, $connName);
+        return $conn;
+    }
+
+    protected function reConnect(&$conn, string $connName)
+    {
         $config = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['async', 'hostname', 'port', 'timeout'],
             [true, 'localhost', Yii::$app->params['swoole']['tcp']['port'], 0.5]);
-        if ($config['async']) {
-            $conn = new \Swoole\Coroutine\Client(SWOOLE_SOCK_TCP | SWOOLE_KEEP);
-        } else {
-            $conn = new \swoole_client(SWOOLE_SOCK_TCP | SWOOLE_KEEP);
+        if (!$conn->isConnected() && $conn->connect($config['hostname'], $config['port'], $config['timeout']) == false
+        ) {
+            if ($this->reconnect <= $this->curconnect) {
+                $this->curconnect = 0;
+                throw new ServerErrorHttpException($conn->error);
+            } else {
+                $this->curconnect++;
+                $this->reConnect($conn, $connName);
+            }
         }
-        $this->saveConn($connName, $conn);
-        $conn->connect($config['hostname'], $config['port'], $config['timeout']);
-        return $conn;
     }
 }
