@@ -58,9 +58,7 @@ class Servermanager extends \yii\base\Component implements \yii\swoole\manager\I
     {
         $srvlist = $this->getlist();
         foreach ($srvlist as $srv) {
-            if ($srv['ip'] == $this->appconfig['ip']) {
-                Yii::$app->getSwooleServer()->serverTable->del($srv['ip']);
-            } elseif ($this->time_diff * 1000 < $srv['updated_at'] - $srv['preupdated_at']) {
+            if ($this->time_diff * 1000 < $srv['updated_at'] - $srv['preupdated_at']) {
                 $srv['status'] = 2;
                 $this->addserver($srv);
                 Yii::$app->getSwooleServer()->serverTable->del($srv['ip']);

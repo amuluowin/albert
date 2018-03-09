@@ -44,7 +44,7 @@ trait TcpTrait
                 $this->setLog($result);
             } catch (\Exception $e) {
                 if (!$fastcall) {
-                    $serv->send($fd, TcpPack::encode($e, 'tcp'));
+                    $serv->send($fd, TcpPack::encode(Yii::$app->getErrorHandler()->converter($e, 'convertExceptionToArray'), 'tcp'));
                 }
 
                 $this->setLog($e);

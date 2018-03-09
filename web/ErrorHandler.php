@@ -202,4 +202,9 @@ class ErrorHandler extends \yii\web\ErrorHandler
         }
     }
 
+    public function converter($exception, $method)
+    {
+        return $this->{$method}($exception);
+    }
+
 }
