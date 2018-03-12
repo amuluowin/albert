@@ -11,7 +11,7 @@ namespace yii\swoole\web;
 use Yii;
 use yii\base\BaseObject;
 
-class WebsocketUser extends BaseObject implements WsUserInterface
+class WebsocketAuth extends BaseObject implements WsAuthInterface
 {
     public function handShake($server, $request)
     {

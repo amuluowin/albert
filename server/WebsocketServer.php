@@ -9,9 +9,7 @@ use swoole_table;
 use swoole_websocket_frame;
 use swoole_websocket_server;
 use Yii;
-use yii\filters\ContentNegotiator;
 use yii\helpers\ArrayHelper;
-use yii\swoole\web\Response;
 
 /**
  * WebSocket服务器
@@ -22,6 +20,8 @@ class WebsocketServer extends HttpServer
 {
     private static $instance;
 
+    private $wsUser;
+
     protected function createServer()
     {
         $this->server = new swoole_websocket_server($this->config['host'], $this->config['port'], $this->config['type']);
@@ -29,12 +29,17 @@ class WebsocketServer extends HttpServer
 
     function onOpen($server, $request)
     {
-//        if (Yii::$app->getUser()->getIsGuest()) {
-//            $server->close($request->fd);
-//        } else {
-        Yii::$app->cache->set('websocketheaders', $request->header);
-        Yii::$app->usercache->set(Yii::$app->getUser()->getId(), ['fd' => $request->fd]);
-//        }
+        if (isset($this->config['wsUser']) && !$this->wsUser) {
+            $this->wsUser = Yii::createObject($this->config['wsUser']);
+        } else {
+            $server->close($request->fd);
+            return;
+        }
+
+        if (!$this->wsUser->handShake($server, $request)) {
+            $server->close($request->fd);
+            return;
+        }
     }
 
     public function onMessage(swoole_server $server, swoole_websocket_frame $frame)
@@ -75,7 +80,7 @@ class WebsocketServer extends HttpServer
                 Yii::error($e->getMessage());
             } finally {
                 $response->websocketPrepare();
-                $server->push($to ?: $frame->fd, $response->content);
+                $server->push($to ? Yii::$app->usercache->get('wsclient:' . $to)['fd'] : $frame->fd, $response->content);
                 Yii::getLogger()->flush(true);
                 Yii::$app->release();
             }

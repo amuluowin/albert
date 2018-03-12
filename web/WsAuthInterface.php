@@ -9,7 +9,7 @@
 namespace yii\swoole\web;
 
 
-interface WsUserInterface
+interface WsAuthInterface
 {
     public function handShake($server, $request);
 }
