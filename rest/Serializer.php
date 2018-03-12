@@ -157,6 +157,9 @@ class Serializer extends Component
             if ($data->_meta !== null) {
                 $res['_meta'] = $data->_meta;
             }
+            if ($data->type !== null) {
+                $res['type'] = $data->type;
+            }
             return $res;
         } else {
             return array("status" => 200, "code" => 0, "message" => Yii::t('custom', "操作成功!"), "data" => $data);

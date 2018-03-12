@@ -85,7 +85,11 @@ class WebsocketServer extends HttpServer
                 Yii::error($e->getMessage());
             } finally {
                 $response->websocketPrepare();
-                $this->wsSend->sendTo($server, $response->content, null, $frame->fd, $to);
+                if (is_array($response->data) && isset($response->data['type'])) {
+                    $this->wsSend->{$response->data['type']}($server, $response->content, $to ? Yii::$app->usercache->get('wsclient:' . $to)['fd'] : $frame->fd);
+                } else {
+                    $this->wsSend->send($server, $response->content, $to ? Yii::$app->usercache->get('wsclient:' . $to)['fd'] : $frame->fd);
+                }
                 Yii::getLogger()->flush(true);
                 Yii::$app->release();
             }

@@ -11,5 +11,7 @@ namespace yii\swoole\web;
 
 interface WsSendInterface
 {
-    public function sendTo($server, $data, $callback = null, $fd = null, $to = null);
+    public function send($server, $data, $to = null);
+
+    public function sendDataByUser($server, $data);
 }
