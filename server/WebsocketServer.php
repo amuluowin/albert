@@ -20,7 +20,9 @@ class WebsocketServer extends HttpServer
 {
     private static $instance;
 
-    private $wsUser;
+    private $wsAuth;
+
+    private $wsSend;
 
     protected function createServer()
     {
@@ -29,16 +31,20 @@ class WebsocketServer extends HttpServer
 
     function onOpen($server, $request)
     {
-        if (isset($this->config['wsUser']) && !$this->wsUser) {
-            $this->wsUser = Yii::createObject($this->config['wsUser']);
+        if (isset($this->config['wsAuth']) && !$this->wsAuth) {
+            $this->wsAuth = Yii::createObject($this->config['wsAuth']);
         } else {
             $server->close($request->fd);
             return;
         }
 
-        if (!$this->wsUser->handShake($server, $request)) {
+        if (!$this->wsAuth->handShake($server, $request)) {
             $server->close($request->fd);
             return;
+        }
+
+        if (isset($this->config['wsSend']) && !$this->wsSend) {
+            $this->wsSend = Yii::createObject($this->config['wsSend']);
         }
     }
 
@@ -57,7 +63,7 @@ class WebsocketServer extends HttpServer
             $query = ArrayHelper::getValue($data, 'query', []);
             $body = ArrayHelper::getValue($data, 'data', []);
             $to = ArrayHelper::getValue($data, 'sendto');
-            
+
             Yii::$app->beforeRun();
             try {
                 //判断转发RPC
@@ -79,7 +85,7 @@ class WebsocketServer extends HttpServer
                 Yii::error($e->getMessage());
             } finally {
                 $response->websocketPrepare();
-                $server->push($to ? Yii::$app->usercache->get('wsclient:' . $to)['fd'] : $frame->fd, $response->content);
+                $this->wsSend->sendTo($server, $response->content, null, $frame->fd, $to);
                 Yii::getLogger()->flush(true);
                 Yii::$app->release();
             }
