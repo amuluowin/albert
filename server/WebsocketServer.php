@@ -50,7 +50,9 @@ class WebsocketServer extends HttpServer
             $response = Yii::$app->getResponse();
 
             $query = ArrayHelper::getValue($data, 'query', []);
-            $data = ArrayHelper::getValue($data, 'data', []);
+            $body = ArrayHelper::getValue($data, 'data', []);
+            $to = ArrayHelper::getValue($data, 'sendto');
+
             $request->setHeaders(Yii::$app->cache->get('websocketheaders'));
             Yii::$app->beforeRun();
             try {
@@ -59,13 +61,13 @@ class WebsocketServer extends HttpServer
                 if (!in_array($route, Yii::$rpcList)
                     || in_array($route, ArrayHelper::getValue(Yii::$app->params, 'rpcCoR', []))
                 ) {
-                    $response->data = Yii::$app->rpc->send([$cmd, [$query, $data]])->recv();
+                    $response->data = Yii::$app->rpc->send([$cmd, [$query, $body]])->recv();
                     $response->format = 'json';
                 } else {
-                    $request->setBodyParams($data);
+                    $request->setBodyParams($body);
                     $request->setHostInfo(null);
                     $request->setUrl($cmd);
-                    $request->setRawBody(json_encode($data));
+                    $request->setRawBody(json_encode($body));
                     $request->setQueryParams($query);
                     $response->data = Yii::$app->runAction($cmd, $query);
                 }
@@ -73,7 +75,7 @@ class WebsocketServer extends HttpServer
                 Yii::error($e->getMessage());
             } finally {
                 $response->websocketPrepare();
-                $server->push($frame->fd, $response->content);
+                $server->push($to ?: $frame->fd, $response->content);
                 Yii::getLogger()->flush(true);
                 Yii::$app->release();
             }

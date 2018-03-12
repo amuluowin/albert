@@ -66,7 +66,7 @@ class Request extends \yii\web\Request
     public function setHeaders($headers)
     {
         $id = CoroHelper::getId();
-        if (!isset($this->_headers[$id])) {
+        if (!isset($this->_headers[$id]) && is_array($headers)) {
             $this->_headers[$id] = new HeaderCollection();
             foreach ($headers as $name => $value) {
                 $this->_headers[$id]->add($name, $value);
