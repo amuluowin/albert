@@ -18,10 +18,7 @@ class WebsocketAuth extends BaseObject implements WsAuthInterface
         if (!isset($request->get['auth_token'])) {
             return false;
         }
-        Yii::$app->cache->set('websocketheaders', $request->header);
         Yii::$app->usercache->set('wsclient:' . $request->get['auth_token'], ['fd' => $request->fd]);
         return true;
     }
-
-
 }

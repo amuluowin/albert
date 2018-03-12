@@ -57,8 +57,7 @@ class WebsocketServer extends HttpServer
             $query = ArrayHelper::getValue($data, 'query', []);
             $body = ArrayHelper::getValue($data, 'data', []);
             $to = ArrayHelper::getValue($data, 'sendto');
-
-            $request->setHeaders(Yii::$app->cache->get('websocketheaders'));
+            
             Yii::$app->beforeRun();
             try {
                 //判断转发RPC
