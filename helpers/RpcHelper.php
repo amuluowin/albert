@@ -41,7 +41,7 @@ class RpcHelper extends \yii\base\Component
                 self::$_modules[$m] = $v->id;
             }
             if ($v->modules) {
-                self::$_modules = ArrayHelper::merge(self::$_modules, $this->getModuleList($v->modules));
+                $this->getModuleList($v->modules);
             }
         }
     }
@@ -73,22 +73,25 @@ class RpcHelper extends \yii\base\Component
                 $data = explode('/', str_replace([Yii::getAlias('@addons/'), 'controllers/', 'Controller.php'], ['', '', ''], $file));
                 $basename = '';
                 foreach ($data as $index => $value) {
-                    if ($index === count($data) - 1) {
+                    if ($index === count($data) - 1 && $basename != '') {
                         $basename .= '/' . strtolower($value);
                     } else {
                         $module = $this->findModule($value);
                         $basename .= $module ? '/' . $module : '';
                     }
                 }
-                if (!in_array($basename, $logics)) {
+                if ($basename && !in_array($basename, $logics)) {
                     $logics[] = $basename;
                 }
             } elseif (strpos($file, '.php') !== false &&
                 (strpos($file, 'modellogic') !== false || strpos($file, 'customba'))
             ) {
                 $basename = 'addons' . substr(str_replace('/', '\\', str_replace(Yii::getAlias('@addons'), '', $file)), 0, -4);
-                if (!in_array($basename, $logics)) {
-                    $logics[] = $basename;
+                if (preg_match("/\\\(.*?)\\\modellogic/", $basename, $m) &&
+                    isset($m[1]) && $this->findModule($m[1])) {
+                    if ($basename && !in_array($basename, $logics)) {
+                        $logics[] = $basename;
+                    }
                 }
             }
         }
