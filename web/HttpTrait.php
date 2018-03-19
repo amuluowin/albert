@@ -87,7 +87,7 @@ trait HttpTrait
                 Yii::$app->getErrorHandler()->handleException($e);
             }
         } finally {
-//            Yii::$app->clog->upload();
+            Yii::$app->clog->upload();
             //结束
             Yii::getLogger()->flush(true);
             Yii::$app->release();

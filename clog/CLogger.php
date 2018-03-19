@@ -32,12 +32,13 @@ class CLogger extends Component
     public function upload()
     {
         $response = Yii::$app->getResponse();
-        $data = $response->getData();
+        $request = Yii::$app->getRequest();
         $model = new MsgModel();
-        $model->route = [Yii::$app->requestedAction->controller->id => Yii::$app->requestedAction->id];
-        $model->created_at = time();
+        $model->route = $request->pathInfo;
+        $model->created_at = date('Y-m-d H:i:s', time());
         $model->status = $response->getStatusCode();
-        $model->message = is_array($data) ? ArrayHelper::getValue($data, 'message') : null;
+        $model->message = $response->content;
+        $model->traceId = $request->getTraceId();
         return $this->reporter->upload([['clog', 'collect'], [$model->toArray()]]);
     }
 

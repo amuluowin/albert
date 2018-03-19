@@ -8,17 +8,9 @@ use yii\swoole\clog\model\MsgModel;
 
 abstract class BaseCollecter extends Component
 {
-    protected $_logs;
-    public $max_num = 50;
-
     public function save(MsgModel $model)
     {
-        $this->_logs[] = $model->toArray();
-        if (count($this->_logs) === $this->max_num) {
-            $this->write($this->_logs);
-            unset($this->_logs);
-            $this->_logs = [];
-        }
+        $this->write($model->toArray());
     }
 
     abstract function write($data);

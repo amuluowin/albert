@@ -11,11 +11,12 @@ class MsgModel extends Model
     public $created_at;
     public $status;
     public $message;
+    public $traceId;
 
     public function rules()
     {
         return [
-            [['route', 'created_at', 'status', 'message'], 'required'],
+            [['route', 'created_at', 'status', 'message', 'traceId'], 'required'],
             [['status', 'created_at'], 'integer']
         ];
     }

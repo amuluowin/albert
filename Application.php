@@ -182,12 +182,10 @@ class Application extends Module implements ICoroutine
 
     public function release()
     {
-        $this->getRequest()->clear();
-        $this->getResponse()->clear();
-        $this->getSession()->close();
         //清理request,response
         $id = CoroHelper::getId();
         unset($this->_swooleServer->currentSwooleRequest[$id]);
+        unset($this->_swooleServer->currentSwooleResponse[$id]);
         //清理属性
         $this->clearProperty();
         //回收组件

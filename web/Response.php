@@ -8,6 +8,7 @@ use yii\base\InvalidParamException;
 use yii\helpers\Inflector;
 use yii\helpers\StringHelper;
 use yii\helpers\Url;
+use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\helpers\CoroHelper;
 use yii\swoole\web\formatter\JsonResponseFormatter;
 use yii\web\CookieCollection;
@@ -16,7 +17,7 @@ use yii\web\HttpException;
 use yii\web\RangeNotSatisfiableHttpException;
 use yii\web\ResponseFormatterInterface;
 
-class Response extends \yii\base\Response
+class Response extends \yii\base\Response implements ICoroutine
 {
 
     const EVENT_BEFORE_SEND = 'beforeSend';
@@ -715,5 +716,10 @@ class Response extends \yii\base\Response
     public function websocketPrepare()
     {
         $this->prepare();
+    }
+
+    public function release()
+    {
+        $this->clear();
     }
 }

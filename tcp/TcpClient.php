@@ -44,6 +44,7 @@ class TcpClient extends BaseClient implements ICoroutine
         $this->trigger(self::EVENT_BEFORE_RECV);
         $result = $this->getClient()->recv();
         list($class, $params) = $this->pack;
+        $class = Yii::createObject($class);
         $result = $class->decode(...[$result, $params]);
         $this->setData($result);
         $this->trigger(self::EVENT_AFTER_RECV);
@@ -78,6 +79,7 @@ class TcpClient extends BaseClient implements ICoroutine
         $this->setData($data);
         $this->trigger(self::EVENT_BEFORE_SEND);
         list($class, $params) = $this->pack;
+        $class = Yii::createObject($class);
         $data = $class->encode(...([$this->getData(), $params]));
         $this->getClient()->send($data);
         $this->trigger(self::EVENT_AFTER_SEND);

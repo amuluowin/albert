@@ -5,6 +5,7 @@ namespace yii\swoole\web;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\helpers\StringHelper;
+use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\helpers\CoroHelper;
 use yii\web\Cookie;
 use yii\web\CookieCollection;
@@ -14,7 +15,7 @@ use yii\web\RequestParserInterface;
 /**
  * @property swoole_http_request swooleRequest
  */
-class Request extends \yii\web\Request
+class Request extends \yii\web\Request implements ICoroutine
 {
     /**
      * @var CookieCollection Collection of request cookies.
@@ -864,16 +865,20 @@ class Request extends \yii\web\Request
     {
         $id = CoroHelper::getId();
         if (!isset($this->_traceId[$id])) {
-            return Yii::$app->BaseHelper->guid();
+            $this->_traceId[$id] = Yii::$app->BaseHelper->guid();
         }
         return $this->_traceId[$id];
     }
 
-    public function setTraceId($id)
+    public function setTraceId($tid)
     {
         $id = CoroHelper::getId();
-        $this->_traceId[$id] = $id;
+        $this->_traceId[$id] = $tid;
     }
 
 
+    public function release()
+    {
+        $this->clear();
+    }
 }

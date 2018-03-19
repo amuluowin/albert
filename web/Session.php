@@ -4,6 +4,7 @@ namespace yii\swoole\web;
 
 use Yii;
 use yii\swoole\Application;
+use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\helpers\CoroHelper;
 use yii\swoole\helpers\SerializeHelper;
 use yii\web\Cookie;
@@ -14,7 +15,7 @@ use yii\web\Cookie;
  * @property string sessionKey
  * @property swoole_http_response swooleResponse
  */
-class Session extends \yii\web\Session
+class Session extends \yii\web\Session implements ICoroutine
 {
     /**
      * @var string
@@ -443,5 +444,10 @@ class Session extends \yii\web\Session
         $id = CoroHelper::getId();
         $this->open();
         unset($_SESSION[$id][$offset]);
+    }
+
+    public function release()
+    {
+        $this->close();
     }
 }
