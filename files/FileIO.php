@@ -18,10 +18,12 @@ class FileIO
     {
         if (Application::$workerApp) {
             try {
-                if (($fp = @fopen($filename, $flags ? "a" : "w")) === false) {
+                if (($fp = @fopen($filename, $flags ? "a+" : "w+")) === false) {
                     throw new InvalidConfigException("Unable to open file: $filename");
                 }
+                @flock($fp, LOCK_EX);
                 \Swoole\Coroutine::fwrite($fp, $data);
+                @flock($fp, LOCK_UN);
                 @fclose($fp);
                 return true;
             } catch (\Exception $e) {
@@ -41,7 +43,9 @@ class FileIO
                 if (($fp = @fopen($filename, 'r+')) === false) {
                     throw new InvalidConfigException("Unable to open file: $filename");
                 }
+                @flock($fp, LOCK_SH);
                 $content = \Swoole\Coroutine::fread($fp);
+                @flock($fp, LOCK_UN);
                 @fclose($fp);
                 return $content;
             } catch (\Exception $e) {

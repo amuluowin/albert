@@ -11,6 +11,7 @@ class CLogger extends Component
 {
     public $reporter;
     public $collecter;
+    public $enabled = false;
 
     public function init()
     {
@@ -31,15 +32,17 @@ class CLogger extends Component
 
     public function upload()
     {
-        $response = Yii::$app->getResponse();
-        $request = Yii::$app->getRequest();
-        $model = new MsgModel();
-        $model->route = $request->pathInfo;
-        $model->created_at = date('Y-m-d H:i:s', time());
-        $model->status = $response->getStatusCode();
-        $model->message = $response->content;
-        $model->traceId = $request->getTraceId();
-        return $this->reporter->upload([['clog', 'collect'], [$model->toArray()]]);
+        if ($this->enabled) {
+            $response = Yii::$app->getResponse();
+            $request = Yii::$app->getRequest();
+            $model = new MsgModel();
+            $model->route = $request->pathInfo;
+            $model->created_at = date('Y-m-d H:i:s', time());
+            $model->status = $response->getStatusCode();
+            $model->message = $response->content;
+            $model->traceId = $request->getTraceId();
+            return $this->reporter->upload([['clog', 'collect'], [$model->toArray()]]);
+        }
     }
 
     public function collect($data)
