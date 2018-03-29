@@ -5,7 +5,6 @@ namespace yii\swoole\clog;
 use Yii;
 use yii\base\Component;
 use yii\swoole\clog\model\MsgModel;
-use yii\swoole\helpers\ArrayHelper;
 
 class CLogger extends Component
 {
