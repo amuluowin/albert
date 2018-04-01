@@ -10,14 +10,16 @@ class ProcessServer implements IProcessServer
 {
     public static $instance;
 
-    public function start($config)
+    public function start($config, $work)
     {
-        Yii::$app->backendwork->startAll(ArrayHelper::getValue($config, 'common'));
+        if ($work) {
+            $work->startAll(ArrayHelper::getValue($config, 'common'));
+        }
     }
 
-    public function stop()
+    public function stop($work)
     {
-        Yii::$app->backendwork->stopAll();
+        $work->stopAll();
     }
 
     public static function getInstance()

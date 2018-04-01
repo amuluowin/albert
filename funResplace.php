@@ -493,18 +493,6 @@ namespace yii\swoole\behaviors {
     }
 }
 
-namespace yii\swoole\clog {
-    function call_user_func_array(...$params)
-    {
-        return \albert\yii\func_array(...$params);
-    }
-
-    function call_user_func(...$params)
-    {
-        return \albert\yii\func(...$params);
-    }
-}
-
 namespace yii\swoole\commands {
     function call_user_func_array(...$params)
     {
@@ -881,6 +869,54 @@ namespace yii\swoole\queue\helpers {
 }
 
 namespace yii\swoole\queue\jobs {
+    function call_user_func_array(...$params)
+    {
+        return \albert\yii\func_array(...$params);
+    }
+
+    function call_user_func(...$params)
+    {
+        return \albert\yii\func(...$params);
+    }
+}
+
+namespace yii\swoole\kafka {
+    function call_user_func_array(...$params)
+    {
+        return \albert\yii\func_array(...$params);
+    }
+
+    function call_user_func(...$params)
+    {
+        return \albert\yii\func(...$params);
+    }
+}
+
+namespace yii\swoole\kafka\Consumer {
+    function call_user_func_array(...$params)
+    {
+        return \albert\yii\func_array(...$params);
+    }
+
+    function call_user_func(...$params)
+    {
+        return \albert\yii\func(...$params);
+    }
+}
+
+namespace yii\swoole\kafka\Producer {
+    function call_user_func_array(...$params)
+    {
+        return \albert\yii\func_array(...$params);
+    }
+
+    function call_user_func(...$params)
+    {
+        return \albert\yii\func(...$params);
+    }
+}
+
+namespace yii\swoole\socket {
     function call_user_func_array(...$params)
     {
         return \albert\yii\func_array(...$params);

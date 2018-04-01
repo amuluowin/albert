@@ -8,21 +8,21 @@
 
 namespace yii\swoole\kafka;
 
+use Kafka\ProducerConfig;
 use Psr\Log\LoggerInterface;
 use Yii;
-use Kafka\Config;
-use Kafka\Producer;
-use Kafka\ProducerConfig;
 use yii\base\BaseObject;
+use yii\swoole\kafka\Producer\CoroProducer;
 
-class KProducer extends BaseObject implements IKafkaControl
+class KProducer extends BaseObject
 {
+    private $producer;
 
-    public function start(LoggerInterface $logger)
+    public function start(LoggerInterface $logger = null)
     {
         $config = ProducerConfig::getInstance();
         $config->setMetadataRefreshIntervalMs(10000);
-        $config->setMetadataBrokerList('127.0.0.1:9093');
+        $config->setMetadataBrokerList('localhost:9092');
         $config->setBrokerVersion('1.0.0');
         $config->setRequiredAck(1);
         $config->setIsAsyn(false);
@@ -40,22 +40,16 @@ class KProducer extends BaseObject implements IKafkaControl
 //        $config->setSslLocalPk('/home/vagrant/code/kafka-php/ca-key');
 //        $config->setSslPassphrase('123456');
 //        $config->setSslPeerName('nmred');
-        $producer = new Producer(function () {
-            return [
-                [
-                    'topic' => 'test',
-                    'value' => 'test....message.',
-                    'key' => '',
-                ],
-            ];
-        });
-        $producer->setLogger($logger);
-        $producer->success(function ($result): void {
-            var_dump($result);
-        });
-        $producer->error(function ($errorCode): void {
-            var_dump($errorCode);
-        });
-        $producer->send(true);
+        $this->producer = new CoroProducer();
+        if ($logger) {
+            $this->producer->setLogger($logger);
+        }
+    }
+
+    public function send($data)
+    {
+        if ($this->producer) {
+            $this->producer->send($data);
+        }
     }
 }

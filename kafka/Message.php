@@ -21,7 +21,7 @@ class Message
      */
     public function getMessage(): array
     {
-        return $this->message;
+        return $this->message ?: [];
     }
 
     /**

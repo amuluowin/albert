@@ -1,17 +1,16 @@
 <?php
 
-namespace yii\swoole\tcp;
+namespace yii\swoole\socket;
 
 use Yii;
 use yii\swoole\coroutine\BaseClient;
 use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\helpers\CoroHelper;
 
-class TcpClient extends BaseClient implements ICoroutine
+class SocketClient extends BaseClient implements ICoroutine
 {
     public $timeout = 0.5;
     public $async = true;
-    public $pack = ['yii\swoole\pack\TcpPack', 'tcp'];
     private $client = [];
     private $data = [];
 
@@ -43,9 +42,6 @@ class TcpClient extends BaseClient implements ICoroutine
     {
         $this->trigger(self::EVENT_BEFORE_RECV);
         $result = $this->getClient()->recv();
-        list($class, $params) = $this->pack;
-        $class = Yii::createObject($class);
-        $result = $class->decode(...[$result, $params]);
         $this->setData($result);
         $this->trigger(self::EVENT_AFTER_RECV);
         $this->release();
@@ -55,12 +51,12 @@ class TcpClient extends BaseClient implements ICoroutine
     public function send($uri, $port, $data)
     {
         $serverIp = ip2long($uri);
-        $key = md5('corotcp:' . $serverIp);
-        if (!Yii::$container->hasSingleton('tcpclient')) {
-            Yii::$container->setSingleton('tcpclient', [
+        $key = md5('corosocket:' . $serverIp);
+        if (!Yii::$container->hasSingleton('socketclient')) {
+            Yii::$container->setSingleton('socketclient', [
                 'class' => 'yii\swoole\pool\TcpPool'
             ]);
-            $conn = Yii::$container->get('tcpclient')->create($key,
+            $conn = Yii::$container->get('socketclient')->create($key,
                 [
                     'hostname' => $uri,
                     'port' => $port,
@@ -71,15 +67,12 @@ class TcpClient extends BaseClient implements ICoroutine
                 ])
                 ->fetch($key);
         } else {
-            $conn = Yii::$container->get('tcpclient')->fetch($key);
+            $conn = Yii::$container->get('socketclient')->fetch($key);
         }
 
         $this->setClient($conn);
         $this->setData($data);
         $this->trigger(self::EVENT_BEFORE_SEND);
-        list($class, $params) = $this->pack;
-        $class = Yii::createObject($class);
-        $data = $class->encode(...([$this->getData(), $params]));
         $this->getClient()->send($data);
         $this->trigger(self::EVENT_AFTER_SEND);
         return $this;
@@ -88,8 +81,8 @@ class TcpClient extends BaseClient implements ICoroutine
     public function release()
     {
         $id = CoroHelper::getId();
-        if (Yii::$container->hasSingleton('tcpclient') && isset($this->client[$id])) {
-            Yii::$container->get('tcpclient')->recycle($this->client[$id]);
+        if (Yii::$container->hasSingleton('socketclient') && isset($this->client[$id])) {
+            Yii::$container->get('socketclient')->recycle($this->client[$id]);
             unset($this->client[$id]);
             unset($this->data[$id]);
         }

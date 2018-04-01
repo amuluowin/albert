@@ -336,7 +336,6 @@ class Application extends Module implements ICoroutine
         if (YII_ENABLE_ERROR_HANDLER) {
             if (!isset($config['components']['errorHandler']['class'])) {
                 echo "Error: no errorHandler component is configured.\n";
-                exit(1);
             }
             $this->set('errorHandler', $config['components']['errorHandler']);
             unset($config['components']['errorHandler']);

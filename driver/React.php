@@ -1,6 +1,6 @@
 <?php
 
-namespace yii\swoole\dirver;
+namespace yii\swoole\driver;
 
 use React\EventLoop\LoopInterface;
 use React\EventLoop\SignalsHandler;

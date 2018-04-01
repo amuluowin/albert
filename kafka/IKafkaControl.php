@@ -13,5 +13,5 @@ use Psr\Log\LoggerInterface;
 
 interface IKafkaControl
 {
-    public function start(LoggerInterface $logger);
+    public function start(LoggerInterface $logger = null);
 }

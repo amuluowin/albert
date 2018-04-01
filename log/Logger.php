@@ -3,10 +3,8 @@
 namespace yii\swoole\log;
 
 use Yii;
-use yii\helpers\ArrayHelper;
 use yii\swoole\Application;
 use yii\swoole\helpers\CoroHelper;
-use yii\swoole\kafka\Kafka;
 
 class Logger extends \yii\log\Logger
 {
@@ -35,10 +33,6 @@ class Logger extends \yii\log\Logger
 
     public function log($message, $level, $category = 'application')
     {
-        if (isset(Yii::$app->kafka)) {
-            $monoLV = ArrayHelper::getValue(Kafka::$logMap, $level, Yii::$app->kafka->logger::NOTICE);
-            Yii::$app->kafka->log($monoLV, $message, [$category]);
-        }
         $time = microtime(true);
         $traces = [];
         if ($this->traceLevel > 0) {

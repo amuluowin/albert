@@ -1,11 +1,11 @@
 <?php
 
-namespace yii\swoole\dirver;
+namespace yii\swoole\driver;
 
-use Amp\Loop\Driver;
 use Amp\Coroutine;
-use Amp\Promise;
+use Amp\Loop\Driver;
 use Amp\Loop\Watcher;
+use Amp\Promise;
 use React\Promise\PromiseInterface as ReactPromise;
 use function Amp\Promise\rethrow;
 

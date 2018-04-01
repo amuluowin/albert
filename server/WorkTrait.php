@@ -58,5 +58,10 @@ trait WorkTrait
         Yii::$app->setRootPath($this->root);
 
         Yii::$app->prepare();
+
+        if (!$server->taskworker && isset(Yii::$app->kafka)) {
+            Yii::$app->kafka->startProducer();
+        }
+
     }
 }

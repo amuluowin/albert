@@ -8,29 +8,29 @@
 
 namespace yii\swoole\kafka;
 
+use Kafka\ConsumerConfig;
 use Psr\Log\LoggerInterface;
 use Yii;
-use Amp\Loop;
-use Kafka\Consumer;
-use Kafka\ConsumerConfig;
 use yii\base\BaseObject;
+use yii\swoole\kafka\Consumer\Consumer;
 
 class KConsumer extends BaseObject implements IKafkaControl
 {
-    public function start(LoggerInterface $logger)
+    public function start(LoggerInterface $logger = null)
     {
-        Loop::set(new \yii\swoole\dirver\Amp());
         $config = ConsumerConfig::getInstance();
         $config->setMetadataRefreshIntervalMs(10000);
-        $config->setMetadataBrokerList('127.0.0.1:9092');
+        $config->setMetadataBrokerList('localhost:9092');
         $config->setGroupId('test');
         $config->setBrokerVersion('1.0.0');
         $config->setTopics(['test']);
         $config->setOffsetReset('earliest');
         $consumer = new Consumer();
-        $consumer->setLogger($logger);
+        if ($logger) {
+            $consumer->setLogger($logger);
+        }
         $consumer->start(function ($topic, $part, $message): void {
-            var_dump($message);
+            print_r($message);
         });
     }
 }
