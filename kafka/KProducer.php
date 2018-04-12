@@ -18,15 +18,21 @@ class KProducer extends BaseObject
 {
     private $producer;
 
+    public $refreshInterval = 1000;
+    public $brokerList = 'localhost:9092';
+    public $brokerVersion = '1.0.0';
+    public $requiredAck = 1;
+    public $produceInterval = 500;
+
     public function start(LoggerInterface $logger = null)
     {
         $config = ProducerConfig::getInstance();
-        $config->setMetadataRefreshIntervalMs(10000);
-        $config->setMetadataBrokerList('localhost:9092');
-        $config->setBrokerVersion('1.0.0');
-        $config->setRequiredAck(1);
+        $config->setMetadataRefreshIntervalMs($this->refreshInterval);
+        $config->setMetadataBrokerList($this->brokerList);
+        $config->setBrokerVersion($this->brokerVersion);
+        $config->setRequiredAck($this->requiredAck);
         $config->setIsAsyn(false);
-        $config->setProduceInterval(500);
+        $config->setProduceInterval($this->produceInterval);
 //        $config->setSecurityProtocol(Config::SECURITY_PROTOCOL_SASL_SSL);
 //        $config->setSaslMechanism(Config::SASL_MECHANISMS_SCRAM_SHA_256);
 //        $config->setSaslUsername('nmred');
