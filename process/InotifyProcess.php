@@ -100,5 +100,6 @@ class InotifyProcess extends BaseProcess
                 $this->useInotify();
             }
         }, false, 2);
+        $this->server->addProcess($p);
     }
 }
