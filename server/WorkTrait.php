@@ -59,7 +59,7 @@ trait WorkTrait
 
         Yii::$app->prepare();
 
-        if (!$server->taskworker && isset(Yii::$app->kafka)) {
+        if (!$server->taskworker && Yii::$app->get('kafka', false) && Yii::$app->params['Process']['kafkawork']) {
             Yii::$app->kafka->startProducer();
         }
 

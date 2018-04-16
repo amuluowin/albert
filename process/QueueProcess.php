@@ -15,36 +15,37 @@ class QueueProcess extends BaseProcess
     {
         parent::init();
         $this->queue = Yii::$app->get($this->queue);
-        $this->server = Yii::$app->getSwooleServer();
     }
 
     public function start($class, $config)
     {
-        for ($i = 0; $i < $config['worker']; $i++) {
-            $queue_process = new \swoole_process(function ($process) use ($class, $config, $i) {
-                $this->workerStart();
-                $process->name('swoole-queue-' . $class . '-' . $i);
-                if ($config['sleep'] > 0) {
-                    swoole_timer_tick($config['sleep'] * 1000, function () use ($process, $class, $config) {
+        if ($class && $config) {
+            for ($i = 0; $i < $config['worker']; $i++) {
+                $queue_process = new \swoole_process(function ($process) use ($class, $config, $i) {
+                    $this->workerStart();
+                    $process->name('swoole-queue-' . $class . '-' . $i);
+                    if ($config['sleep'] > 0) {
+                        swoole_timer_tick($config['sleep'] * 1000, function () use ($process, $class, $config) {
+                            $this->doWork($process, $class, $config);
+                        });
+                    } else {
                         $this->doWork($process, $class, $config);
-                    });
+                    }
+
+                }, false, 2);
+
+                if ($this->server) {
+                    $this->server->addProcess($queue_process);
                 } else {
-                    $this->doWork($process, $class, $config);
+                    $pid = $queue_process->start();
+                    if (!in_array($pid, $this->pids)) {
+                        $this->pids[] = $pid;
+                    }
+                    if (!isset($this->processArray[$pid])) {
+                        $this->processArray[$pid] = $queue_process;
+                    }
+                    $this->savePid();
                 }
-
-            }, false, 2);
-
-            if ($this->server) {
-                $this->server->addProcess($queue_process);
-            } else {
-                $pid = $queue_process->start();
-                if (!in_array($pid, $this->pids)) {
-                    $this->pids[] = $pid;
-                }
-                if (!isset($this->processArray[$pid])) {
-                    $this->processArray[$pid] = $queue_process;
-                }
-                $this->savePid();
             }
         }
     }

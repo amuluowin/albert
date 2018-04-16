@@ -13,6 +13,7 @@ use Psr\Log\LoggerInterface;
 use Yii;
 use yii\base\BaseObject;
 use yii\swoole\kafka\Consumer\Consumer;
+use yii\swoole\kafka\Targets\Target;
 
 class KConsumer extends BaseObject implements IKafkaControl
 {
@@ -22,6 +23,18 @@ class KConsumer extends BaseObject implements IKafkaControl
     public $brokerVersion = '1.0.0';
     public $topics = ['test'];
     public $offsetReset = 'earliest';
+
+    public $targets = [];
+
+    public function init()
+    {
+        parent::init();
+        foreach ($this->targets as $name => $target) {
+            if (!$target instanceof Target) {
+                $this->targets[$name] = Yii::createObject($target);
+            }
+        }
+    }
 
     public function start(LoggerInterface $logger = null)
     {
@@ -37,7 +50,9 @@ class KConsumer extends BaseObject implements IKafkaControl
             $consumer->setLogger($logger);
         }
         $consumer->start(function ($topic, $part, $message): void {
-            print_r($message);
+            foreach ($this->targets as $target) {
+                $target->export($topic, $part, $message);
+            }
         });
     }
 }

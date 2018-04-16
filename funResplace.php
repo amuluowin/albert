@@ -805,17 +805,6 @@ namespace yii\swoole\web {
     }
 }
 
-namespace yii\swoole\work {
-    function call_user_func_array(...$params)
-    {
-        return \albert\yii\func_array(...$params);
-    }
-
-    function call_user_func(...$params)
-    {
-        return \albert\yii\func(...$params);
-    }
-}
 /*
  *
  */
@@ -905,6 +894,18 @@ namespace yii\swoole\kafka\Consumer {
 }
 
 namespace yii\swoole\kafka\Producer {
+    function call_user_func_array(...$params)
+    {
+        return \albert\yii\func_array(...$params);
+    }
+
+    function call_user_func(...$params)
+    {
+        return \albert\yii\func(...$params);
+    }
+}
+
+namespace yii\swoole\kafka\Targets {
     function call_user_func_array(...$params)
     {
         return \albert\yii\func_array(...$params);

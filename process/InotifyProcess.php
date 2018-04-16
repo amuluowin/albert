@@ -1,8 +1,11 @@
 <?php
 
-namespace yii\swoole\work;
+namespace yii\swoole\process;
 
-class InotifyProcess {
+use Yii;
+
+class InotifyProcess extends BaseProcess
+{
 
     const RELOAD_SIG = 'reload_sig';
 
@@ -10,21 +13,16 @@ class InotifyProcess {
     public $monitor_dir;
     public $inotifyFd;
     public $managePid;
-    public $server;
 
-    public function __construct($server, $path) {
+    public function init()
+    {
+        parent::init();
         echo "启动了autoReload\n";
-        $this->server = $server;
-        $this->monitor_dir = $path;
-        if (!extension_loaded('inotify')) {
-            swoole_timer_after(10000, [$this, 'unUseInotify']);
-        }
-        else {
-            $this->useInotify();
-        }
+        $this->monitor_dir = Yii::getAlias('@addons');
     }
 
-    public function useInotify() {
+    public function useInotify()
+    {
         global $monitor_files;
         // 初始化inotify句柄
         $this->inotifyFd = inotify_init();
@@ -64,7 +62,8 @@ class InotifyProcess {
         }, null, SWOOLE_EVENT_READ);
     }
 
-    public function unUseInotify() {
+    public function unUseInotify()
+    {
         echo "非inotify模式，性能极低，不建议在正式环境启用。\n";
         swoole_timer_tick(1, function () {
             global $last_mtime;
@@ -91,4 +90,15 @@ class InotifyProcess {
         });
     }
 
+    public function start($class, $config)
+    {
+        $p = new \swoole_process(function ($process) {
+            $process->name('swoole-inotify');
+            if (!extension_loaded('inotify')) {
+                swoole_timer_after(10000, [$this, 'unUseInotify']);
+            } else {
+                $this->useInotify();
+            }
+        }, false, 2);
+    }
 }

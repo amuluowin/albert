@@ -19,12 +19,22 @@ abstract class BaseProcess extends \yii\base\Component
     protected $server = null;
     public $log_path = '/data/logs';
 
+    public function init()
+    {
+        parent::init();
+        $this->server = Yii::$app->getSwooleServer();
+    }
+
     public function startAll($workConfig)
     {
         $this->config = $workConfig;
         $this->root = $workConfig['root'];
-        foreach ($this->processList as $class => $config) {
-            $this->start($class, $config);
+        if ($this->processList) {
+            foreach ($this->processList as $class => $config) {
+                $this->start($class, $config);
+            }
+        } else {
+            $this->start(null, null);
         }
     }
 
