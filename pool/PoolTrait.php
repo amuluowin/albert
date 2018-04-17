@@ -4,6 +4,7 @@ namespace yii\swoole\pool;
 
 use Yii;
 use yii\base\Exception;
+use yii\helpers\VarDumper;
 use yii\swoole\web\NoParamsException;
 use yii\web\ServerErrorHttpException;
 
@@ -71,7 +72,8 @@ trait PoolTrait
     public function fetch(string $connName)
     {
         if (!isset($this->connsConfig[$connName])) {
-            throw new NoParamsException("Unvalid connName: {$connName}.");
+            return null;
+            //throw new NoParamsException("Unvalid connName: {$connName}." . PHP_EOL . 'config:' . VarDumper::export($this->connsConfig));
         }
 
         $conn = $this->createConn($connName, $this->getConn($connName));

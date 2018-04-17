@@ -50,12 +50,13 @@ class SocketClient extends BaseClient implements ICoroutine
 
     public function send($uri, $port, $data)
     {
-        $serverIp = ip2long($uri);
-        $key = md5('corosocket:' . $serverIp);
+        $key = md5('corosocket:' . $uri);
         if (!Yii::$container->hasSingleton('socketclient')) {
             Yii::$container->setSingleton('socketclient', [
                 'class' => 'yii\swoole\pool\TcpPool'
             ]);
+        }
+        if (($conn = Yii::$container->get('socketclient')->fetch($key)) === null) {
             $conn = Yii::$container->get('socketclient')->create($key,
                 [
                     'hostname' => $uri,
@@ -66,8 +67,6 @@ class SocketClient extends BaseClient implements ICoroutine
                     'busy_size' => $this->busy_pool
                 ])
                 ->fetch($key);
-        } else {
-            $conn = Yii::$container->get('socketclient')->fetch($key);
         }
 
         $this->setClient($conn);

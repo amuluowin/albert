@@ -39,24 +39,24 @@ class TcpClient extends IRpcClient
         }
         $server = array_shift($serlist);
         list($server, $port) = $server;
-        $serverIp = ip2long($server);
-        $key = 'corotcp:' . $serverIp;
+        $key = 'corotcp:' . $server;
         if (!Yii::$container->hasSingleton('tcpclient')) {
             Yii::$container->setSingleton('tcpclient', [
                 'class' => 'yii\swoole\pool\TcpPool'
             ]);
         }
-        $this->client = Yii::$container->get('tcpclient')->create($key,
-            [
-                'hostname' => $server,
-                'port' => $port,
-                'timeout' => $this->timeout,
-                'async' => $this->async,
-                'pool_size' => $this->maxPoolSize,
-                'busy_size' => $this->busy_pool
-            ])
-            ->fetch($key);
-        //
+        if (($this->client = Yii::$container->get('tcpclient')->fetch($key)) === null) {
+            $this->client = Yii::$container->get('tcpclient')->create($key,
+                [
+                    'hostname' => $server,
+                    'port' => $port,
+                    'timeout' => $this->timeout,
+                    'async' => $this->async,
+                    'pool_size' => $this->maxPoolSize,
+                    'busy_size' => $this->busy_pool
+                ])
+                ->fetch($key);
+        }
 
         $odata = [current(swoole_get_local_ip()), Yii::$app->request->getTraceId()];
         $this->client->send(TcpPack::encode(ArrayHelper::merge($data, $odata), 'tcp'));

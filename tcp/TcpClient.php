@@ -54,12 +54,14 @@ class TcpClient extends BaseClient implements ICoroutine
 
     public function send($uri, $port, $data)
     {
-        $serverIp = ip2long($uri);
-        $key = md5('corotcp:' . $serverIp);
+        $key = md5('corotcp:' . $uri);
         if (!Yii::$container->hasSingleton('tcpclient')) {
             Yii::$container->setSingleton('tcpclient', [
                 'class' => 'yii\swoole\pool\TcpPool'
             ]);
+
+        }
+        if (($conn = Yii::$container->get('tcpclient')->fetch($key)) === null) {
             $conn = Yii::$container->get('tcpclient')->create($key,
                 [
                     'hostname' => $uri,
@@ -70,8 +72,6 @@ class TcpClient extends BaseClient implements ICoroutine
                     'busy_size' => $this->busy_pool
                 ])
                 ->fetch($key);
-        } else {
-            $conn = Yii::$container->get('tcpclient')->fetch($key);
         }
 
         $this->setClient($conn);
