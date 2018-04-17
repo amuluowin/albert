@@ -8,6 +8,7 @@
 
 namespace yii\swoole\process;
 
+use Yii;
 
 class SrvMonitProcess extends BaseProcess
 {

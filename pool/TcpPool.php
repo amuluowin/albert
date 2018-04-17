@@ -26,7 +26,7 @@ class TcpPool extends \yii\swoole\pool\IPool
         ) {
             if ($this->reconnect <= $this->curconnect) {
                 $this->curconnect = 0;
-                throw new ServerErrorHttpException($conn->error);
+                throw new ServerErrorHttpException("Can not connect to {$connName}: " . $config['hostname'] . ':' . $config['port'], $conn->errCode);
             } else {
                 $this->curconnect++;
                 $this->reConnect($conn, $connName);

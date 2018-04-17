@@ -103,15 +103,6 @@ class HttpServer extends Server
         $this->server->start();
     }
 
-    public function createServerTable()
-    {
-        //创建内存表
-        $this->server->serverTable = new swoole_table(1024);
-        $this->server->serverTable->column('host', swoole_table::TYPE_STRING, 16);
-        $this->server->serverTable->column('appname', swoole_table::TYPE_STRING, 16);
-        $this->server->serverTable->create();
-    }
-
     public function onPipeMessage($server, $from_worker_id, $message)
     {
         print_r(SerializeHelper::unserialize($message));

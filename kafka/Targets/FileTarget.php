@@ -27,7 +27,7 @@ class FileTarget extends Target
     public function export($topic, $part, $message)
     {
         go(function () use ($message) {
-            FileIO::write($this->logFile, $message['message']['key'] . ':' . $message['message']['value']);
+            FileIO::write($this->logFile, 'traceID:' . $message['message']['key'] . ' ' . $message['message']['value'] . PHP_EOL, FILE_APPEND);
         });
     }
 }
