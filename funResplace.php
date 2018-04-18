@@ -8,11 +8,19 @@
 namespace albert\yii {
     function func_array(...$params)
     {
+        if (is_string($params[0])) {
+            //var_dump($params);
+            return \call_user_func_array(...$params);
+        }
         return \Swoole\Coroutine::call_user_func_array(...$params);
     }
 
     function func(...$params)
     {
+        if (is_string($params[0])) {
+            //var_dump($params);
+            return \call_user_func(...$params);
+        }
         return \Swoole\Coroutine::call_user_func(...$params);
     }
 }
