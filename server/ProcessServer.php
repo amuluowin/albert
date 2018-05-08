@@ -10,6 +10,8 @@ class ProcessServer implements IProcessServer
 {
     public static $instance;
 
+    private $works = [];
+
     public function start($config, $work)
     {
         if ($work) {

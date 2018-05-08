@@ -78,7 +78,7 @@ abstract class Server extends Component
             }
             foreach ($function as $func) {
                 if ($func instanceof \Closure) {
-                    call_user_func_array($func, [$this]);
+                    $func($this);
                 }
             }
             $this->schme[$schme]->set($config['server']);
@@ -86,7 +86,7 @@ abstract class Server extends Component
 
         foreach (ArrayHelper::remove($this->config, 'beforeStart', []) as $function) {
             if ($function instanceof \Closure) {
-                call_user_func_array($function, [$this]);
+                $function($this);
             }
         }
     }

@@ -3,6 +3,7 @@
 namespace yii\swoole\process;
 
 use Yii;
+use yii\swoole\Application;
 use yii\swoole\files\FileIO;
 use yii\swoole\server\WorkTrait;
 
@@ -23,6 +24,7 @@ abstract class BaseProcess extends \yii\base\Component
     {
         parent::init();
         $this->server = Yii::$app->getSwooleServer();
+        Application::$workerApp = true;
     }
 
     public function startAll($workConfig)
@@ -43,7 +45,10 @@ abstract class BaseProcess extends \yii\base\Component
     public function savePid()
     {
         if ($this->pidFile) {
-            FileIO::write($this->pidFile, implode(',', $this->pids), FILE_APPEND);
+            go(function () {
+                FileIO::write($this->pidFile, implode(',', $this->pids));
+            });
+
         }
     }
 
@@ -56,17 +61,24 @@ abstract class BaseProcess extends \yii\base\Component
 
     public function stopAll($status = 0)
     {
-        foreach ($this->processArray as $pid => $process) {
-            $process->exit($status);
-        }
-        $content = FileIO::read($this->pidFile);
-        if (is_string($content)) {
-            $pids = explode(',', $content);
-        }
-        foreach ($pids as $pid) {
-            \swoole_process::kill(intval($pid));
-        }
-        @unlink($this->pidFile);
+        go(function () use ($status) {
+            try {
+                foreach ($this->processArray as $pid => $process) {
+                    $process->exit($status);
+                }
+                $content = FileIO::read($this->pidFile);
+                if (is_string($content)) {
+                    $pids = explode(',', $content);
+                }
+                foreach ($pids as $pid) {
+                    \swoole_process::kill(intval($pid));
+                }
+            } catch (\Exception $e) {
+                print_r($e);
+            } finally {
+                @unlink($this->pidFile);
+            }
+        });
     }
 
     /**

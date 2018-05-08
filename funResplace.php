@@ -8,20 +8,32 @@
 namespace albert\yii {
     function func_array(...$params)
     {
-        if (is_string($params[0])) {
-            //var_dump($params);
-            return \call_user_func_array(...$params);
+        $cb = array_shift($params);
+        $args = $params;
+        if (\is_object($cb) || (\is_string($cb) && \function_exists($cb))) {
+            $ret = $cb(...$args);
+        } elseif (\is_array($cb)) {
+            list($obj, $mhd) = $cb;
+            $ret = \is_object($obj) ? $obj->$mhd(...$args) : $obj::$mhd(...$args);
+        } else {
+            $ret = \call_user_func_array($cb, $args);
         }
-        return \Swoole\Coroutine::call_user_func_array(...$params);
+        return $ret;
     }
 
     function func(...$params)
     {
-        if (is_string($params[0])) {
-            //var_dump($params);
-            return \call_user_func(...$params);
+        $cb = array_shift($params);
+        $args = $params;
+        if (\is_object($cb) || (\is_string($cb) && \function_exists($cb))) {
+            $ret = $cb(...$args);
+        } elseif (\is_array($cb)) {
+            list($obj, $mhd) = $cb;
+            $ret = \is_object($obj) ? $obj->$mhd(...$args) : $obj::$mhd(...$args);
+        } else {
+            $ret = \call_user_func_array($cb, $args);
         }
-        return \Swoole\Coroutine::call_user_func(...$params);
+        return $ret;
     }
 }
 

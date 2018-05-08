@@ -1,0 +1,26 @@
+{
+    "name": "swoft/moniter",
+    "type": "library",
+    "keywords": [
+        "php",
+        "swoole",
+        "pig",
+        "moniter"
+    ],
+    "description": "moniter Component for Swoft",
+    "license": "Apache-2.0",
+    "require": {
+        "swoft/framework": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Swoft\\Moniter\\": "src/"
+        }
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://packagist.phpcomposer.com"
+        }
+    ]
+}

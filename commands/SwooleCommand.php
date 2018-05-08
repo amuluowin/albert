@@ -127,38 +127,18 @@ class SwooleCommand
         }
     }
 
-    public static function Queue($app)
+    public static function Process($app, $work)
     {
-        if (!isset($app)) {
+        if (!isset($app) || !isset($work)) {
             exit("No argv.\n");
         } else {
+            $work = $work && Yii::$app->get($work, false) ? Yii::$app->{$work} : new $work();
             switch ($app) {
                 case 'start':
-                    QueueServer::getInstance()->start(Yii::$app->params['swoole']);
+                    ProcessServer::getInstance()->start(Yii::$app->params['swoole'], $work);
                     break;
                 case 'stop':
-                    QueueServer::getInstance()->stop();
-                    break;
-                case 'restart':
-                    break;
-                default:
-                    exit("Not support this argv.\n");
-                    break;
-            }
-        }
-    }
-
-    public static function Process($app)
-    {
-        if (!isset($app)) {
-            exit("No argv.\n");
-        } else {
-            switch ($app) {
-                case 'start':
-                    ProcessServer::getInstance()->start(Yii::$app->params['swoole']);
-                    break;
-                case 'stop':
-                    ProcessServer::getInstance()->stop();
+                    ProcessServer::getInstance()->stop($work);
                     break;
                 case 'restart':
                     break;

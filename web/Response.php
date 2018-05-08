@@ -322,6 +322,7 @@ class Response extends \yii\base\Response implements ICoroutine
         $this->sendHeaders();
         $this->sendContent();
         $this->trigger(self::EVENT_AFTER_SEND);
+        unset(Yii::$app->getSwooleServer()->currentSwooleResponse[$id]);
         $this->isSent[$id] = true;
     }
 

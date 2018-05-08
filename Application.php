@@ -185,7 +185,6 @@ class Application extends Module implements ICoroutine
         //清理request,response
         $id = CoroHelper::getId();
         unset($this->_swooleServer->currentSwooleRequest[$id]);
-        unset($this->_swooleServer->currentSwooleResponse[$id]);
         //清理属性
         $this->clearProperty();
         //回收组件
@@ -641,20 +640,6 @@ class Application extends Module implements ICoroutine
         $response->isSent = false;
         $this->refresh();
         $this->request->setTraceId(Yii::$app->BaseHelper->guid());
-    }
-
-    /**
-     * to fix ActiveRecord::__set() call call some Coroutine error.
-     * @see https://wiki.swoole.com/wiki/page/p-coroutine.html
-     * @deprecated
-     */
-    public function onEvent()
-    {
-        Event::on(ActiveRecord::className(), ActiveRecord::EVENT_INIT, function ($event) {
-            /** @var ActiveRecord $model */
-            $model = $event->sender;
-            $model->getTableSchema();
-        });
     }
 
     public function refresh()
