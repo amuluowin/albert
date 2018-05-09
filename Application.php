@@ -190,7 +190,6 @@ class Application extends Module implements ICoroutine
         //清理环境变量
         unset($_GET[$id]);
         unset($_POST[$id]);
-        unset($_SERVER[$id]);
         unset($_FILES[$id]);
         unset($_COOKIE[$id]);
 
@@ -208,11 +207,9 @@ class Application extends Module implements ICoroutine
 
     public function clearComponents()
     {
-        foreach ($this->getComponents(false) as $re) {
-            if ($re instanceof ICoroutine) {
-                $re->release();
-            }
-        }
+        Yii::$app->getUser()->release();
+        Yii::$app->getRequest()->release();
+        Yii::$app->getResponse()->release();
     }
 
     public function __construct($config = [])
@@ -610,7 +607,6 @@ class Application extends Module implements ICoroutine
         ], [
             'request' => ['class' => 'yii\web\Request'],
             'response' => ['class' => 'yii\web\Response'],
-            'session' => ['class' => 'yii\web\Session'],
             'user' => ['class' => 'yii\web\User'],
             'errorHandler' => ['class' => 'yii\web\ErrorHandler'],
         ]);
@@ -637,7 +633,6 @@ class Application extends Module implements ICoroutine
         $response->setStatusCode(200, 'OK');
         $response->isSent = false;
         $this->refresh();
-        $this->request->setTraceId(Yii::$app->BaseHelper->guid());
     }
 
     public function refresh()

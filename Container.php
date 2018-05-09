@@ -32,7 +32,6 @@ class Container extends \yii\di\Container
         'yii\web\User' => 'yii\swoole\web\User',
         'yii\web\View' => 'yii\swoole\web\View',
         'yii\web\AssetManager' => 'yii\swoole\web\AssetManager',
-        'yii\web\UrlManager' => 'yii\swoole\web\UrlManager',
         'yii\console\ErrorHandler' => 'yii\swoole\console\ErrorHandler',
         'yii\db\Query' => 'yii\swoole\db\Query',
         'yii\debug\Module' => 'yii\swoole\debug\filedebug\Module',

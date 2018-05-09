@@ -13,6 +13,8 @@ use yii\swoole\web\ErrorHandler;
  */
 class Dispatcher extends \yii\log\Dispatcher
 {
+    public $isFlush = true;
+
     /**
      * @inheritdoc
      */

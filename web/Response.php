@@ -384,11 +384,10 @@ class Response extends \yii\base\Response implements ICoroutine
 
     protected function getHttpRange($fileSize)
     {
-        $id = CoroHelper::getId();
-        if (!isset($_SERVER[$id]['HTTP_RANGE']) || $_SERVER[$id]['HTTP_RANGE'] === '-') {
+        if (!isset($_SERVER['HTTP_RANGE']) || $_SERVER['HTTP_RANGE'] === '-') {
             return [0, $fileSize - 1];
         }
-        if (!preg_match('/^bytes=(\d*)-(\d*)$/', $_SERVER[$id]['HTTP_RANGE'], $matches)) {
+        if (!preg_match('/^bytes=(\d*)-(\d*)$/', $_SERVER['HTTP_RANGE'], $matches)) {
             return false;
         }
         if ($matches[1] === '') {

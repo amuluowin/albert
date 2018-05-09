@@ -24,11 +24,6 @@ class HttpServer extends Server
      */
     public $indexFile = 'index.php';
 
-    /**
-     * @var bool
-     */
-    public $debug = false;
-
     private static $instance;
 
     public function __construct($config)

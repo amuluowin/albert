@@ -12,11 +12,6 @@ trait WorkTrait
 {
     public function workerStart($server = null, $worker_id)
     {
-        $id = CoroHelper::getId();
-        // 初始化一些变量, 下面这些变量在进入真实流程时是无效的
-        $_SERVER[$id]['SERVER_ADDR'] = '127.0.0.1';
-        $_SERVER[$id]['SERVER_NAME'] = 'localhost';
-        $_SERVER[$id]['REQUEST_URI'] = $_SERVER[$id]['SCRIPT_FILENAME'] = $_SERVER[$id]['DOCUMENT_ROOT'] = $_SERVER[$id]['DOCUMENT_URI'] = $_SERVER[$id]['SCRIPT_NAME'] = '';
         // 关闭Yii2自己实现的异常错误
         defined('YII_ENABLE_ERROR_HANDLER') || define('YII_ENABLE_ERROR_HANDLER', false);
         // 加载文件和一些初始化配置
@@ -49,7 +44,7 @@ trait WorkTrait
         Yii::$app->setSwooleServer($this->server);
         Yii::$app->initComponent($config);
         Yii::$app->language = $config['language'];
-        Yii::$app::$workerApp = true;
+        Application::$workerApp = true;
         // init all yii components
         foreach ($config['components'] as $id => $_config) {
             Yii::$app->get($id);

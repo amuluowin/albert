@@ -88,10 +88,13 @@ class Request extends \yii\web\Request implements ICoroutine
         $id = CoroHelper::getId();
         if (isset(Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->post[$this->methodParam])) {
             return strtoupper(Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->post[$this->methodParam]);
-        } elseif (isset($_SERVER[$id]['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
-            return strtoupper($_SERVER[$id]['HTTP_X_HTTP_METHOD_OVERRIDE']);
-        } else {
-            return isset($_SERVER[$id]['REQUEST_METHOD']) ? strtoupper($_SERVER[$id]['REQUEST_METHOD']) : 'RPC';
+        }
+        if ($this->headers->has('X-Http-Method-Override')) {
+            return strtoupper($this->headers->get('X-Http-Method-Override'));
+        }
+
+        if (isset(Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->server['request_method'])) {
+            return strtoupper(Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->server['request_method']);
         }
     }
 
@@ -100,85 +103,22 @@ class Request extends \yii\web\Request implements ICoroutine
         $this->_post[CoroHelper::getId()] = $_post;
     }
 
-    public function getIsAjax()
-    {
-        $id = CoroHelper::getId();
-        return isset($_SERVER[$id]['HTTP_X_REQUESTED_WITH']) && $_SERVER[$id]['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
-    }
-
-    public function getIsPjax()
-    {
-        $id = CoroHelper::getId();
-        return $this->getIsAjax() && !empty($_SERVER[$id]['HTTP_X_PJAX']);
-    }
-
-    public function getIsFlash()
-    {
-        $id = CoroHelper::getId();
-        return isset($_SERVER[$id]['HTTP_USER_AGENT']) &&
-            (stripos($_SERVER[$id]['HTTP_USER_AGENT'], 'Shockwave') !== false || stripos($_SERVER[$id]['HTTP_USER_AGENT'], 'Flash') !== false);
-    }
-
-    protected function resolvePathInfo()
-    {
-        $id = CoroHelper::getId();
-        $pathInfo = $this->getUrl();
-
-        if (($pos = strpos($pathInfo, '?')) !== false) {
-            $pathInfo = substr($pathInfo, 0, $pos);
-        }
-
-        $pathInfo = urldecode($pathInfo);
-
-        // try to encode in UTF8 if not so
-        // http://w3.org/International/questions/qa-forms-utf-8.html
-        if (!preg_match('%^(?:
-            [\x09\x0A\x0D\x20-\x7E]              # ASCII
-            | [\xC2-\xDF][\x80-\xBF]             # non-overlong 2-byte
-            | \xE0[\xA0-\xBF][\x80-\xBF]         # excluding overlongs
-            | [\xE1-\xEC\xEE\xEF][\x80-\xBF]{2}  # straight 3-byte
-            | \xED[\x80-\x9F][\x80-\xBF]         # excluding surrogates
-            | \xF0[\x90-\xBF][\x80-\xBF]{2}      # planes 1-3
-            | [\xF1-\xF3][\x80-\xBF]{3}          # planes 4-15
-            | \xF4[\x80-\x8F][\x80-\xBF]{2}      # plane 16
-            )*$%xs', $pathInfo)
-        ) {
-            $pathInfo = utf8_encode($pathInfo);
-        }
-
-        $scriptUrl = $this->getScriptUrl();
-        $baseUrl = $this->getBaseUrl();
-        if (strpos($pathInfo, $scriptUrl) === 0) {
-            $pathInfo = substr($pathInfo, strlen($scriptUrl));
-        } elseif ($baseUrl === '' || strpos($pathInfo, $baseUrl) === 0) {
-            $pathInfo = substr($pathInfo, strlen($baseUrl));
-        } elseif (isset($_SERVER[$id]['PHP_SELF']) && strpos($_SERVER[$id]['PHP_SELF'], $scriptUrl) === 0) {
-            $pathInfo = substr($_SERVER[$id]['PHP_SELF'], strlen($scriptUrl));
-        } else {
-            throw new InvalidConfigException('Unable to determine the path info of the current request.');
-        }
-
-        if (substr($pathInfo, 0, 1) === '/') {
-            $pathInfo = substr($pathInfo, 1);
-        }
-
-        return (string)$pathInfo;
-    }
-
     protected function resolveRequestUri()
     {
         $id = CoroHelper::getId();
-        if (isset($_SERVER[$id]['HTTP_X_REWRITE_URL'])) { // IIS
-            $requestUri = $_SERVER[$id]['HTTP_X_REWRITE_URL'];
-        } elseif (isset($_SERVER[$id]['REQUEST_URI'])) {
-            $requestUri = $_SERVER[$id]['REQUEST_URI'];
+        if (isset(Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->server['request_uri'])) {
+            $requestUri = Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->server['request_uri'];
+        } elseif ($this->headers->has('X-Rewrite-Url')) { // IIS
+            $requestUri = $this->headers->get('X-Rewrite-Url');
+        } elseif (isset($_SERVER['REQUEST_URI'])) {
+            $requestUri = $_SERVER['REQUEST_URI'];
             if ($requestUri !== '' && $requestUri[0] !== '/') {
                 $requestUri = preg_replace('/^(http|https):\/\/[^\/]+/i', '', $requestUri);
             }
-        } elseif (isset($_SERVER[$id]['ORIG_PATH_INFO'])) { // IIS 5.0 CGI
-            $requestUri = $_SERVER[$id]['ORIG_PATH_INFO'];
-            if (!empty($_SERVER[$id]['QUERY_STRING'])) {
-                $requestUri .= '?' . $_SERVER[$id]['QUERY_STRING'];
+        } elseif (isset($_SERVER['ORIG_PATH_INFO'])) { // IIS 5.0 CGI
+            $requestUri = $_SERVER['ORIG_PATH_INFO'];
+            if (!empty($_SERVER['QUERY_STRING'])) {
+                $requestUri .= '?' . $_SERVER['QUERY_STRING'];
             }
         } else {
             throw new InvalidConfigException('Unable to determine the request URI.');
@@ -190,84 +130,89 @@ class Request extends \yii\web\Request implements ICoroutine
     public function getQueryString()
     {
         $id = CoroHelper::getId();
-        return isset($_SERVER[$id]['QUERY_STRING']) ? $_SERVER[$id]['QUERY_STRING'] : '';
+        return isset(Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->server['query_string']) ? Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->server['query_string'] : '';
     }
 
     public function getIsSecureConnection()
     {
         $id = CoroHelper::getId();
-        return isset($_SERVER[$id]['HTTPS']) && (strcasecmp($_SERVER[$id]['HTTPS'], 'on') === 0 || $_SERVER[$id]['HTTPS'] == 1)
-            || isset($_SERVER[$id]['HTTP_X_FORWARDED_PROTO']) && strcasecmp($_SERVER[$id]['HTTP_X_FORWARDED_PROTO'], 'https') === 0;
+        return strcasecmp(Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->server['server_protocol'], 'https');
     }
 
     public function getServerName()
     {
-        $id = CoroHelper::getId();
-        return isset($_SERVER[$id]['SERVER_NAME']) ? $_SERVER[$id]['SERVER_NAME'] : null;
+        return isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : null;
     }
 
     public function getServerPort()
     {
         $id = CoroHelper::getId();
-        return isset($_SERVER[$id]['SERVER_PORT']) ? (int)$_SERVER[$id]['SERVER_PORT'] : null;
+        return Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->server['server_port'];
     }
 
     public function getReferrer()
     {
-        $id = CoroHelper::getId();
-        return isset($_SERVER[$id]['HTTP_REFERER']) ? $_SERVER[$id]['HTTP_REFERER'] : null;
+        return $this->headers->get('Referer');
     }
 
     public function getUserAgent()
     {
-        $id = CoroHelper::getId();
-        return isset($_SERVER[$id]['HTTP_USER_AGENT']) ? $_SERVER[$id]['HTTP_USER_AGENT'] : null;
+        return $this->headers->get('User-Agent');
     }
 
     public function getUserIP()
     {
+        foreach ($this->ipHeaders as $ipHeader) {
+            if ($this->headers->has($ipHeader)) {
+                return trim(explode(',', $this->headers->get($ipHeader))[0]);
+            }
+        }
+
+        return $this->getRemoteIP();
+    }
+
+    public function getRemoteIP()
+    {
         $id = CoroHelper::getId();
-        return isset($_SERVER[$id]['REMOTE_ADDR']) ? $_SERVER[$id]['REMOTE_ADDR'] : null;
+        return Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->server['remote_addr'];
     }
 
     public function getUserHost()
     {
-        $id = CoroHelper::getId();
-        return isset($_SERVER[$id]['REMOTE_HOST']) ? $_SERVER[$id]['REMOTE_HOST'] : null;
+        foreach ($this->ipHeaders as $ipHeader) {
+            if ($this->headers->has($ipHeader)) {
+                return gethostbyaddr(trim(explode(',', $this->headers->get($ipHeader))[0]));
+            }
+        }
+
+        return $this->getRemoteHost();
     }
 
     public function getAuthUser()
     {
-        $id = CoroHelper::getId();
-        return isset($_SERVER[$id]['PHP_AUTH_USER']) ? $_SERVER[$id]['PHP_AUTH_USER'] : null;
+        return $this->getAuthCredentials()[0];
     }
 
     public function getAuthPassword()
     {
-        $id = CoroHelper::getId();
-        return isset($_SERVER[$id]['PHP_AUTH_PW']) ? $_SERVER[$id]['PHP_AUTH_PW'] : null;
+        return $this->getAuthCredentials()[1];
     }
 
     public function getContentType()
     {
         $id = CoroHelper::getId();
-        if (isset($_SERVER[$id]['CONTENT_TYPE'])) {
-            return $_SERVER[$id]['CONTENT_TYPE'];
+        if (isset(Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->header['content-type'])) {
+            return Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->header['content-type'];
         }
 
-        if (isset($_SERVER[$id]['HTTP_CONTENT_TYPE'])) {
-            //fix bug https://bugs.php.net/bug.php?id=66606
-            return $_SERVER[$id]['HTTP_CONTENT_TYPE'];
-        }
-
-        return null;
+        //fix bug https://bugs.php.net/bug.php?id=66606
+        return $this->headers->get('Content-Type');
     }
 
     public function getETags()
     {
-        $id = CoroHelper::getId();
-        if (isset($_SERVER[$id]['HTTP_IF_NONE_MATCH'])) {
-            return preg_split('/[\s,]+/', str_replace('-gzip', '', $_SERVER[$id]['HTTP_IF_NONE_MATCH']), -1, PREG_SPLIT_NO_EMPTY);
+        if ($this->headers->has('If-None-Match')) {
+            return preg_split('/[\s,]+/', str_replace('-gzip', '', $this->headers->get('If-None-Match')), -1, PREG_SPLIT_NO_EMPTY);
         }
 
         return [];
@@ -450,13 +395,16 @@ class Request extends \yii\web\Request implements ICoroutine
         if (!isset($this->_hostInfo[$id])) {
             $secure = $this->getIsSecureConnection();
             $http = $secure ? 'https' : 'http';
-            if (isset($_SERVER[$id]['HTTP_HOST'])) {
-                $this->_hostInfo[$id] = $http . '://' . $_SERVER[$id]['HTTP_HOST'];
-            } else {
-                $this->_hostInfo[$id] = $http . '://' . $_SERVER[$id]['SERVER_NAME'];
+
+            if ($this->headers->has('X-Forwarded-Host')) {
+                $this->_hostInfo = $http . '://' . $this->headers->get('X-Forwarded-Host');
+            } elseif ($this->headers->has('Host')) {
+                $this->_hostInfo = $http . '://' . $this->headers->get('Host');
+            } elseif (isset($_SERVER['SERVER_NAME'])) {
+                $this->_hostInfo = $http . '://' . $_SERVER['SERVER_NAME'];
                 $port = $secure ? $this->getSecurePort() : $this->getPort();
                 if (($port !== 80 && !$secure) || ($port !== 443 && $secure)) {
-                    $this->_hostInfo[$id] .= ':' . $port;
+                    $this->_hostInfo .= ':' . $port;
                 }
             }
         }
@@ -530,16 +478,16 @@ class Request extends \yii\web\Request implements ICoroutine
         if (!isset($this->_scriptUrl[$id])) {
             $scriptFile = $this->getScriptFile();
             $scriptName = basename($scriptFile);
-            if (basename($_SERVER[$id]['SCRIPT_NAME']) === $scriptName) {
-                $this->_scriptUrl[$id] = $_SERVER[$id]['SCRIPT_NAME'];
-            } elseif (basename($_SERVER[$id]['PHP_SELF']) === $scriptName) {
-                $this->_scriptUrl[$id] = $_SERVER[$id]['PHP_SELF'];
-            } elseif (isset($_SERVER[$id]['ORIG_SCRIPT_NAME']) && basename($_SERVER[$id]['ORIG_SCRIPT_NAME']) === $scriptName) {
-                $this->_scriptUrl[$id] = $_SERVER[$id]['ORIG_SCRIPT_NAME'];
-            } elseif (($pos = strpos($_SERVER[$id]['PHP_SELF'], '/' . $scriptName)) !== false) {
-                $this->_scriptUrl[$id] = substr($_SERVER[$id]['SCRIPT_NAME'], 0, $pos) . '/' . $scriptName;
-            } elseif (!empty($_SERVER[$id]['DOCUMENT_ROOT']) && strpos($scriptFile, $_SERVER[$id]['DOCUMENT_ROOT']) === 0) {
-                $this->_scriptUrl[$id] = str_replace('\\', '/', str_replace($_SERVER[$id]['DOCUMENT_ROOT'], '', $scriptFile));
+            if (basename($_SERVER['SCRIPT_NAME']) === $scriptName) {
+                $this->_scriptUrl[$id] = $_SERVER['SCRIPT_NAME'];
+            } elseif (basename($_SERVER['PHP_SELF']) === $scriptName) {
+                $this->_scriptUrl[$id] = $_SERVER['PHP_SELF'];
+            } elseif (isset($_SERVER['ORIG_SCRIPT_NAME']) && basename($_SERVER['ORIG_SCRIPT_NAME']) === $scriptName) {
+                $this->_scriptUrl[$id] = $_SERVER['ORIG_SCRIPT_NAME'];
+            } elseif (($pos = strpos($_SERVER['PHP_SELF'], '/' . $scriptName)) !== false) {
+                $this->_scriptUrl[$id] = substr($_SERVER['SCRIPT_NAME'], 0, $pos) . '/' . $scriptName;
+            } elseif (!empty($_SERVER['DOCUMENT_ROOT']) && strpos($scriptFile, $_SERVER['DOCUMENT_ROOT']) === 0) {
+                $this->_scriptUrl[$id] = str_replace('\\', '/', str_replace($_SERVER['DOCUMENT_ROOT'], '', $scriptFile));
             } else {
                 throw new InvalidConfigException('Unable to determine the entry script URL.');
             }
@@ -562,18 +510,18 @@ class Request extends \yii\web\Request implements ICoroutine
 
     /**
      * Returns the entry script file path.
-     * The default implementation will simply return `$_SERVER[$id]['SCRIPT_FILENAME']`.
+     * The default implementation will simply return `$_SERVER['SCRIPT_FILENAME']`.
      * @return string the entry script file path
      */
     public function getScriptFile()
     {
         $id = CoroHelper::getId();
-        return isset($this->_scriptFile[$id]) ? $this->_scriptFile[$id] : $_SERVER[$id]['SCRIPT_FILENAME'];
+        return isset($this->_scriptFile[$id]) ? $this->_scriptFile[$id] : $_SERVER['SCRIPT_FILENAME'];
     }
 
     /**
      * Sets the entry script file path.
-     * The entry script file path normally can be obtained from `$_SERVER[$id]['SCRIPT_FILENAME']`.
+     * The entry script file path normally can be obtained from `$_SERVER['SCRIPT_FILENAME']`.
      * If your server configuration does not return the correct value, you may configure
      * this property to make it right.
      * @param string $value the entry script file path.
@@ -655,7 +603,8 @@ class Request extends \yii\web\Request implements ICoroutine
     {
         $id = CoroHelper::getId();
         if (!isset($this->_port[$id])) {
-            $this->_port[$id] = !$this->getIsSecureConnection() && isset($_SERVER[$id]['SERVER_PORT']) ? (int)$_SERVER[$id]['SERVER_PORT'] : 80;
+            $serverPort = $this->getServerPort();
+            $this->_port[$id] = !$this->getIsSecureConnection() && $serverPort !== null ? $serverPort : 80;
         }
         return $this->_port[$id];
     }
@@ -688,7 +637,8 @@ class Request extends \yii\web\Request implements ICoroutine
     {
         $id = CoroHelper::getId();
         if (!isset($this->_securePort[$id])) {
-            $this->_securePort[$id] = $this->getIsSecureConnection() && isset($_SERVER[$id]['SERVER_PORT']) ? (int)$_SERVER[$id]['SERVER_PORT'] : 443;
+            $serverPort = $this->getServerPort();
+            $this->_securePort[$id] = $this->getIsSecureConnection() && $serverPort !== null ? $serverPort : 443;
         }
         return $this->_securePort[$id];
     }
@@ -715,7 +665,7 @@ class Request extends \yii\web\Request implements ICoroutine
      * This is determined by the `Accept` HTTP header. For example,
      *
      * ```php
-     * $_SERVER[$id]['HTTP_ACCEPT'] = 'text/plain; q=0.5, application/json; version=1.0, application/xml; version=2.0;';
+     * $_SERVER['HTTP_ACCEPT'] = 'text/plain; q=0.5, application/json; version=1.0, application/xml; version=2.0;';
      * $types = $request->getAcceptableContentTypes();
      * print_r($types);
      * // displays:
@@ -734,8 +684,8 @@ class Request extends \yii\web\Request implements ICoroutine
     {
         $id = CoroHelper::getId();
         if (!isset($this->_contentTypes[$id])) {
-            if (isset($_SERVER[$id]['HTTP_ACCEPT'])) {
-                $this->_contentTypes[$id] = $this->parseAcceptHeader($_SERVER[$id]['HTTP_ACCEPT']);
+            if ($this->headers->get('Accept') !== null) {
+                $this->_contentTypes[$id] = $this->parseAcceptHeader($this->headers->get('Accept'));
             } else {
                 $this->_contentTypes[$id] = [];
             }
@@ -768,8 +718,8 @@ class Request extends \yii\web\Request implements ICoroutine
     {
         $id = CoroHelper::getId();
         if (!isset($this->_languages[$id])) {
-            if (isset($_SERVER[$id]['HTTP_ACCEPT_LANGUAGE'])) {
-                $this->_languages[$id] = array_keys($this->parseAcceptHeader($_SERVER[$id]['HTTP_ACCEPT_LANGUAGE']));
+            if ($this->headers->has('Accept-Language')) {
+                $this->_languages[$id] = array_keys($this->parseAcceptHeader($this->headers->get('Accept-Language')));
             } else {
                 $this->_languages[$id] = [];
             }
@@ -831,28 +781,13 @@ class Request extends \yii\web\Request implements ICoroutine
     {
         $id = CoroHelper::getId();
         if (!isset($this->_csrfToken[$id]) || $regenerate) {
-            if ($regenerate || ($token = $this->loadCsrfToken()) === null) {
+            $token = $this->loadCsrfToken();
+            if ($regenerate || empty($token)) {
                 $token = $this->generateCsrfToken();
             }
-            // the mask doesn't need to be very random
-            $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-.';
-            $mask = substr(str_shuffle(str_repeat($chars, 5)), 0, static::CSRF_MASK_LENGTH);
-            // The + sign may be decoded as blank space later, which will fail the validation
-            $this->_csrfToken[$id] = str_replace('+', '.', base64_encode($mask . $this->xorTokens($token, $mask)));
+            $this->_csrfToken[$id] = Yii::$app->security->maskToken($token);
         }
         return $this->_csrfToken[$id];
-    }
-
-    private function xorTokens($token1, $token2)
-    {
-        $n1 = StringHelper::byteLength($token1);
-        $n2 = StringHelper::byteLength($token2);
-        if ($n1 > $n2) {
-            $token2 = str_pad($token2, $n1, $token2);
-        } elseif ($n1 < $n2) {
-            $token1 = str_pad($token1, $n2, $n1 === 0 ? ' ' : $token1);
-        }
-        return $token1 ^ $token2;
     }
 
     private $_traceId;

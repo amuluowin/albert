@@ -107,27 +107,6 @@ class SwooleController extends Controller
         }
     }
 
-    public function actionHprose($app, $d = 0)
-    {
-        if (!isset($app)) {
-            exit("No argv.\n");
-        } else {
-            switch ($app) {
-                case 'start':
-                    Yii::$app->params['swoole']['hprose']['server']['daemonize'] = $d;
-                    HproseServer::getInstance(ArrayHelper::merge(Yii::$app->params['swoole']['hprose'],Yii::$app->params['swoole']['common']));
-                    break;
-                case 'stop':
-                    break;
-                case 'restart':
-                    break;
-                default:
-                    exit("Not support this argv.\n");
-                    break;
-            }
-        }
-    }
-
     public function actionQueue($app)
     {
         if (!isset($app)) {

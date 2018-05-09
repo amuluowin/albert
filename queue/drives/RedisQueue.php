@@ -15,7 +15,7 @@ use yii\swoole\redis\Connection;
  * Date: 2017/1/17
  * Time: 17:12
  */
-class RedisQueue extends Queue implements ICoroutine
+class RedisQueue extends Queue
 {
     public function init()
     {
@@ -23,13 +23,6 @@ class RedisQueue extends Queue implements ICoroutine
             \Yii::$container->setSingleton('connector', $this->connector);
         }
         $this->connector = \Yii::$container->get("connector")->connect();
-    }
-
-    public function release()
-    {
-        if ($this->connector instanceof Connection) {
-            $this->connector->release();
-        }
     }
 
     /**
@@ -92,12 +85,7 @@ class RedisQueue extends Queue implements ICoroutine
     public function getJobCount($queue = null)
     {
         $queue = $this->getQueue($queue);
-        if ($this->connector instanceof \Swoole\Coroutine\Redis) {
-            $this->connector->llen($queue) + $this->connector->zcard($queue . ":delayed");
-            return $this->connector->recv();
-        } else {
-            return $this->connector->llen($queue) + $this->connector->zcard($queue . ":delayed");
-        }
+        return $this->connector->llen($queue) + $this->connector->zcard($queue . ":delayed");
     }
 
     /**

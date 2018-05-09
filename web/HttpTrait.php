@@ -3,6 +3,7 @@
 namespace yii\swoole\web;
 
 use Yii;
+use yii\base\ErrorException;
 use yii\filters\ContentNegotiator;
 use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\helpers\CoroHelper;
@@ -22,36 +23,17 @@ trait HttpTrait
 
         $_GET[$id] = isset($request->get) ? $request->get : [];
         $_POST[$id] = isset($request->post) ? $request->post : [];
-        $_SERVER[$id] = array_change_key_case($request->server, CASE_UPPER);
         $_FILES[$id] = isset($request->files) ? $request->files : [];
         $_COOKIE[$id] = isset($request->cookie) ? $request->cookie : [];
-        if (isset($request->header)) {
-            foreach ($request->header as $key => $value) {
-                $key = 'HTTP_' . strtoupper(str_replace('-', '_', $key));
-                $_SERVER[$id][$key] = $value;
-            }
-        }
 
-        $_SERVER[$id]['REQUEST_URI'] = $request->server['request_uri'];
-        if (isset($request->server['query_string']) && $request->server['query_string']) {
-            $_SERVER[$id]['REQUEST_URI'] = $_SERVER[$id]['REQUEST_URI'] . '?' . $request->server['query_string'];
-        }
-
-        $path = isset($request->header['path']) ? $request->header['path'] : Yii::$app->params['path'];
-        $_SERVER[$id]['REQUEST_URI'] = $path . $_SERVER[$id]['REQUEST_URI'];
-
-        $_SERVER[$id]['SERVER_ADDR'] = '127.0.0.1';
-        $_SERVER[$id]['SERVER_NAME'] = 'localhost';
-        $_SERVER[$id]['SCRIPT_FILENAME'] = $file;
-        $_SERVER[$id]['DOCUMENT_ROOT'] = $this->root;
-        $_SERVER[$id]['DOCUMENT_URI'] = $_SERVER[$id]['SCRIPT_NAME'] = '/' . $this->indexFile;
+        $_SERVER['SERVER_ADDR'] = '127.0.0.1';
+        $_SERVER['SERVER_NAME'] = 'localhost';
+        $_SERVER['SCRIPT_FILENAME'] = $file;
+        $_SERVER['DOCUMENT_ROOT'] = $this->root;
+        $_SERVER['DOCUMENT_URI'] = $_SERVER['SCRIPT_NAME'] = '/' . $this->indexFile;
 
         $this->server->currentSwooleRequest[$id] = $request;
         $this->server->currentSwooleResponse[$id] = $response;
-
-        Yii::$app->getUrlManager()->setBaseUrl($path);
-        Yii::$app->getUrlManager()->checkRules();
-        //set request
         try {
             Yii::$app->beforeRun();
             //判断转发RPC
@@ -71,21 +53,9 @@ trait HttpTrait
                 Yii::$app->run();
             }
         } catch (ErrorException $e) {
-            if ($this->debug) {
-                echo (string)$e;
-                echo "\n";
-                $response->end('');
-            } else {
-                Yii::$app->getErrorHandler()->handleException($e);
-            }
+            Yii::$app->getErrorHandler()->handleException($e);
         } catch (\Exception $e) {
-            if ($this->debug) {
-                echo (string)$e;
-                echo "\n";
-                $response->end('');
-            } else {
-                Yii::$app->getErrorHandler()->handleException($e);
-            }
+            Yii::$app->getErrorHandler()->handleException($e);
         } finally {
             //结束
             Yii::getLogger()->flush(true);
