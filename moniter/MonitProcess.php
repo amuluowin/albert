@@ -9,8 +9,8 @@
 namespace yii\swoole\moniter;
 
 
-use Yii;
 use Swoole\Coroutine\Channel;
+use Yii;
 use yii\swoole\moniter\Parser\ParserInterface;
 use yii\swoole\moniter\Reader\ReaderInterface;
 use yii\swoole\moniter\Writer\WriterInterface;

@@ -4,6 +4,7 @@ namespace yii\swoole\mysql;
 
 use Yii;
 use yii\base\BaseObject;
+use yii\web\ServerErrorHttpException;
 
 class Statement extends BaseObject
 {
@@ -33,24 +34,21 @@ class Statement extends BaseObject
     public function execute($timeout = 10)
     {
         try {
-            $this->pdo->setDefer();
-            $this->data = $this->pdo->query($this->sql, $timeout);
-            $this->data = $this->pdo->recv();
-//            if (empty($this->params)) {
-//                $this->data = $this->pdo->query($this->sql, $timeout);
-//            } else {
-//                $values = [];
-//                foreach ($this->params as $name => $value) {
-//                    $this->sql = preg_replace('/' . $name . '/', '?', $this->sql, 1);
-//                    $values[] = $value;
-//                }
-//                $statement = $this->pdo->prepare($this->sql);
-//                if ($statement == false) {
-//                    throw new ServerErrorHttpException($this->pdo->errno);
-//                } else {
-//                    $this->data = $statement->execute($values);
-//                }
-//            }
+            if (empty($this->params)) {
+                $this->data = $this->pdo->query($this->sql, $timeout);
+            } else {
+                $values = [];
+                foreach ($this->params as $name => $value) {
+                    $this->sql = preg_replace('/' . $name . '/', '?', $this->sql, 1);
+                    $values[] = $value;
+                }
+                $statement = $this->pdo->prepare($this->sql);
+                if ($statement == false) {
+                    throw new ServerErrorHttpException($this->pdo->errno);
+                } else {
+                    $this->data = $statement->execute($values);
+                }
+            }
         } catch (\Exception $e) {
             Yii::warning($e->getMessage());
         } finally {

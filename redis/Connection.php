@@ -28,8 +28,8 @@ class Connection extends \yii\redis\Connection implements ICoroutine
     //key
     private $key;
 
-    public $maxPoolSize = 30;
-    public $busy_pool = 30;
+    public $maxPoolSize = 15;
+    public $busy_pool = 10;
 
     public function getClient()
     {
@@ -103,7 +103,6 @@ class Connection extends \yii\redis\Connection implements ICoroutine
             $client->setDefer();
             $client->{$name}(...$params);
             $result = $client->recv();
-            $this->release();
             return $result;
         } catch (\Exception $e) {
             throw $e;

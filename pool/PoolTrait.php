@@ -4,7 +4,6 @@ namespace yii\swoole\pool;
 
 use Yii;
 use yii\base\Exception;
-use yii\helpers\VarDumper;
 use yii\swoole\web\NoParamsException;
 use yii\web\ServerErrorHttpException;
 
@@ -50,7 +49,7 @@ trait PoolTrait
                 if ($this->spareConns[$connName]->count() >= $this->connsConfig[$connName]['busy_size']) {
                     $conn->close();
                 } else {
-                    $this->spareConns[$connName]->enqueue($conn);
+                    $this->spareConns[$connName]->push($conn);
                     if ($this->pendingFetchCount[$connName] > 0) {
                         $this->resumeFetchCount[$connName]++;
                         $this->pendingFetchCount[$connName]--;
@@ -92,7 +91,7 @@ trait PoolTrait
     protected function getConn(string $connName)
     {
         if (!empty($this->spareConns[$connName]) && $this->spareConns[$connName]->count() > $this->resumeFetchCount[$connName]) {
-            $conn = $this->spareConns[$connName]->dequeue();
+            $conn = $this->spareConns[$connName]->shift();
             $this->busyConns[$connName][spl_object_hash($conn)] = $conn;
             return $conn;
         }
@@ -105,7 +104,7 @@ trait PoolTrait
             }
             $this->resumeFetchCount[$connName]--;
             if (!empty($this->spareConns[$connName])) {
-                $conn = $this->spareConns[$connName]->dequeue();
+                $conn = $this->spareConns[$connName]->shift();
                 $this->busyConns[$connName][spl_object_hash($conn)] = $conn;
                 return $conn;
             } else {

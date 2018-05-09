@@ -2,10 +2,7 @@
 
 namespace yii\swoole\server;
 
-use swoole_http_request;
-use swoole_http_response;
 use swoole_http_server;
-use swoole_table;
 use Yii;
 use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\helpers\SerializeHelper;

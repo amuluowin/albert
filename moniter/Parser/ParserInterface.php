@@ -9,7 +9,6 @@
 namespace yii\swoole\moniter\Parser;
 
 use Yii;
-use yii\base\BaseObject;
 
 interface ParserInterface
 {

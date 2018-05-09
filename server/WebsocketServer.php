@@ -2,10 +2,7 @@
 
 namespace yii\swoole\server;
 
-use swoole_http_request;
-use swoole_http_response;
 use swoole_server;
-use swoole_table;
 use swoole_websocket_frame;
 use swoole_websocket_server;
 use Yii;

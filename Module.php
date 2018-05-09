@@ -12,24 +12,7 @@ class Module extends \yii\base\Module
     /**
      * @var is debug this module
      */
-    public $isService= true;
+    public $isService = true;
 
     public $use_default_doc = true;
-
-    public function init()
-    {
-        parent::init();
-        $this->registerTranslations();
-    }
-
-    public function registerTranslations()
-    {
-        $path = Yii::$app->BaseHelper->getPath($this);
-        Yii::$app->i18n->translations[$this->id] = [
-            'class' => 'yii\i18n\PhpMessageSource',
-            'sourceLanguage' => Yii::$app->sourceLanguage,
-            'basePath' => '@addons' . $path . '/messages'
-        ];
-    }
-
 }
