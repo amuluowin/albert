@@ -16,13 +16,40 @@ use yii\swoole\kafka\Producer\CoroProducer;
 
 class KProducer extends BaseObject
 {
+    /**
+     * @var CoroProducer
+     */
     private $producer;
 
+    /**
+     * @var int
+     */
     public $refreshInterval = 1000;
+
+    /**
+     * @var string
+     */
     public $brokerList = 'localhost:9092';
+
+    /**
+     * @var string
+     */
     public $brokerVersion = '1.0.0';
+
+    /**
+     * @var int
+     */
     public $requiredAck = 1;
+
+    /**
+     * @var int
+     */
     public $produceInterval = 500;
+
+    /**
+     * @var bool
+     */
+    private $started = false;
 
     public function start(LoggerInterface $logger = null)
     {
@@ -55,6 +82,9 @@ class KProducer extends BaseObject
     public function send($data)
     {
         if ($this->producer) {
+            if (!$this->started) {
+                $this->started = true;
+            }
             $this->producer->send($data);
         }
     }

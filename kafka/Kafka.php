@@ -44,23 +44,23 @@ class Kafka extends Component
 
     public function startProducer(LoggerInterface $logger = null)
     {
-        if ($logger) {
-            $this->logger = $logger;
-        }
-        if ($this->logger) {
-            $this->logger->pushHandler(new StdoutHandler());
-        }
+//        if ($logger) {
+//            $this->logger = $logger;
+//        }
+//        if ($this->logger) {
+//            $this->logger->pushHandler(new StdoutHandler());
+//        }
         $this->producer->start($this->logger);
     }
 
     public function startConsumer(LoggerInterface $logger = null)
     {
-        if ($logger) {
-            $this->logger = $logger;
-        }
-        if ($this->logger) {
-            $this->logger->pushHandler(new StdoutHandler());
-        }
+//        if ($logger) {
+//            $this->logger = $logger;
+//        }
+//        if ($this->logger) {
+//            $this->logger->pushHandler(new StdoutHandler());
+//        }
         $this->consumer->start($this->logger);
     }
 }

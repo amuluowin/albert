@@ -66,7 +66,7 @@ class WebsocketServer extends HttpServer
                 //判断转发RPC
                 $route = substr($cmd, 0, strrpos($cmd, '/'));
                 if (!in_array($route, Yii::$rpcList)
-                    || in_array($route, ArrayHelper::getValue(Yii::$app->params, 'rpcCoR', []))
+                    || in_array($route, ArrayHelper::getValue(Yii::$app->rpc, 'remoteList', []))
                 ) {
                     $response->data = Yii::$app->rpc->send([$cmd, [$query, $body]])->recv();
                     $response->format = 'json';

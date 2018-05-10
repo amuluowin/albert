@@ -39,7 +39,7 @@ trait HttpTrait
             //判断转发RPC
             $route = substr($request->server['request_uri'], 0, strrpos($request->server['request_uri'], '/'));
             if (!in_array($route, Yii::$rpcList)
-                || in_array($route, ArrayHelper::getValue(Yii::$app->params, 'rpcCoR', []))
+                || in_array($route, ArrayHelper::getValue(Yii::$app->rpc, 'remoteList', []))
             ) {
                 $appResponse = Yii::$app->getResponse();
                 $appResponse->data = Yii::$app->rpc->send([$request->server['request_uri'], [Yii::$app->getRequest()->getQueryParams(), Yii::$app->getRequest()->getBodyParams()]])->recv();

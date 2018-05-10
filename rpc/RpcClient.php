@@ -12,10 +12,13 @@ class RpcClient extends IRpcClient
     public $config_r;
     public $config_n;
 
+    public $remoteList = [];
+    public $selfList = [];
+
     public function send($data, $uri = null)
     {
         $cor = $this->getRpcCall($data);
-        if (in_array($cor, Yii::$rpcList) && !in_array($cor, ArrayHelper::getValue(Yii::$app->params, 'rpcCoR', []))) {
+        if (in_array($cor, Yii::$rpcList) && !in_array($cor, $this->remoteList)) {
             $client = Yii::createObject($this->config_n);
         } else {
             $client = Yii::createObject($this->config_r);

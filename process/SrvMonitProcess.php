@@ -13,9 +13,14 @@ use Yii;
 class SrvMonitProcess extends BaseProcess
 {
 
+    /**
+     * @var int
+     */
+    public $ticket = 1;
+
     public function start()
     {
-        swoole_timer_tick(Yii::$app->params['BeatConfig']['Srvhbtick'] * 1000, function () {
+        swoole_timer_tick($this->ticket * 1000, function () {
             \Swoole\Coroutine::create(function () {
                 Yii::$app->mserver->create();
                 Yii::$app->mserver->dealServer();

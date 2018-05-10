@@ -115,7 +115,7 @@ class RpcHelper extends \yii\base\Component
     public function getRpcClass()
     {
         if (!self::$_rpcClass) {
-            self::$_rpcClass = ArrayHelper::merge($this->getLogics(), ArrayHelper::getValue(Yii::$app->params, 'extRpc', []));
+            self::$_rpcClass = ArrayHelper::merge($this->getLogics(), ArrayHelper::getValue(Yii::$app->rpc, 'selfList', []));
         }
         return self::$_rpcClass;
     }

@@ -40,6 +40,8 @@ class Response extends \yii\base\Response implements ICoroutine
 
     public $formatters = [];
 
+    public $gziplevel = 1;
+
     public static $httpStatuses = [
         100 => 'Continue',
         101 => 'Switching Protocols',
@@ -316,6 +318,7 @@ class Response extends \yii\base\Response implements ICoroutine
         if (isset($this->isSent[$id]) && $this->isSent[$id]) {
             return;
         }
+        Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->gzip = $this->gziplevel;
         $this->trigger(self::EVENT_BEFORE_SEND);
         $this->prepare();
         $this->trigger(self::EVENT_AFTER_PREPARE);
