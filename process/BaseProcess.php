@@ -91,8 +91,10 @@ abstract class BaseProcess extends \yii\base\Component
                 if (is_string($content)) {
                     $pids = explode(',', $content);
                 }
-                foreach ($pids as $pid) {
-                    \swoole_process::kill(intval($pid));
+                if (is_array($pids)) {
+                    foreach ($pids as $pid) {
+                        \swoole_process::kill(intval($pid));
+                    }
                 }
             } catch (\Exception $e) {
                 print_r($e);
