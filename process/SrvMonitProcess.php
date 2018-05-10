@@ -13,18 +13,14 @@ use Yii;
 class SrvMonitProcess extends BaseProcess
 {
 
-    public function start($class, $config)
+    public function start()
     {
-        $p = new \swoole_process(function ($process) {
-            $process->name('swoole-monit');
-            swoole_timer_tick(Yii::$app->params['BeatConfig']['Srvhbtick'] * 1000, function () {
-                \Swoole\Coroutine::create(function () {
-                    Yii::$app->mserver->dealServer();
-                    Yii::$app->clearComponents();
-                });
+        swoole_timer_tick(Yii::$app->params['BeatConfig']['Srvhbtick'] * 1000, function () {
+            \Swoole\Coroutine::create(function () {
+                Yii::$app->mserver->create();
+                Yii::$app->mserver->dealServer();
+                Yii::$app->clearComponents();
             });
-        }, false, 2);
-
-        $this->server->addProcess($p);
+        });
     }
 }

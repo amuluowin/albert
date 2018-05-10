@@ -7,14 +7,21 @@ use yii\swoole\files\FileIO;
 
 class BackendProcess extends BaseProcess
 {
-    public function start($class, $config)
+    public function start()
+    {
+        foreach ($this->processList as $class => $config) {
+            $this->create($class, $config);
+        }
+    }
+
+    private function create($class, $config)
     {
         if ($class && $config) {
             $config['class'] = $class;
             $obj = Yii::createObject($config);
             $baseprocess = new \swoole_process(function ($process) use ($obj) {
                 $this->workerStart();
-                $process->name('swoole-backend-' . $obj->processName);
+                $process->name('swoole-' . $this->name . '-' . $obj->processName);
                 $process->retry = 0;
                 swoole_timer_tick($obj->ticket * 1000, function () use ($process, $obj) {
                     if ($obj->use_coro) {
@@ -25,20 +32,10 @@ class BackendProcess extends BaseProcess
                         $this->doWork($process, $obj);
                     }
                 });
-            }, false, 2);
+            }, $this->inout, $this->pipe);
 
-            if ($this->server) {
-                $this->server->addProcess($baseprocess);
-            } else {
-                $pid = $baseprocess->start();
-                if (!in_array($pid, $this->pids)) {
-                    $this->pids[] = $pid;
-                }
-                if (!isset($this->processArray[$pid])) {
-                    $this->processArray[$pid] = $baseprocess;
-                }
-                $this->savePid();
-            }
+            $this->saveProcess($baseprocess);
+            $this->savePid();
         }
     }
 

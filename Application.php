@@ -9,6 +9,7 @@ use yii\base\InvalidConfigException;
 use yii\base\InvalidRouteException;
 use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\helpers\CoroHelper;
+use yii\swoole\server\ProcessServer;
 use yii\swoole\web\Request;
 use yii\swoole\web\Response;
 use yii\swoole\web\Session;
@@ -33,6 +34,8 @@ class Application extends Module implements ICoroutine
      * @var static 当前进行中的$app实例, 存放的是一个通用的, 可以供复制的app实例
      */
     public static $workerApp = null;
+
+    public $process;
 
     /**
      * @var swoole_http_server 当前运行中的swoole实例
@@ -216,10 +219,7 @@ class Application extends Module implements ICoroutine
     {
         Yii::$app = $this;
         static::setInstance($this);
-    }
 
-    public function initComponent($config = [])
-    {
         $this->state = self::STATE_BEGIN;
 
         $this->preInit($config);
@@ -227,6 +227,20 @@ class Application extends Module implements ICoroutine
         $this->registerErrorHandler($config);
 
         Component::__construct($config);
+    }
+
+    public function initProcess()
+    {
+        if (is_array($this->process)) {
+            foreach ($this->process as $name => $obj) {
+                if (isset($obj['boot']) && $obj['boot'] === true) {
+                    $obj['name'] = $name;
+                    $process = Yii::createObject($obj);
+                    $this->process[$name] = $process;
+                    ProcessServer::getInstance()->start($process);//启动定时任务
+                }
+            }
+        }
     }
 
     /**

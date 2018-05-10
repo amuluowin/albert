@@ -90,16 +90,12 @@ class InotifyProcess extends BaseProcess
         });
     }
 
-    public function start($class, $config)
+    public function start()
     {
-        $p = new \swoole_process(function ($process) {
-            $process->name('swoole-inotify');
-            if (!extension_loaded('inotify')) {
-                swoole_timer_after(10000, [$this, 'unUseInotify']);
-            } else {
-                $this->useInotify();
-            }
-        }, false, 2);
-        $this->server->addProcess($p);
+        if (!extension_loaded('inotify')) {
+            swoole_timer_after(10000, [$this, 'unUseInotify']);
+        } else {
+            $this->useInotify();
+        }
     }
 }

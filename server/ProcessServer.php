@@ -10,12 +10,10 @@ class ProcessServer implements IProcessServer
 {
     public static $instance;
 
-    private $works = [];
-
-    public function start($config, $work)
+    public function start($work)
     {
         if ($work) {
-            $work->startAll(ArrayHelper::getValue($config, 'common'));
+            $work->startAll();
         }
     }
 

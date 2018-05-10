@@ -115,32 +115,16 @@ class MonitProcess extends BaseProcess
         $this->state = self::STOP;
     }
 
-    public function start($class, $config)
+    public function start()
     {
-        $process = new \swoole_process(function ($process) {
-            $process->name('swoole-moniter');
-            $this->readChannel = new Channel($this->reader->capacity);
+        $this->readChannel = new Channel($this->reader->capacity);
 
-            $this->writeChannel = new Channel($this->writer->capacity);
+        $this->writeChannel = new Channel($this->writer->capacity);
 
-            $this->readerStart();
+        $this->readerStart();
 
-            $this->parserStart();
+        $this->parserStart();
 
-            $this->writerStart();
-        }, false, 2);
-
-        if ($this->server) {
-            $this->server->addProcess($process);
-        } else {
-            $pid = $process->start();
-            if (!in_array($pid, $this->pids)) {
-                $this->pids[] = $pid;
-            }
-            if (!isset($this->processArray[$pid])) {
-                $this->processArray[$pid] = $process;
-            }
-            $this->savePid();
-        }
+        $this->writerStart();
     }
 }

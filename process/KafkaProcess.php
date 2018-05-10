@@ -12,13 +12,8 @@ use Yii;
 
 class KafkaProcess extends BaseProcess
 {
-    public function start($class, $config)
+    public function start()
     {
-        $kafkaprocess = new \swoole_process(function ($process) {
-            $process->name('swoole-Kafka');
-            Yii::$app->kafka->startConsumer();
-        }, false, 2);
-
-        $this->server->addProcess($kafkaprocess);
+        Yii::$app->kafka->startConsumer();
     }
 }

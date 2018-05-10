@@ -9,46 +9,67 @@ use yii\swoole\server\WorkTrait;
 
 abstract class BaseProcess extends \yii\base\Component
 {
-    use WorkTrait;
     public $processArray = [];
+    public $processList = [];
     public $pidFile;
     public $pids = [];
-    public $processList = [];
     public $memory = 512;
     protected $config = [];
     protected $root;
     protected $server = null;
     public $log_path = '/data/logs';
+    public $boot = false;
+    public $name;
+    public $num = 1;
+    public $inout = 0;
+    public $pipe = 0;
 
     public function init()
     {
         parent::init();
         $this->server = Yii::$app->getSwooleServer();
-        Application::$workerApp = true;
-    }
-
-    public function startAll($workConfig)
-    {
-        $this->config = $workConfig;
-        $this->root = $workConfig['root'];
-        if ($this->processList) {
-            foreach ($this->processList as $class => $config) {
-                $this->start($class, $config);
-            }
-        } else {
-            $this->start(null, null);
+        if (!$this->pidFile) {
+            $this->pidFile = sys_get_temp_dir() . '/' . $this->name . '.pid';
         }
     }
 
-    abstract public function start($class, $config);
+    public function startAll()
+    {
+        if ($this->processList) {
+            $this->start();
+        } else {
+            $p = new \swoole_process(function ($process) {
+                $process->name('swoole-' . $this->name);
+                $this->start();
+            }, $this->inout, $this->pipe);
+            $this->saveProcess($p);
+        }
+    }
+
+    abstract public function start();
 
     public function savePid()
     {
-        if ($this->pidFile) {
+        if ($this->pidFile && $this->pids) {
             go(function () {
                 FileIO::write($this->pidFile, implode(',', $this->pids));
             });
 
+        }
+    }
+
+    public function saveProcess($p)
+    {
+        if ($this->server) {
+            $this->server->addProcess($p);
+        } else {
+            $pid = $p->start();
+            if (!in_array($pid, $this->pids)) {
+                $this->pids[] = $pid;
+            }
+            if (!isset($this->processArray[$pid])) {
+                $this->processArray[$pid] = $p;
+            }
         }
     }
 
