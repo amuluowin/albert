@@ -35,7 +35,9 @@ class Application extends Module implements ICoroutine
      */
     public static $workerApp = null;
 
-    public $process;
+    public $process = [];
+
+    public $processPool = [];
 
     /**
      * @var swoole_http_server 当前运行中的swoole实例

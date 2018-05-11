@@ -128,14 +128,16 @@ class SwooleCommand
         }
     }
 
-    public static function ProcessPool($app)
+    public static function ProcessPool($app, $name)
     {
-        if (!isset($app)) {
+        if (!isset($app) || !isset($name)) {
             exit("No argv.\n");
         } else {
             switch ($app) {
                 case 'start':
-                    Yii::createObject('yii\swoole\processpool\TestProcessPool')->start();
+                    if (isset(Yii::$app->processPool[$name])) {
+                        Yii::createObject(Yii::$app->processPool[$name])->start();
+                    }
                     break;
                 case 'stop':
                     break;
