@@ -4,7 +4,6 @@ namespace yii\swoole\rpc;
 
 use Yii;
 use yii\base\NotSupportedException;
-use yii\swoole\helpers\ArrayHelper;
 
 class RpcClient extends IRpcClient
 {
@@ -15,15 +14,16 @@ class RpcClient extends IRpcClient
     public $remoteList = [];
     public $selfList = [];
 
-    public function send($data, $uri = null)
+    public function __call($name, $params)
     {
-        $cor = $this->getRpcCall($data);
-        if (in_array($cor, Yii::$rpcList) && !in_array($cor, $this->remoteList)) {
-            $client = Yii::createObject($this->config_n);
+        list($ser, $route) = $this->getService();
+        if (key_exists($ser, Yii::$rpcList) && in_array($route, Yii::$rpcList[$ser]) && $this->config_n) {
+            $client = clone $this->config_n;
         } else {
-            $client = Yii::createObject($this->config_r);
+            $client = clone $this->config_r;
         }
-        return $client->send($data);
+        $client->create($ser, $route);
+        return $client->$name(...$params);
     }
 
     public function recv()

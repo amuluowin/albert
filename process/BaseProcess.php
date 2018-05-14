@@ -40,7 +40,9 @@ abstract class BaseProcess extends \yii\base\Component
         } else {
             $p = new \swoole_process(function ($process) {
                 $process->name('swoole-' . $this->name);
-                $this->start();
+                go(function () {
+                    $this->start();
+                });
             }, $this->inout, $this->pipe);
             $this->saveProcess($p);
         }

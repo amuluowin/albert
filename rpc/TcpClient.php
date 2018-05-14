@@ -2,43 +2,53 @@
 
 namespace yii\swoole\rpc;
 
+use Swoole\Coroutine\Client;
 use Yii;
-use yii\helpers\ArrayHelper;
+use yii\swoole\governance\trace\TraceInterface;
 use yii\swoole\pack\TcpPack;
-use yii\web\NotFoundHttpException;
 
 class TcpClient extends IRpcClient
 {
+    /**
+     * @var int
+     */
+    public $maxPoolSize = 10;
 
+    /**
+     * @var int
+     */
+    public $busy_pool = 5;
+    /**
+     * @var Client
+     */
     public $client;
+
+    /**
+     * @var float
+     */
     public $timeout = 0.5;
-    public $async = true;
+
+    /**
+     * @var TraceInterface
+     */
+    public $tracer;
+
+    const EVENT_BEFORE_SEND = 'beforeSend';
+    const EVENT_AFTER_RECV = 'afterRecv';
 
     public function recv()
     {
         $result = TcpPack::decode($this->client->recv(), 'tcp');
+        $this->trigger(self::EVENT_AFTER_RECV);
         Yii::$container->get('tcpclient')->recycle($this->client);
         return $result;
     }
 
-    public function send($data, $uri = null)
+    public function __call($name, $params)
     {
-        $cor = $this->getRpcCall($data);
-        //从连接池中获取连接
-        $serlist = null;
-        if ($uri) {
-            $serlist = [$uri];
-        } elseif ($cor) {
-            $serlist = Yii::$app->mserver->getTable($cor);
-        }
-        if (!$serlist && $cor) {
-            $serlist = ArrayHelper::getColumn(Yii::$app->mserver->getFromRedis($cor), 'host', false);
-        }
-        if (!$serlist) {
-            throw new NotFoundHttpException(Yii::t('yii', 'Page not found.'));
-        }
-        $server = array_shift($serlist);
-        list($server, $port) = $server;
+        list($service, $route) = $this->getService();
+        $server = Yii::$app->gr->provider->getServices(Yii::$app->gr->provider->register['Name'], $service);
+        list($server, $port) = array_shift($server);
         $key = 'corotcp:' . $server;
         if (!Yii::$container->hasSingleton('tcpclient')) {
             Yii::$container->setSingleton('tcpclient', [
@@ -51,16 +61,19 @@ class TcpClient extends IRpcClient
                     'hostname' => $server,
                     'port' => $port,
                     'timeout' => $this->timeout,
-                    'async' => $this->async,
                     'pool_size' => $this->maxPoolSize,
                     'busy_size' => $this->busy_pool
                 ])
                 ->fetch($key);
         }
 
-        $odata = [current(swoole_get_local_ip()), Yii::$app->request->getTraceId()];
-        $this->client->send(TcpPack::encode(ArrayHelper::merge($data, $odata), 'tcp'));
+        $data = Yii::$app->gr->trace->getCollect(Yii::$app->request->getTraceId());
+        list($data['service'], $data['route']) = $this->getService();
+        $data['method'] = $name;
+        $data['params'] = $params;
+        $data['fastCall'] = $this->fastCall;
+        Yii::$app->gr->trace->setCollect($data['traceId'], $data);
+        $this->client->send(TcpPack::encode($data, 'tcp'));
         return $this;
     }
-
 }

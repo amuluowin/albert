@@ -2,34 +2,30 @@
 
 namespace yii\swoole\rpc;
 
+use Yii;
+use yii\swoole\helpers\CoroHelper;
+
 abstract class IRpcClient extends \yii\base\Component
 {
-    public $maxPoolSize = 10;
-    public $busy_pool = 10;
+    protected $service = [];
+    protected $fastCall = false;
 
-    public function create($appname)
+    public function getService(): array
     {
+        return isset($this->service[CoroHelper::getId()]) ? $this->service[CoroHelper::getId()] : [null, null];
+    }
+
+    public function fastCall()
+    {
+        $this->fastCall = true;
         return $this;
     }
 
-    abstract public function send($data, $uri = null);
+    public function create(string $ser, string $route)
+    {
+        $this->service[CoroHelper::getId()] = [$ser, $route];
+        return $this;
+    }
 
     abstract public function recv();
-
-    public function sendAndrecv($data)
-    {
-        return $this->send($data)->recv();
-    }
-
-    public function getRpcCall($data)
-    {
-        if (is_array($data[0])) {
-            $cor = $data[0][0][0] === '\\' ? substr($data[0][0], 1) : $data[0][0];
-        } else {
-            $cor = array_shift($data);
-            $cor = substr($cor, 0, strrpos($cor, '/'));
-        }
-        return $cor;
-    }
-
 }

@@ -28,6 +28,19 @@ class Yii extends \yii\BaseYii
 
     private static $_includeFile = [];
 
+    public static function configure($object, $properties)
+    {
+        foreach ($properties as $name => $value) {
+            if (is_array($value) && isset($value['class'])) {
+                $object->$name = self::createObject($value);
+            } else {
+                $object->$name = $value;
+            }
+        }
+
+        return $object;
+    }
+
     public static function autoload($className)
     {
         if (isset(static::$classMap[$className])) {

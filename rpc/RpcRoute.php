@@ -59,7 +59,12 @@ class RpcRoute
                 }
 
                 $namespace = trim($module->controllerNamespace, '\\') . '\\';
+                if (isset($module->logicNamespace)) {
+                    $logicNamespace = trim($module->logicNamespace, '\\') . '\\';
+                }
+
                 self::getControllerFiles($module, $namespace, '', $result);
+                self::getLogics($module, $logicNamespace, '', $result);
             }
 
 
@@ -109,6 +114,43 @@ class RpcRoute
     }
 
     /**
+     * Get list modellogic under module
+     * @param \yii\base\Module $module
+     * @param string $namespace
+     * @param string $prefix
+     * @param mixed $result
+     * @return mixed
+     */
+    public static function getLogics($module, $namespace, $prefix, &$result)
+    {
+        $path = Yii::getAlias('@' . str_replace('\\', '/', $namespace), false);
+        $token = "Get modellogic from '$path'";
+        Yii::beginProfile($token, __METHOD__);
+        try {
+            if (!is_dir($path)) {
+                return;
+            }
+            foreach (scandir($path) as $file) {
+                if ($file == '.' || $file == '..') {
+                    continue;
+                }
+                if (is_dir($path . '/' . $file) && preg_match('%^[a-z0-9_/]+$%i', $file . '/')) {
+                    self::getControllerFiles($module, $namespace . $file . '\\', $prefix . $file . '/', $result);
+                } elseif (strcmp(substr($file, -9), 'Logic.php') === 0) {
+                    $baseName = substr(basename($file), 0, -9);
+                    $name = strtolower(preg_replace('/(?<![A-Z])[A-Z]/', ' \0', $baseName));
+                    $id = ltrim(str_replace(' ', '', $name), '-');
+                    $className = $baseName . 'Logic';
+                    $result[$module->id][] = $className;
+                }
+            }
+        } catch (\Exception $exc) {
+            Yii::error($exc->getMessage(), __METHOD__);
+        }
+        Yii::endProfile($token, __METHOD__);
+    }
+
+    /**
      * Get list action of controller
      * @param mixed $type
      * @param string $id
@@ -122,7 +164,7 @@ class RpcRoute
         try {
             /* @var $controller \yii\base\Controller */
             $controller = Yii::createObject($type, [$id, $module]);
-            $result[] = $prefix = '/' . $controller->uniqueId;
+            $result[$module->id][] = $controller->id;
         } catch (\Exception $exc) {
             Yii::error($exc->getMessage(), __METHOD__);
         }

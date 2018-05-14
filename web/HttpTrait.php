@@ -4,6 +4,8 @@ namespace yii\swoole\web;
 
 use Yii;
 use yii\base\ErrorException;
+use yii\base\InvalidArgumentException;
+use yii\base\InvalidRouteException;
 use yii\filters\ContentNegotiator;
 use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\helpers\CoroHelper;
@@ -37,12 +39,16 @@ trait HttpTrait
         try {
             Yii::$app->beforeRun();
             //判断转发RPC
-            $route = substr($request->server['request_uri'], 0, strrpos($request->server['request_uri'], '/'));
-            if (!in_array($route, Yii::$rpcList)
-                || in_array($route, ArrayHelper::getValue(Yii::$app->rpc, 'remoteList', []))
+            $service = explode('/', ltrim($request->server['request_uri'], '/'));
+            if (count($service) !== 3) {
+                throw new InvalidRouteException();
+            }
+            list($service, $route, $method) = $service;
+            if (!in_array($route, Yii::$rpcList[$service])
+                || in_array($route, ArrayHelper::getValue(Yii::$app->rpc->remoteList, $service, []))
             ) {
                 $appResponse = Yii::$app->getResponse();
-                $appResponse->data = Yii::$app->rpc->send([$request->server['request_uri'], [Yii::$app->getRequest()->getQueryParams(), Yii::$app->getRequest()->getBodyParams()]])->recv();
+                $appResponse->data = Yii::$app->rpc->create($service, $route)->$method([Yii::$app->getRequest()->getQueryParams(), Yii::$app->getRequest()->getBodyParams()])->recv();
                 $filter = new ContentNegotiator(['formats' => [
                     'application/json' => Response::FORMAT_JSON,
                     'application/xml' => Response::FORMAT_XML,

@@ -3,23 +3,25 @@
 namespace yii\swoole\rpc;
 
 use Yii;
+use yii\swoole\helpers\ArrayHelper;
 
 class NavClient extends IRpcClient
 {
 
     private $data;
+    private $method;
 
     public function recv()
     {
-        list($method, $data) = $this->data;
-        $data = call_user_func_array($method, $data);
+        list($service, $route) = $this->getService();
+        $data = call_user_func_array(Yii::$app->RpcHelper->getCurCall($service, $route, $this->method), $this->data);
         return $data;
     }
 
-    public function send($data, $uri = null)
+    public function __call($name, $params)
     {
-        $this->data = $data;
-        return clone $this;
+        $this->method = $name;
+        $this->data = $params;
+        return $this;
     }
-
 }

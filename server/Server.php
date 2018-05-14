@@ -65,6 +65,12 @@ abstract class Server extends Component
 
     protected function beforeStart()
     {
+        foreach (ArrayHelper::remove($this->config, 'beforeStart', []) as $function) {
+            if ($function instanceof \Closure) {
+                $function($this);
+            }
+        }
+        
         foreach (ArrayHelper::remove($this->config, 'addlisten', []) as $schme => $data) {
             list($type, $on, $function) = $data;
             $config = ArrayHelper::getValue($this->allConfig, $schme);
@@ -82,12 +88,6 @@ abstract class Server extends Component
                 }
             }
             $this->schme[$schme]->set($config['server']);
-        }
-
-        foreach (ArrayHelper::remove($this->config, 'beforeStart', []) as $function) {
-            if ($function instanceof \Closure) {
-                $function($this);
-            }
         }
     }
 

@@ -3,6 +3,7 @@
 namespace yii\swoole\tcp;
 
 use Yii;
+use yii\base\InvalidArgumentException;
 use yii\base\InvalidParamException;
 use yii\helpers\BaseJson;
 use yii\swoole\helpers\ArrayHelper;
@@ -13,37 +14,32 @@ trait TcpTrait
     public function onReceive($serv, $fd, $from_id, $data)
     {
         $data = TcpPack::decode($data, 'tcp');
-        $data = ArrayHelper::merge([$serv, $fd, $from_id], $data);
-        $this->run(...$data);
+        $this->run($serv, $fd, $from_id, $data);
     }
 
-    public function run($serv, $fd, $form_id, $function, $params, $IP = '127.0.0.1', $traceId = null, $fastcall = false)
+    public function run($serv, $fd, $form_id, $data)
     {
-        if ($fastcall) {
+        if ($data['fastCall']) {
             $serv->send($fd, TcpPack::encode(['status' => 200, 'code' => 0, 'message' => 'success', 'data' => null], 'tcp'));
         }
 
+        $function = Yii::$app->RpcHelper->getCurCall($data['service'], $data['route'], $data['method']);
+
         if (is_string($function) && strpos($function, '\\') === false && strpos($function, '/') !== false) {
             try {
-                list($query, $params) = $params;
+                list($query, $params) = $data['params'];
                 Yii::$app->request->setBodyParams($params);
                 Yii::$app->request->setHostInfo(null);
                 Yii::$app->request->setUrl($function);
                 Yii::$app->request->setRawBody(json_encode($params));
-                Yii::$app->request->setTraceId($traceId);
+                Yii::$app->request->setTraceId(isset($data['traceId']) ? $data['traceId'] : null);
                 Yii::$app->getRequest()->setQueryParams($query);
                 Yii::$app->refresh();
                 $result = Yii::$app->runAction($function, $query);
-                if (!$fastcall) {
-                    $serv->send($fd, TcpPack::encode($result, 'tcp'));
-                }
-
+                $serv->send($fd, TcpPack::encode($result, 'tcp'));
                 $this->setLog($result);
             } catch (\Exception $e) {
-                if (!$fastcall) {
-                    $serv->send($fd, TcpPack::encode(Yii::$app->getErrorHandler()->converter($e, 'convertExceptionToArray'), 'tcp'));
-                }
-
+                $serv->send($fd, TcpPack::encode(Yii::$app->getErrorHandler()->converter($e, 'convertExceptionToArray'), 'tcp'));
                 $this->setLog($e);
             }
 
@@ -54,32 +50,26 @@ trait TcpTrait
                     list($comp, $obj, $method) = $function;
                     if (Yii::$app->has($comp)) {
                         $obj = Yii::$app->get($comp)->$obj;
-                        $result = $obj->{$method}(...$params);
+                        $result = $obj->{$method}(...$data['params']);
                     } else {
-                        $result = new InvalidParamException('Error send data!');
+                        $result = new InvalidArgumentException('Error send data!');
                     }
                 } elseif ($pnum === 2) {
                     list($obj, $method) = $function;
                     if (Yii::$app->has($obj)) {
                         $obj = Yii::$app->get($obj);
-                        $result = $obj->{$method}(...$params);
+                        $result = $obj->{$method}(...$data['params']);
                     } else {
-                        $result = call_user_func_array($function, $params);
+                        $result = call_user_func_array($function, $data['params']);
                     }
                 } else {
-                    $result = new InvalidParamException('Error send data!');
+                    $result = new InvalidArgumentException('Error send data!');
                 }
 
-                if (!$fastcall) {
-                    $serv->send($fd, TcpPack::encode($result, 'tcp'));
-                }
-                $function = is_array($function) ? implode('\\', $function) : $function;
+                $serv->send($fd, TcpPack::encode($result, 'tcp'));
                 $this->setLog($result);
             } catch (\Exception $e) {
-                if (!$fastcall) {
-                    $serv->send($fd, TcpPack::encode($result, 'tcp'));
-                }
-                $function = is_array($function) ? implode('\\', $function) : $function;
+                $serv->send($fd, TcpPack::encode($result, 'tcp'));
                 $this->setLog($e);
             }
         }
@@ -88,6 +78,7 @@ trait TcpTrait
     private function setLog($result)
     {
         Yii::$app->response->content = BaseJson::encode(Yii::createObject('yii\swoole\rest\Serializer')->serialize($result));
+        Yii::getLogger()->flush(true);
         Yii::$app->release();
     }
 }
