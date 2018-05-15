@@ -3,7 +3,6 @@
 namespace yii\swoole\server;
 
 use Yii;
-use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\process\IProcessServer;
 
 class ProcessServer implements IProcessServer

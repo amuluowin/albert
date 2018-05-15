@@ -16,7 +16,7 @@ class Governance extends Component
     /**
      * @var TraceInterface
      */
-    public $trace;
+    public $tracer;
 
     /**
      * @var ProviderInterface

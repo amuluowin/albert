@@ -4,9 +4,7 @@ namespace yii\swoole\tcp;
 
 use Yii;
 use yii\base\InvalidArgumentException;
-use yii\base\InvalidParamException;
 use yii\helpers\BaseJson;
-use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\pack\TcpPack;
 
 trait TcpTrait

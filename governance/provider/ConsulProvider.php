@@ -45,6 +45,14 @@ class ConsulProvider extends Component implements ProviderInterface
      */
     public $discovery;
 
+    /**
+     * @var int
+     */
+    public $checkType = 1;
+
+    const HTTP = 1;
+    const DNS = 2;
+
     public function init()
     {
         parent::init();
@@ -118,5 +126,16 @@ class ConsulProvider extends Component implements ProviderInterface
         $path = sprintf('%s%s', self::DISCOVERY_PATH, $serviceName);
 
         return sprintf('%s:%d%s?%s', $this->address, $this->port, $path, $queryStr);
+    }
+
+    public function dnsCheck()
+    {
+        if ($this->checkType === self::DNS) {
+            $dns = sprintf('%s.service.$s.consul', $this->register['Name'], $this->discovery['dc']);
+            $node = \Co::getaddrinfo($dns);
+        } else {
+            $node = $this->getServices($this->register['Name']);
+        }
+        return $node;
     }
 }

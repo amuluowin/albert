@@ -4,7 +4,6 @@ namespace yii\swoole\web;
 
 use Yii;
 use yii\base\ErrorException;
-use yii\base\InvalidArgumentException;
 use yii\base\InvalidRouteException;
 use yii\filters\ContentNegotiator;
 use yii\swoole\helpers\ArrayHelper;

@@ -4,15 +4,8 @@ namespace yii\swoole\commands;
 
 use Yii;
 use yii\console\Controller;
-use yii\helpers\ArrayHelper;
-use yii\swoole\helpers\IniHelper;
 use yii\swoole\server\HproseServer;
-use yii\swoole\server\HttpServer;
-use yii\swoole\server\ProcessServer;
 use yii\swoole\server\QueueServer;
-use yii\swoole\server\TaskServer;
-use yii\swoole\server\TcpServer;
-use yii\swoole\server\WebsocketServer;
 
 class SwooleController extends Controller
 {

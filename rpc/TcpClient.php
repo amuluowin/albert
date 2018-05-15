@@ -4,10 +4,9 @@ namespace yii\swoole\rpc;
 
 use Swoole\Coroutine\Client;
 use Yii;
-use yii\swoole\governance\trace\TraceInterface;
 use yii\swoole\pack\TcpPack;
 
-class TcpClient extends IRpcClient
+class TcpClient implements IRpcClient
 {
     /**
      * @var int
@@ -28,26 +27,19 @@ class TcpClient extends IRpcClient
      */
     public $timeout = 0.5;
 
-    /**
-     * @var TraceInterface
-     */
-    public $tracer;
-
-    const EVENT_BEFORE_SEND = 'beforeSend';
-    const EVENT_AFTER_RECV = 'afterRecv';
-
     public function recv()
     {
         $result = TcpPack::decode($this->client->recv(), 'tcp');
-        $this->trigger(self::EVENT_AFTER_RECV);
+        Yii::$app->rpc->afterRecv($result);
         Yii::$container->get('tcpclient')->recycle($this->client);
         return $result;
     }
 
     public function __call($name, $params)
     {
-        list($service, $route) = $this->getService();
-        $server = Yii::$app->gr->provider->getServices(Yii::$app->gr->provider->register['Name'], $service);
+        $data = [];
+        list($data['service'], $data['route']) = Yii::$app->rpc->getService();
+        $server = Yii::$app->gr->provider->getServices(Yii::$app->gr->provider->register['Name'], $data['service']);
         list($server, $port) = array_shift($server);
         $key = 'corotcp:' . $server;
         if (!Yii::$container->hasSingleton('tcpclient')) {
@@ -67,12 +59,10 @@ class TcpClient extends IRpcClient
                 ->fetch($key);
         }
 
-        $data = Yii::$app->gr->trace->getCollect(Yii::$app->request->getTraceId());
-        list($data['service'], $data['route']) = $this->getService();
         $data['method'] = $name;
-        $data['params'] = $params;
-        $data['fastCall'] = $this->fastCall;
-        Yii::$app->gr->trace->setCollect($data['traceId'], $data);
+        $data['params'] = array_shift($params);
+        $data['fastCall'] = Yii::$app->rpc->fastCall;
+        $data = Yii::$app->rpc->beforeSend($data);
         $this->client->send(TcpPack::encode($data, 'tcp'));
         return $this;
     }

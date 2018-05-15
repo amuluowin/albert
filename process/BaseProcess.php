@@ -3,9 +3,7 @@
 namespace yii\swoole\process;
 
 use Yii;
-use yii\swoole\Application;
 use yii\swoole\files\FileIO;
-use yii\swoole\server\WorkTrait;
 
 abstract class BaseProcess extends \yii\base\Component
 {

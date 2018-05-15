@@ -8,15 +8,24 @@
 
 namespace yii\swoole\governance\trace;
 
+use Yii;
 use yii\base\Component;
 use yii\swoole\coroutine\ICoroutine;
-use Yii;
+use yii\swoole\helpers\ArrayHelper;
 
 class TraceCollect extends Component implements ICoroutine, TraceInterface
 {
-    private $collect = [];
+    /**
+     * @var bool
+     */
+    public $isTrace = true;
 
-    public function getCollect($traceId):?array
+    /**
+     * @var array
+     */
+    public $collect = [];
+
+    public function getCollect(string $traceId, array $collect):?array
     {
         if (isset($this->collect[$traceId])) {
             $this->collect[$traceId]['parentId'] = $this->collect[$traceId]['spanId'];
@@ -29,12 +38,13 @@ class TraceCollect extends Component implements ICoroutine, TraceInterface
         }
         $this->collect[$traceId]['sendTime'] = time();
         $this->collect[$traceId]['sendIp'] = current(swoole_get_local_ip());
+        $this->collect[$traceId] = ArrayHelper::merge($this->collect[$traceId], $collect);
         return $this->collect[$traceId];
     }
 
-    public function setCollect($traceId, array $collect)
+    public function addCollect(string $traceId, array $collect)
     {
-        $this->collect[$traceId] = $collect;
+        $this->collect[$traceId] = ArrayHelper::merge($this->collect[$traceId], $collect);
     }
 
     public function release($traceId = null)

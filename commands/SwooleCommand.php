@@ -3,8 +3,6 @@
 namespace yii\swoole\commands;
 
 use Yii;
-use yii\helpers\ArrayHelper;
-use yii\swoole\helpers\IniHelper;
 use yii\swoole\server\HproseServer;
 use yii\swoole\server\HttpServer;
 use yii\swoole\server\ProcessServer;

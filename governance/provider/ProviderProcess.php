@@ -16,5 +16,6 @@ class ProviderProcess extends BaseProcess
     public function start()
     {
         Yii::$app->gr->provider->registerService();
+//        $nodes = Yii::$app->gr->provider->dnsCheck();
     }
 }

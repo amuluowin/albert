@@ -4,7 +4,6 @@ namespace yii\swoole\web;
 
 use Yii;
 use yii\base\InvalidConfigException;
-use yii\helpers\StringHelper;
 use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\helpers\CoroHelper;
 use yii\web\Cookie;

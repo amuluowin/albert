@@ -11,7 +11,7 @@ namespace yii\swoole\governance\trace;
 
 interface TraceInterface
 {
-    public function getCollect($traceId):?array;
+    public function getCollect(string $traceId,array $collect):?array;
 
-    public function setCollect($traceId, array $collect);
+    public function addCollect(string $traceId, array $collect);
 }
