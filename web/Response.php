@@ -318,14 +318,14 @@ class Response extends \yii\base\Response implements ICoroutine
         if (isset($this->isSent[$id]) && $this->isSent[$id]) {
             return;
         }
-        Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->gzip = $this->gziplevel;
+        Yii::$server->currentSwooleResponse[$id]->gzip = $this->gziplevel;
         $this->trigger(self::EVENT_BEFORE_SEND);
         $this->prepare();
         $this->trigger(self::EVENT_AFTER_PREPARE);
         $this->sendHeaders();
         $this->sendContent();
         $this->trigger(self::EVENT_AFTER_SEND);
-        unset(Yii::$app->getSwooleServer()->currentSwooleResponse[$id]);
+        unset(Yii::$server->currentSwooleResponse[$id]);
         $this->isSent[$id] = true;
     }
 
@@ -420,14 +420,14 @@ class Response extends \yii\base\Response implements ICoroutine
             return;
         }
         $statusCode = $this->getStatusCode();
-        Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->status($statusCode);
+        Yii::$server->currentSwooleResponse[$id]->status($statusCode);
         if ($this->_headers) {
             $headers = $this->getHeaders();
             foreach ($headers as $name => $values) {
                 $name = str_replace(' ', '-', ucwords(str_replace('-', ' ', $name)));
                 // set replace for first occurrence of header but false afterwards to allow multiple
                 foreach ($values as $value) {
-                    Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->header($name, $value);
+                    Yii::$server->currentSwooleResponse[$id]->header($name, $value);
                 }
             }
         }
@@ -464,7 +464,7 @@ class Response extends \yii\base\Response implements ICoroutine
             if ($cookie->expire != 1 && isset($validationKey)) {
                 $value = Yii::$app->getSecurity()->hashData(serialize([$cookie->name, $value]), $validationKey);
             }
-            Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->cookie($cookie->name, $value, $cookie->expire, $cookie->path, $cookie->domain, $cookie->secure, $cookie->httpOnly);
+            Yii::$server->currentSwooleResponse[$id]->cookie($cookie->name, $value, $cookie->expire, $cookie->path, $cookie->domain, $cookie->secure, $cookie->httpOnly);
         }
     }
 
@@ -472,7 +472,7 @@ class Response extends \yii\base\Response implements ICoroutine
     {
         $id = CoroHelper::getId();
         if ($this->getStream() === null) {
-            Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->end($this->content[$id]);
+            Yii::$server->currentSwooleResponse[$id]->end($this->content[$id]);
             return;
         }
 
@@ -485,16 +485,16 @@ class Response extends \yii\base\Response implements ICoroutine
                 if ($pos + $chunkSize > $end) {
                     $chunkSize = $end - $pos + 1;
                 }
-                Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->write(\Swoole\Coroutine::fread($handle, $chunkSize));
+                Yii::$server->currentSwooleResponse[$id]->write(\Swoole\Coroutine::fread($handle, $chunkSize));
             }
             fclose($handle);
-            Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->end();
+            Yii::$server->currentSwooleResponse[$id]->end();
         } else {
             while (!feof($this->getStream())) {
-                Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->write(\Swoole\Coroutine::fread($this->getStream(), $chunkSize));
+                Yii::$server->currentSwooleResponse[$id]->write(\Swoole\Coroutine::fread($this->getStream(), $chunkSize));
             }
             fclose($this->getStream());
-            Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->end();
+            Yii::$server->currentSwooleResponse[$id]->end();
         }
     }
 
@@ -507,12 +507,12 @@ class Response extends \yii\base\Response implements ICoroutine
         if ($attachmentName === null) {
             $attachmentName = basename($filePath);
         }
-        Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->header('Content-disposition', 'attachment; filename="' . urlencode($attachmentName) . '.xlsx"');
-        Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->header('Content-Type', $options['mimeType']);
-        Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->header('Content-Transfer-Encoding', 'binary');
-        Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->header('Cache-Control', 'must-revalidate');
-        Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->header('Pragma', 'public');
-        Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->sendfile($filePath);
+        Yii::$server->currentSwooleResponse[$id]->header('Content-disposition', 'attachment; filename="' . urlencode($attachmentName) . '.xlsx"');
+        Yii::$server->currentSwooleResponse[$id]->header('Content-Type', $options['mimeType']);
+        Yii::$server->currentSwooleResponse[$id]->header('Content-Transfer-Encoding', 'binary');
+        Yii::$server->currentSwooleResponse[$id]->header('Cache-Control', 'must-revalidate');
+        Yii::$server->currentSwooleResponse[$id]->header('Pragma', 'public');
+        Yii::$server->currentSwooleResponse[$id]->sendfile($filePath);
     }
 
     public function xSendFile($filePath, $attachmentName = null, $options = [])

@@ -23,6 +23,7 @@ if (PHP_SAPI === 'cli' && extension_loaded('swoole')) {
  */
 class Yii extends \yii\BaseYii
 {
+    public static $server;
 
     public static $rpcList = [];
 

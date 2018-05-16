@@ -11,12 +11,12 @@ class TcpClient implements IRpcClient
     /**
      * @var int
      */
-    public $maxPoolSize = 10;
+    public $maxPoolSize = 100;
 
     /**
      * @var int
      */
-    public $busy_pool = 5;
+    public $busy_pool = 50;
     /**
      * @var Client
      */
@@ -25,7 +25,7 @@ class TcpClient implements IRpcClient
     /**
      * @var float
      */
-    public $timeout = 0.5;
+    public $timeout = 1;
 
     public function recv()
     {
@@ -39,7 +39,7 @@ class TcpClient implements IRpcClient
     {
         $data = [];
         list($data['service'], $data['route']) = Yii::$app->rpc->getService();
-        $server = Yii::$app->gr->provider->getServices(Yii::$app->gr->provider->register['Name'], $data['service']);
+        $server = Yii::$app->gr->provider->getServices($data['service']);
         list($server, $port) = array_shift($server);
         $key = 'corotcp:' . $server;
         if (!Yii::$container->hasSingleton('tcpclient')) {

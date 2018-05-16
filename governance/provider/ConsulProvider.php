@@ -9,11 +9,11 @@
 namespace yii\swoole\governance\provider;
 
 use Yii;
-use yii\base\Component;
 use yii\helpers\VarDumper;
 use yii\httpclient\Client;
+use yii\swoole\files\OutPut;
 
-class ConsulProvider extends Component implements ProviderInterface
+class ConsulProvider extends BaseProvider implements ProviderInterface
 {
     /**
      * Register path
@@ -50,40 +50,58 @@ class ConsulProvider extends Component implements ProviderInterface
      */
     public $checkType = 1;
 
+    /**
+     * @var array
+     */
+    private $services = [];
+
     const HTTP = 1;
     const DNS = 2;
 
     public function init()
     {
         parent::init();
-        if (empty($this->register['Tags'])) {
-            $this->register['Tags'] = array_keys(Yii::$rpcList);
+        if (empty($this->register['Name'])) {
+            $this->services = array_keys(Yii::$rpcList);
         }
     }
 
-    public function getServices(string $serviceName, string $tag = null)
+    public function getServices(string $serviceName, ...$params)
     {
-        $url = $this->getDiscoveryUrl($serviceName, $tag);
-        $services = Yii::$app->httpclient->get($url)->send()->getData();
-
-        // 数据格式化
-        $nodes = [];
-        foreach ($services as $service) {
-            if (!isset($service['Service'])) {
-                Yii::warning("consul[Service] 服务健康节点集合，数据格式不不正确，Data=" . VarDumper::export($services));
-                continue;
-            }
-            $serviceInfo = $service['Service'];
-            if (!isset($serviceInfo['Address'], $serviceInfo['Port'])) {
-                Yii::warning("consul[Address] Or consul[Port] 服务健康节点集合，数据格式不不正确，Data=" . VarDumper::export($services));
-                continue;
-            }
-            $address = $serviceInfo['Address'];
-            $port = $serviceInfo['Port'];
-            $nodes[] = [$address, $port];
+        $nodes = $this->getServiceFromCache($serviceName);
+        if ($nodes) {
+            return $nodes;
+        } else {
+            return $this->get($serviceName, $params);
         }
+    }
 
-        return $nodes;
+    private function get(string $serviceName, ...$params)
+    {
+        $url = $this->getDiscoveryUrl($serviceName);
+        $services = Yii::$app->httpclient->get($url)->send()->getData();
+        if (is_array($services)) {
+            // 数据格式化
+            $nodes = [];
+            foreach ($services as $service) {
+                if (!isset($service['Service'])) {
+                    Yii::warning("consul[Service] 服务健康节点集合，数据格式不不正确，Data=" . VarDumper::export($services));
+                    continue;
+                }
+                $serviceInfo = $service['Service'];
+                if (!isset($serviceInfo['Address'], $serviceInfo['Port'])) {
+                    Yii::warning("consul[Address] Or consul[Port] 服务健康节点集合，数据格式不不正确，Data=" . VarDumper::export($services));
+                    continue;
+                }
+                $address = $serviceInfo['Address'];
+                $port = $serviceInfo['Port'];
+                $nodes[] = [$address, $port];
+            }
+
+            return $nodes;
+        } else {
+            print_r(sprintf("can not connect to service provider consul:%s:%d", $this->address, $this->port) . PHP_EOL);
+        }
     }
 
     /**
@@ -95,14 +113,28 @@ class ConsulProvider extends Component implements ProviderInterface
      */
     public function registerService(...$params)
     {
-
         $url = sprintf('%s:%d%s', $this->address, $this->port, self::REGISTER_PATH);
-        $result = Yii::$app->httpclient->put($url, $this->register)->setFormat(Client::FORMAT_JSON)->send()->getData();
-        if (empty($result)) {
-            print_r(sprintf('RPC service register success by consul ! tcp=%s:%d', $this->register['Address'], $this->register['Port']) . PHP_EOL);
+        if (!empty($this->services)) {
+            foreach ($this->services as $service) {
+                $this->register['Name'] = $service;
+                $this->putService($url);
+            }
+        } else {
+            $this->putService($url);
         }
 
         return true;
+    }
+
+    private function putService(string $url)
+    {
+        $response = Yii::$app->httpclient->put($url, $this->register)->setFormat(Client::FORMAT_JSON)->send();
+        $output = 'RPC service register service %s %s by consul ! tcp=%s:%d';
+        if (empty($result) && $response->getStatusCode() == 200) {
+            print_r(sprintf($output, $this->register['Name'], 'success', $this->register['Address'], $this->register['Port']) . PHP_EOL);
+        } else {
+            print_r(sprintf($output, $this->register['Name'], 'failed', $this->register['Address'], $this->register['Port']) . PHP_EOL);
+        }
     }
 
     /**
@@ -110,7 +142,7 @@ class ConsulProvider extends Component implements ProviderInterface
      *
      * @return string
      */
-    private function getDiscoveryUrl(string $serviceName, string $tag = null): string
+    private function getDiscoveryUrl(string $serviceName): string
     {
         $query = [
             'passing' => $this->discovery['passing'],
@@ -118,8 +150,8 @@ class ConsulProvider extends Component implements ProviderInterface
             'near' => $this->discovery['near'],
         ];
 
-        if (!empty($tag)) {
-            $query['tag'] = $tag;
+        if (!empty($this->register['Tags'])) {
+            $query['tag'] = $this->register['Tags'];
         }
 
         $queryStr = http_build_query($query);
@@ -130,12 +162,23 @@ class ConsulProvider extends Component implements ProviderInterface
 
     public function dnsCheck()
     {
-        if ($this->checkType === self::DNS) {
-            $dns = sprintf('%s.service.$s.consul', $this->register['Name'], $this->discovery['dc']);
-            $node = \Co::getaddrinfo($dns);
+        if (!empty($this->services)) {
+            foreach ($this->services as $service) {
+                $this->check($service);
+            }
         } else {
-            $node = $this->getServices($this->register['Name']);
+            $this->check($this->register['Name']);
         }
-        return $node;
+    }
+
+    private function check(string $service)
+    {
+        if ($this->checkType === self::DNS) {
+            $dns = sprintf('%s.service.$s.consul', $service, $this->discovery['dc']);
+            $node[$service] = \Co::getaddrinfo($dns);
+        } else {
+            $node[$service] = $this->get($service);
+        }
+        $this->setServiceToCache($node);
     }
 }

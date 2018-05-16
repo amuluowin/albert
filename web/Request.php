@@ -54,7 +54,7 @@ class Request extends \yii\web\Request implements ICoroutine
         $id = CoroHelper::getId();
         if (!isset($this->_headers[$id])) {
             $this->_headers[$id] = new HeaderCollection;
-            $headers = Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->header;
+            $headers = Yii::$server->currentSwooleRequest[$id]->header;
             foreach ($headers as $name => $value) {
                 $this->_headers[$id]->add($name, $value);
             }
@@ -85,15 +85,15 @@ class Request extends \yii\web\Request implements ICoroutine
     public function getMethod()
     {
         $id = CoroHelper::getId();
-        if (isset(Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->post[$this->methodParam])) {
-            return strtoupper(Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->post[$this->methodParam]);
+        if (isset(Yii::$server->currentSwooleRequest[$id]->post[$this->methodParam])) {
+            return strtoupper(Yii::$server->currentSwooleRequest[$id]->post[$this->methodParam]);
         }
         if ($this->headers->has('X-Http-Method-Override')) {
             return strtoupper($this->headers->get('X-Http-Method-Override'));
         }
 
-        if (isset(Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->server['request_method'])) {
-            return strtoupper(Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->server['request_method']);
+        if (isset(Yii::$server->currentSwooleRequest[$id]->server['request_method'])) {
+            return strtoupper(Yii::$server->currentSwooleRequest[$id]->server['request_method']);
         }
     }
 
@@ -105,8 +105,8 @@ class Request extends \yii\web\Request implements ICoroutine
     protected function resolveRequestUri()
     {
         $id = CoroHelper::getId();
-        if (isset(Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->server['request_uri'])) {
-            $requestUri = Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->server['request_uri'];
+        if (isset(Yii::$server->currentSwooleRequest[$id]->server['request_uri'])) {
+            $requestUri = Yii::$server->currentSwooleRequest[$id]->server['request_uri'];
         } elseif ($this->headers->has('X-Rewrite-Url')) { // IIS
             $requestUri = $this->headers->get('X-Rewrite-Url');
         } elseif (isset($_SERVER['REQUEST_URI'])) {
@@ -129,13 +129,13 @@ class Request extends \yii\web\Request implements ICoroutine
     public function getQueryString()
     {
         $id = CoroHelper::getId();
-        return isset(Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->server['query_string']) ? Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->server['query_string'] : '';
+        return isset(Yii::$server->currentSwooleRequest[$id]->server['query_string']) ? Yii::$server->currentSwooleRequest[$id]->server['query_string'] : '';
     }
 
     public function getIsSecureConnection()
     {
         $id = CoroHelper::getId();
-        return strcasecmp(Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->server['server_protocol'], 'https');
+        return strcasecmp(Yii::$server->currentSwooleRequest[$id]->server['server_protocol'], 'https');
     }
 
     public function getServerName()
@@ -146,7 +146,7 @@ class Request extends \yii\web\Request implements ICoroutine
     public function getServerPort()
     {
         $id = CoroHelper::getId();
-        return Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->server['server_port'];
+        return Yii::$server->currentSwooleRequest[$id]->server['server_port'];
     }
 
     public function getReferrer()
@@ -173,7 +173,7 @@ class Request extends \yii\web\Request implements ICoroutine
     public function getRemoteIP()
     {
         $id = CoroHelper::getId();
-        return Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->server['remote_addr'];
+        return Yii::$server->currentSwooleRequest[$id]->server['remote_addr'];
     }
 
     public function getUserHost()
@@ -200,8 +200,8 @@ class Request extends \yii\web\Request implements ICoroutine
     public function getContentType()
     {
         $id = CoroHelper::getId();
-        if (isset(Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->header['content-type'])) {
-            return Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->header['content-type'];
+        if (isset(Yii::$server->currentSwooleRequest[$id]->header['content-type'])) {
+            return Yii::$server->currentSwooleRequest[$id]->header['content-type'];
         }
 
         //fix bug https://bugs.php.net/bug.php?id=66606
@@ -265,7 +265,7 @@ class Request extends \yii\web\Request implements ICoroutine
     {
         $id = CoroHelper::getId();
         if (!isset($this->_rawBody[$id])) {
-            $this->_rawBody[$id] = Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->rawContent();
+            $this->_rawBody[$id] = Yii::$server->currentSwooleRequest[$id]->rawContent();
         }
         return $this->_rawBody[$id];
     }
@@ -297,8 +297,8 @@ class Request extends \yii\web\Request implements ICoroutine
     {
         $id = CoroHelper::getId();
         if (!isset($this->_bodyParams[$id])) {
-            if (isset(Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->post[$this->methodParam])) {
-                $this->_bodyParams[$id] = Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->post;
+            if (isset(Yii::$server->currentSwooleRequest[$id]->post[$this->methodParam])) {
+                $this->_bodyParams[$id] = Yii::$server->currentSwooleRequest[$id]->post;
                 unset($this->_bodyParams[$id][$this->methodParam]);
                 return $this->_bodyParams[$id];
             }
@@ -320,7 +320,7 @@ class Request extends \yii\web\Request implements ICoroutine
                 }
                 $this->_bodyParams[$id] = $parser->parse($this->getRawBody(), $contentType);
             } elseif ($this->getMethod() === 'POST') {
-                // PHP has already parsed the body so we have all params in         Yii::$app->getSwooleServer()->currentSwooleRequest[CoroHelper::getId()]->post
+                // PHP has already parsed the body so we have all params in         Yii::$server->currentSwooleRequest[CoroHelper::getId()]->post
                 $this->_bodyParams[$id] = $_POST[$id];
             } else {
                 $this->_bodyParams[$id] = [];
@@ -544,7 +544,7 @@ class Request extends \yii\web\Request implements ICoroutine
     {
         $id = CoroHelper::getId();
         if (!isset($this->_pathInfo[$id])) {
-            $this->_pathInfo[$id] = Yii::$app->getSwooleServer()->currentSwooleRequest[$id]->server['path_info'];
+            $this->_pathInfo[$id] = Yii::$server->currentSwooleRequest[$id]->server['path_info'];
         }
         return $this->_pathInfo[$id];
     }

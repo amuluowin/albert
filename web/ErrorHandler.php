@@ -174,8 +174,8 @@ class ErrorHandler extends \yii\web\ErrorHandler
     private function flush($exception)
     {
         $id = CoroHelper::getId();
-        if (isset(Yii::$app->getSwooleServer()->currentSwooleResponse[$id])) {
-            Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->status(500);
+        if (isset(Yii::$server->currentSwooleResponse[$id])) {
+            Yii::$server->currentSwooleResponse[$id]->status(500);
             try {
                 $this->logException($exception);
                 if ($this->discardExistingOutput) {
@@ -194,8 +194,8 @@ class ErrorHandler extends \yii\web\ErrorHandler
                     $html = 'An internal server error occurred.';
                 }
 
-                Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->header('Content-Type', 'text/html; charset=utf-8');
-                Yii::$app->getSwooleServer()->currentSwooleResponse[$id]->end($html);
+                Yii::$server->currentSwooleResponse[$id]->header('Content-Type', 'text/html; charset=utf-8');
+                Yii::$server->currentSwooleResponse[$id]->end($html);
             }
         } else {
             print_r($this->convertExceptionToArray($exception));

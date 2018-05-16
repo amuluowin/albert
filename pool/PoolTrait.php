@@ -4,7 +4,7 @@ namespace yii\swoole\pool;
 
 use Yii;
 use yii\base\Exception;
-use yii\swoole\web\NoParamsException;
+use yii\base\InvalidArgumentException;
 use yii\web\ServerErrorHttpException;
 
 trait PoolTrait
@@ -18,6 +18,7 @@ trait PoolTrait
 
     protected $reconnect = 3;
     protected $curconnect = 0;
+    protected $recycleTime = 1;
 
     public function create(string $connName, array $config)
     {
@@ -27,7 +28,7 @@ trait PoolTrait
         $this->pendingFetchCount[$connName] = 0;
         $this->resumeFetchCount[$connName] = 0;
         if ($config['pool_size'] <= 0 || $config['busy_size'] <= 0) {
-            throw new NoParamsException("Invalid maxSpareConns or maxConns in {$connName}");
+            throw new InvalidArgumentException("Invalid maxSpareConns or maxConns in {$connName}");
         }
         return $this;
     }
@@ -72,7 +73,6 @@ trait PoolTrait
     {
         if (!isset($this->connsConfig[$connName])) {
             return null;
-            //throw new NoParamsException("Unvalid connName: {$connName}." . PHP_EOL . 'config:' . VarDumper::export($this->connsConfig));
         }
 
         $conn = $this->createConn($connName, $this->getConn($connName));

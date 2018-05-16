@@ -43,8 +43,9 @@ class SwooleTransport extends \yii\httpclient\Transport
             ];
             if (($ret = filter_var($config['hostname'], FILTER_VALIDATE_IP) ? $config['hostname'] : null) || ($ret = swoole_async_dns_lookup_coro($config['hostname'], $config['timeout']))) {
                 $cli = new \Swoole\Coroutine\Http\Client($ret, $config['port'], $config['scheme'] === 'https' ? true : false);
-                if ($cli->errCode !== 0) {
-                    throw new ServerErrorHttpException("Can not connect to " . $config['hostname'] . ':' . $config['port']);
+                if ($cli->errCode !== 0 || !$cli->connected) {
+                    $response = $request->client->createConn($cli);
+                    return $response;
                 }
             } else {
                 throw new ServerErrorHttpException("Can not connect to " . $config['hostname'] . ':' . $config['port']);
@@ -93,7 +94,8 @@ class SwooleTransport extends \yii\httpclient\Transport
             }
         } catch (\Exception $e) {
             Yii::endProfile($token, __METHOD__);
-            throw new \Exception($e->getMessage(), $e->getCode(), $e);
+            $response = $request->client->createConn($cli);
+            return $response;
         }
 
         Yii::endProfile($token, __METHOD__);

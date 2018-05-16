@@ -39,8 +39,7 @@ class QueueProcess extends BaseProcess
                     }
 
                 }, $this->inout, $this->pipe);
-
-
+                $this->saveProcess($queue_process);
             }
             $this->savePid();
         }

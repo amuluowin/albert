@@ -25,7 +25,7 @@ abstract class BaseProcess extends \yii\base\Component
     public function init()
     {
         parent::init();
-        $this->server = Yii::$app->getSwooleServer();
+        $this->server = Yii::$server;
         if (!$this->pidFile) {
             $this->pidFile = sys_get_temp_dir() . '/' . $this->name . '.pid';
         }

@@ -22,7 +22,8 @@ class Response extends \yii\httpclient\Response
 
     private function recv()
     {
-        if ($this->conn->errCode === 0 && !isset($this->conn->body) && $this->conn->recv()) {
+        if ($this->conn->connected && $this->conn->errCode === 0 &&
+            !isset($this->conn->body) && $this->conn->recv()) {
             $this->setContent($this->conn->body);
             $this->setHeaders($this->conn->headers);
             $this->setCookies($this->conn->cookies);
@@ -36,7 +37,7 @@ class Response extends \yii\httpclient\Response
         if (isset($this->conn->statusCode)) {
             $code = $this->conn->statusCode;
         } else {
-            $code = 500;
+            $code = 502;
         }
         return $code;
     }

@@ -42,7 +42,7 @@ class HttpServer extends Server
             $this->pidFile = $this->config['pidFile'];
         }
         $this->createServer();
-        Yii::$app->setSwooleServer($this->server);
+        Yii::$server = $this->server;
         $this->startServer();
     }
 

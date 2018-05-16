@@ -44,7 +44,7 @@ class Cache extends \yii\caching\Cache
 
     public function init()
     {
-        $table = Yii::$app->getSwooleServer()->cacheTable;
+        $table = Yii::$server->cacheTable;
         if (!$table instanceof Table) {
             throw new InvalidValueException('Cache require yii\swoole\server::cacheTable');
         }
@@ -83,13 +83,12 @@ class Cache extends \yii\caching\Cache
         if ($column == false) {
             return false;
         }
-        if ($column['expire'] < $nowtime) {
+        if ($column['expire'] != 0 && $column['expire'] < $nowtime) {
             $this->deleteValue($key);
             return false;
         }
         $nextValue = $this->getValueRec($column['nextId'], $nowtime);
         if ($nextValue === false) {
-            var_dump('false:' . $column['nextId']);
             $this->tableInstance->del($key);
             return false;
         }
@@ -99,7 +98,7 @@ class Cache extends \yii\caching\Cache
     protected function setValue($key, $value, $duration)
     {
         $this->gc();
-        $expire = $duration + time();
+        $expire = $duration ? $duration + time() : 0;
         $valueLength = strlen($value);
         return (boolean)$this->setValueRec($key, $value, $expire, $valueLength);
     }
