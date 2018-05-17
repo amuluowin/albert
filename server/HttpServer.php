@@ -4,9 +4,10 @@ namespace yii\swoole\server;
 
 use swoole_http_server;
 use Yii;
+use yii\swoole\base\BootInterface;
 use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\helpers\SerializeHelper;
-use yii\swoole\tcp\TcpTrait;
+use yii\swoole\rpc\RpcTrait;
 use yii\swoole\web\HttpTrait;
 
 /**
@@ -16,7 +17,7 @@ use yii\swoole\web\HttpTrait;
  */
 class HttpServer extends Server
 {
-    use TcpTrait;
+    use RpcTrait;
     use HttpTrait;
 
     /**
@@ -28,12 +29,21 @@ class HttpServer extends Server
 
     public function __construct($config)
     {
-        $this->allConfig = $config;
+        $this->config = ArrayHelper::merge(ArrayHelper::getValue($config, 'web'), ArrayHelper::getValue($config, 'common'));
+    }
+
+    protected function beforeStart()
+    {
+        foreach (Yii::$app->beforeStart as $handle) {
+            if (!$handle instanceof BootInterface) {
+                $handle = Yii::createObject($handle);
+            }
+            $handle->handle($this);
+        }
     }
 
     public function start()
     {
-        $this->config = ArrayHelper::merge(ArrayHelper::getValue($this->allConfig, 'web'), ArrayHelper::getValue($this->allConfig, 'common'));
         $this->name = $this->config['name'];
         if (isset($this->config['debug'])) {
             $this->debug = $this->config['debug'];

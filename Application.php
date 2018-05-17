@@ -16,15 +16,12 @@ use yii\swoole\web\Session;
 use yii\web\NotFoundHttpException;
 use yii\web\UrlNormalizerRedirectException;
 
-/**
- * @property swoole_http_request swooleRequest
- * @property swoole_http_response swooleResponse
- * @property swoole_http_server swooleServer
- * @property string rootPath
- */
 class Application extends Module implements ICoroutine
 {
 
+    /**
+     * @var string
+     */
     public $defaultRoute = 'site';
 
     public $catchAll;
@@ -35,30 +32,20 @@ class Application extends Module implements ICoroutine
      */
     public static $workerApp = null;
 
+    /**
+     * @var array
+     */
     public $process = [];
 
+    /**
+     * @var array
+     */
     public $processPool = [];
 
     /**
-     * @var swoole_http_server 当前运行中的swoole实例
+     * @var array
      */
-    protected $_swooleServer;
-
-    /**
-     * @return swoole_http_server
-     */
-    public function getSwooleServer()
-    {
-        return $this->_swooleServer;
-    }
-
-    /**
-     * @param swoole_http_server $swooleServer
-     */
-    public function setSwooleServer($swooleServer)
-    {
-        $this->_swooleServer = $swooleServer;
-    }
+    public $beforeStart = [];
 
     /**
      * @event Event an event raised before the application starts to handle a request.
@@ -187,7 +174,7 @@ class Application extends Module implements ICoroutine
     {
         //清理request,response
         $id = CoroHelper::getId();
-        unset($this->_swooleServer->currentSwooleRequest[$id]);
+        unset(Yii::$server->currentSwooleRequest[$id]);
         //清理属性
         $this->clearProperty();
         //回收组件

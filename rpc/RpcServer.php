@@ -5,21 +5,25 @@ namespace yii\swoole\server;
 use swoole_server;
 use Yii;
 use yii\swoole\helpers\ArrayHelper;
-use yii\swoole\tcp\TcpTrait;
 
-class TcpServer extends Server
+class RpcServer extends Server
 {
-    use TcpTrait;
+    /**
+     * @var swoole_server
+     */
     public $server;
+
+    /**
+     * @var RpcServer
+     */
     public static $instance;
 
     public function __construct($config)
     {
-        $this->allConfig = $config;
         $this->config = ArrayHelper::merge(ArrayHelper::getValue($config, 'tcp'), ArrayHelper::getValue($config, 'common'));
         $this->server = new swoole_server($this->config['host'], $this->config['port']);
         $this->name = $this->config['name'];
-        Yii::$app->setSwooleServer($this->server);
+        Yii::$server = $this->server;
         if (isset($this->config['pidFile'])) {
             $this->pidFile = $this->config['pidFile'];
         }
@@ -39,17 +43,10 @@ class TcpServer extends Server
         $this->server->start();
     }
 
-    protected function beforeStart()
-    {
-        if (Yii::$app->params['Hearbeat']['UpSrv']) {
-            \yii\swoole\work\Heartbeat::getInstance(Yii::$app->params['swoole'])->UpSrv();
-        }
-    }
-
     public static function getInstance($config)
     {
         if (!self::$instance) {
-            self::$instance = new TcpServer($config);
+            self::$instance = new RpcServer($config);
         }
         return self::$instance;
     }

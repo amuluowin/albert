@@ -40,7 +40,7 @@ class TcpClient implements IRpcClient
         $data = [];
         list($data['service'], $data['route']) = Yii::$app->rpc->getService();
         $server = Yii::$app->gr->provider->getServices($data['service']);
-        list($server, $port) = array_shift($server);
+        list($server, $port) = Yii::$app->gr->balance->select($data['service'])->getCurrentService($server);
         $key = 'corotcp:' . $server;
         if (!Yii::$container->hasSingleton('tcpclient')) {
             Yii::$container->setSingleton('tcpclient', [

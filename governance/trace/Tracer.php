@@ -11,9 +11,10 @@ namespace yii\swoole\governance\trace;
 use Yii;
 use yii\base\Component;
 use yii\swoole\coroutine\ICoroutine;
+use yii\swoole\governance\exporter\ExportInterface;
 use yii\swoole\helpers\ArrayHelper;
 
-class TraceCollect extends Component implements ICoroutine, TraceInterface
+class Tracer extends Component implements ICoroutine, TraceInterface
 {
     /**
      * @var bool
@@ -24,6 +25,11 @@ class TraceCollect extends Component implements ICoroutine, TraceInterface
      * @var array
      */
     public $collect = [];
+
+    /**
+     * @var ExportInterface
+     */
+    public $exporter;
 
     public function getCollect(string $traceId, array $collect):?array
     {

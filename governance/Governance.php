@@ -8,8 +8,8 @@
 
 namespace yii\swoole\governance;
 
-
 use yii\base\Component;
+use yii\swoole\governance\balancer\BalancerSelectInterface;
 
 class Governance extends Component
 {
@@ -22,4 +22,9 @@ class Governance extends Component
      * @var ProviderInterface
      */
     public $provider;
+
+    /**
+     * @var BalancerSelectInterface
+     */
+    public $balance;
 }

@@ -7,8 +7,8 @@ use yii\swoole\server\HproseServer;
 use yii\swoole\server\HttpServer;
 use yii\swoole\server\ProcessServer;
 use yii\swoole\server\QueueServer;
+use yii\swoole\server\RpcServer;
 use yii\swoole\server\TaskServer;
-use yii\swoole\server\TcpServer;
 use yii\swoole\server\WebsocketServer;
 
 class SwooleCommand
@@ -70,7 +70,7 @@ class SwooleCommand
             switch ($app) {
                 case 'start':
                     Yii::$app->params['swoole']['tcp']['server']['daemonize'] = $d;
-                    TcpServer::getInstance(Yii::$app->params['swoole']);
+                    RpcServer::getInstance(Yii::$app->params['swoole']);
                     break;
                 case 'stop':
                     break;

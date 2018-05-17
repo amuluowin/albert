@@ -4,7 +4,6 @@ namespace yii\swoole\rpc;
 
 use Yii;
 use yii\base\Component;
-use yii\swoole\governance\trace\TraceInterface;
 use yii\swoole\helpers\CoroHelper;
 
 class RpcClient extends Component

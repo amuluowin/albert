@@ -5,7 +5,6 @@ namespace yii\swoole\httpclient;
 use Yii;
 use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\pool\HttpPool;
-use yii\web\ServerErrorHttpException;
 
 class SwooleTransport extends \yii\httpclient\Transport
 {

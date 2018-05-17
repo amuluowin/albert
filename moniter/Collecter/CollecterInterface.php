@@ -6,13 +6,13 @@
  * Time: 下午2:42
  */
 
-namespace yii\swoole\moniter\Reader;
+namespace yii\swoole\moniter\Collecter;
 
 use Yii;
 
-interface ReaderInterface
+interface CollecterInterface
 {
-    public function read(): ?string;
+    public function collect(): ?string;
 
     public function open();
 

@@ -40,7 +40,7 @@ trait WorkTrait
         $config['aliases']['@webroot'] = $this->root;
         $config['aliases']['@web'] = '/';
         new Application($config);
-        Yii::$app->setSwooleServer($this->server);
+        Yii::$server = $this->server;
         Yii::$app->language = $config['language'];
         Application::$workerApp = true;
         // init all yii components

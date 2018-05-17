@@ -6,13 +6,13 @@
  * Time: 下午4:23
  */
 
-namespace yii\swoole\moniter\Writer;
+namespace yii\swoole\moniter\Exporter;
 
 use Yii;
 use yii\base\InvalidArgumentException;
 use yii\swoole\base\Channel;
 
-class FileWriter extends Channel implements WriterInterface
+class FileWriter extends Channel implements ExporterInterface
 {
     public $path;
 
@@ -24,7 +24,7 @@ class FileWriter extends Channel implements WriterInterface
         $this->path = Yii::getAlias($this->path);
     }
 
-    public function write(string $data)
+    public function export(string $data)
     {
         \Co::fwrite($this->fp, $data);
     }

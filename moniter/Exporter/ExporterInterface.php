@@ -6,11 +6,11 @@
  * Time: 下午4:20
  */
 
-namespace yii\swoole\moniter\Writer;
+namespace yii\swoole\moniter\Exporter;
 
-interface WriterInterface
+interface ExporterInterface
 {
-    public function write(string $data);
+    public function export(string $data);
 
     public function open();
 

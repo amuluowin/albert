@@ -15,7 +15,6 @@ class TaskServer extends Server
 
     public function __construct($config)
     {
-        $this->allConfig = $config;
         $this->config = ArrayHelper::merge(ArrayHelper::getValue($config, 'tcp'), ArrayHelper::getValue($config, 'common'));
         $server = new swoole_server($this->config['host'], $this->config['port']);
         $this->name = $this->config['name'];

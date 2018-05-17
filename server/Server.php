@@ -43,10 +43,14 @@ abstract class Server extends Component
      */
     public $root;
 
-    public $allConfig = [];
-
+    /**
+     * @var array
+     */
     public $schme = [];
 
+    /**
+     * @var array
+     */
     protected $webConfig = [];
 
     /**
@@ -65,30 +69,7 @@ abstract class Server extends Component
 
     protected function beforeStart()
     {
-        foreach (ArrayHelper::remove($this->config, 'beforeStart', []) as $function) {
-            if ($function instanceof \Closure) {
-                $function();
-            }
-        }
-        
-        foreach (ArrayHelper::remove($this->config, 'addlisten', []) as $schme => $data) {
-            list($type, $on, $function) = $data;
-            $config = ArrayHelper::getValue($this->allConfig, $schme);
-            if ($type) {
-                $this->schme[$schme] = $this->server->listen($config['host'], $config['port'], $type);
-            } else {
-                $this->schme[$schme] = $this->server->listen($config['host'], $config['port']);
-            }
-            foreach ($on as $bind => $method) {
-                $this->schme[$schme]->on($bind, [$this, $method]);
-            }
-            foreach ($function as $func) {
-                if ($func instanceof \Closure) {
-                    $func();
-                }
-            }
-            $this->schme[$schme]->set($config['server']);
-        }
+
     }
 
     /**

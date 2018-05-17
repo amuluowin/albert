@@ -38,8 +38,9 @@ class KafkaTarget extends Target
      */
     public function export()
     {
-        if (isset(Yii::$app->kafka) && isset(Yii::$app->kafka->producer)) {
-            Yii::$app->kafka->producer->send([
+        if (($kafka = Yii::$app->get('kafka', false)) !== null
+            && isset($kafka->producer)) {
+            $kafka->producer->send([
                 [
                     'topic' => 'test',
                     'value' => implode("\n", array_map([$this, 'formatMessage'], $this->messages)) . "\n",

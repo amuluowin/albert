@@ -9,7 +9,6 @@
 namespace yii\swoole\governance\provider;
 
 use Yii;
-use yii\swoole\helpers\SerializeHelper;
 use yii\swoole\process\BaseProcess;
 
 class ProviderProcess extends BaseProcess

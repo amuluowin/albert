@@ -1,10 +1,10 @@
 <?php
 
-namespace yii\swoole\helpers;
+namespace yii\swoole\rpc;
 
 use Yii;
+use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\Module;
-use yii\swoole\rpc\RpcRoute;
 
 /**
  * Created by PhpStorm.

@@ -6,19 +6,19 @@
  * Time: 下午2:38
  */
 
-namespace yii\swoole\moniter\Reader;
+namespace yii\swoole\moniter\Collecter;
 
 use Yii;
 use yii\base\InvalidArgumentException;
 use yii\swoole\base\Channel;
 
-class NginxReader extends Channel implements ReaderInterface
+class NginxReader extends Channel implements CollecterInterface
 {
     public $path;
 
     private $fp;
 
-    public function read(): ?string
+    public function collect(): ?string
     {
         if ($this->path && file_exists($this->path)) {
             try {

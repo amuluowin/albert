@@ -1,13 +1,19 @@
 <?php
+/**
+ * Created by PhpStorm.
+ * User: albert
+ * Date: 18-5-17
+ * Time: 下午10:27
+ */
 
-namespace yii\swoole\tcp;
+namespace yii\swoole\rpc;
 
 use Yii;
 use yii\base\InvalidArgumentException;
 use yii\helpers\BaseJson;
 use yii\swoole\pack\TcpPack;
 
-trait TcpTrait
+trait RpcTrait
 {
     public function onReceive($serv, $fd, $from_id, $data)
     {
