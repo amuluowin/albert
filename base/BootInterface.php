@@ -13,5 +13,5 @@ use yii\swoole\server\Server;
 
 interface BootInterface
 {
-    public function handle(Server $server);
+    public function handle(Server $server = null);
 }

@@ -17,7 +17,7 @@ use yii\swoole\tablecache\Cache;
 class BootFunction implements BootInterface
 {
 
-    public function handle(Server $server)
+    public function handle(Server $server = null)
     {
         Yii::$app->initProcess();
 

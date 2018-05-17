@@ -48,6 +48,11 @@ class Application extends Module implements ICoroutine
     public $beforeStart = [];
 
     /**
+     * @var array
+     */
+    public $workerStart=[];
+
+    /**
      * @event Event an event raised before the application starts to handle a request.
      */
     const EVENT_BEFORE_REQUEST = 'beforeRequest';

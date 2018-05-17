@@ -26,7 +26,7 @@ class BootRpcServer extends Component implements BootInterface
      */
     private $schme = [];
 
-    public function handle(Server $server)
+    public function handle(Server $server = null)
     {
         foreach ($this->listen as $schme => $data) {
             list($type, $on) = $data;

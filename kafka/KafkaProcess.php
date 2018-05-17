@@ -6,9 +6,10 @@
  * Time: 下午5:10
  */
 
-namespace yii\swoole\process;
+namespace yii\swoole\kafka;
 
 use Yii;
+use yii\swoole\process\BaseProcess;
 
 class KafkaProcess extends BaseProcess
 {

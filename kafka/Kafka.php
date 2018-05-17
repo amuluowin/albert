@@ -8,6 +8,8 @@
 
 namespace yii\swoole\kafka;
 
+use Kafka\Consumer;
+use Kafka\Producer;
 use Monolog\Handler\StdoutHandler;
 use Psr\Log\LoggerInterface;
 use Yii;
@@ -15,7 +17,14 @@ use yii\base\Component;
 
 class Kafka extends Component
 {
+    /**
+     * @var Consumer
+     */
     public $consumer;
+
+    /**
+     * @var Producer
+     */
     public $producer;
     public $logger;
     public $socket;
