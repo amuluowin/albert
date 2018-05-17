@@ -7,11 +7,23 @@ use Yii;
 class Response extends \yii\httpclient\Response
 {
 
+    /**
+     * @var \Swoole\Coroutine\Http\Client
+     */
     private $conn;
+
+    /**
+     * @var bool
+     */
+    private $isGet = false;
 
     public function getData()
     {
-        $this->recv();
+        if (!$this->isGet) {
+            $this->recv();
+            $this->isGet = true;
+        }
+
         return parent::getData();
     }
 
@@ -22,24 +34,33 @@ class Response extends \yii\httpclient\Response
 
     private function recv()
     {
-        if ($this->conn->connected && $this->conn->errCode === 0 &&
-            !isset($this->conn->body) && $this->conn->recv()) {
-            $this->setContent($this->conn->body);
-            $this->setHeaders($this->conn->headers);
-            $this->setCookies($this->conn->cookies);
+        if ($this->conn) {
+            if ($this->conn->errCode === 0 &&
+                $this->conn->recv()) {
+                $this->setContent($this->conn->body);
+                $this->conn->headers['http-code'] = $this->conn->statusCode;
+                $this->setHeaders($this->conn->headers);
+                $this->setCookies($this->conn->cookies);
+            } else {
+                $this->conn->headers['http-code'] = $this->conn->statusCode;
+                $this->setHeaders($this->conn->headers);
+                $this->setCookies($this->conn->cookies);
+            }
+            Yii::$container->get('httpclient')->recycle($this->conn);
+        } else {
+            $this->conn->headers['http-code'] = 0;
+            $this->conn->close();
         }
-        $this->conn->close();
     }
 
     public function getStatusCode()
     {
-        $this->recv();
-        if (isset($this->conn->statusCode)) {
-            $code = $this->conn->statusCode;
-        } else {
-            $code = 502;
+        if (!$this->isGet) {
+            $this->recv();
+            $this->isGet = true;
         }
-        return $code;
+
+        return parent::getStatusCode();
     }
 
 }

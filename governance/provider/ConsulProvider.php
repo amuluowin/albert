@@ -114,12 +114,20 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
     public function registerService(...$params)
     {
         $url = sprintf('%s:%d%s', $this->address, $this->port, self::REGISTER_PATH);
+
         if (!empty($this->services)) {
             foreach ($this->services as $service) {
+                $id = sprintf('service-%s-%s', $this->register['Check']['tcp'], $service);
+                $this->register['ID'] = $id;
                 $this->register['Name'] = $service;
+                $this->register['Check']['id'] = $id;
+                $this->register['Check']['name'] = $service;
                 $this->putService($url);
             }
         } else {
+            $id = sprintf('service-%s-%s', $this->register['Check']['tcp'], $this->register['Name']);
+            $this->register['ID'] = $id;
+            $this->register['Check']['id'] = $id;
             $this->putService($url);
         }
 

@@ -3,9 +3,7 @@
 namespace yii\swoole\pool;
 
 use Yii;
-use yii\base\NotSupportedException;
 use yii\swoole\helpers\ArrayHelper;
-use yii\web\ServerErrorHttpException;
 
 class HttpPool extends \yii\swoole\pool\IPool
 {
@@ -14,21 +12,25 @@ class HttpPool extends \yii\swoole\pool\IPool
         if ($conn) {
             return $conn;
         }
-        $config = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['hostname', 'port', 'timeout', 'scheme'],
-            ['localhost', 80, 0.5, 'http']);
-        if (($ret = swoole_async_dns_lookup_coro($config['hostname'], $config['timeout']))) {
-            $conn = new \Swoole\Coroutine\Http\Client($ret, $config['port'], $config['scheme'] === 'https' ? true : false);
-            if ($conn->errCode !== 0) {
-                throw new ServerErrorHttpException("Can not connect to {$connName}: " . $config['hostname'] . ':' . $config['port']);
-            }
-            $this->saveConn($connName, $conn);
-            return $conn;
-        }
-        throw new ServerErrorHttpException("Can not connect to {$connName}: " . $config['hostname'] . ':' . $config['port']);
+        $this->reConnect($conn, $connName);
+        return $conn;
     }
 
     protected function reConnect(&$conn, string $connName)
     {
-        throw new NotSupportedException('Coroutine HttpClient Not Supported this function');
+        $config = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['hostname', 'port', 'timeout', 'scheme'],
+            ['localhost', 80, 0.5, 'http']);
+        if (($ret = filter_var($config['hostname'], FILTER_VALIDATE_IP) ? $config['hostname'] : null) || ($ret = swoole_async_dns_lookup_coro($config['hostname'], $config['timeout']))) {
+            $conn = new \Swoole\Coroutine\Http\Client($ret, $config['port'], $config['scheme'] === 'https' ? true : false);
+            if ($conn->errCode !== 0) {
+                if ($this->reconnect <= $this->curconnect) {
+                    $this->curconnect = 0;
+                } else {
+                    $this->curconnect++;
+                    $this->reConnect($conn, $connName);
+                }
+            }
+            $this->saveConn($connName, $conn);
+        }
     }
 }

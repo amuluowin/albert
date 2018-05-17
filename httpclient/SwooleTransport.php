@@ -4,6 +4,7 @@ namespace yii\swoole\httpclient;
 
 use Yii;
 use yii\swoole\helpers\ArrayHelper;
+use yii\swoole\pool\HttpPool;
 use yii\web\ServerErrorHttpException;
 
 class SwooleTransport extends \yii\httpclient\Transport
@@ -33,22 +34,23 @@ class SwooleTransport extends \yii\httpclient\Transport
         Yii::beginProfile($token, __METHOD__);
 
         try {
-            $config = [
-                'hostname' => $urlarr['host'],
-                'port' => isset($urlarr['port']) ? $urlarr['port'] : ($urlarr['scheme'] === 'http' ? 80 : 443),
-                'scheme' => $urlarr['scheme'],
-                'timeout' => $request->dns_timeout,
-                'pool_size' => $request->pool_size,
-                'busy_size' => $request->busy_size
-            ];
-            if (($ret = filter_var($config['hostname'], FILTER_VALIDATE_IP) ? $config['hostname'] : null) || ($ret = swoole_async_dns_lookup_coro($config['hostname'], $config['timeout']))) {
-                $cli = new \Swoole\Coroutine\Http\Client($ret, $config['port'], $config['scheme'] === 'https' ? true : false);
-                if ($cli->errCode !== 0 || !$cli->connected) {
-                    $response = $request->client->createConn($cli);
-                    return $response;
-                }
-            } else {
-                throw new ServerErrorHttpException("Can not connect to " . $config['hostname'] . ':' . $config['port']);
+            if (!Yii::$container->hasSingleton('httpclient')) {
+                Yii::$container->setSingleton('httpclient', [
+                    'class' => HttpPool::class
+                ]);
+            }
+            $port = isset($urlarr['port']) ? $urlarr['port'] : ($urlarr['scheme'] === 'http' ? 80 : 443);
+            $key = sprintf('httpclient:%s:%s', $urlarr['host'], $port);
+            if (($cli = Yii::$container->get('httpclient')->fetch($key)) === null) {
+                $cli = Yii::$container->get('httpclient')->create($key,
+                    [
+                        'hostname' => $urlarr['host'],
+                        'port' => $port,
+                        'timeout' => $request->dns_timeout,
+                        'pool_size' => $request->pool_size,
+                        'busy_size' => $request->busy_size
+                    ])
+                    ->fetch($key);
             }
             //headers
             $headers = $request->getHeaders();
@@ -77,7 +79,6 @@ class SwooleTransport extends \yii\httpclient\Transport
                 'timeout' => isset($options['timeout']) ? $options['timeout'] : $request->client_timeout,
                 'keep_alive' => $request->keep_alive,
                 'websocket_mask' => $request->websocket_mask,
-                'ssl_cert_file'
             ], array_filter([
                 'ssl_cert_file' => ArrayHelper::getValue($options, 'sslLocalCert'),
                 'ssl_key_file' => ArrayHelper::getValue($options, 'sslLocalPk')
