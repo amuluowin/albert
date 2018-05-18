@@ -64,7 +64,8 @@ trait RpcTrait
                         $obj = Yii::$app->get($obj);
                         $result = $obj->{$method}(...$data['params']);
                     } else {
-                        $result = call_user_func_array($function, $data['params']);
+                        list($class, $function) = $function;
+                        $result = $class::$function($data['params']);
                     }
                 } else {
                     $result = new InvalidArgumentException('Error send data!');

@@ -27,7 +27,7 @@ class Response extends \yii\httpclient\Response
         return parent::getData();
     }
 
-    public function setConn($conn)
+    public function setConn(?\Swoole\Coroutine\Http\Client $conn)
     {
         $this->conn = $conn;
     }
@@ -35,17 +35,13 @@ class Response extends \yii\httpclient\Response
     private function recv()
     {
         if ($this->conn) {
-            if ($this->conn->errCode === 0 &&
-                $this->conn->recv()) {
-                $this->setContent($this->conn->body);
-                $this->conn->headers['http-code'] = $this->conn->statusCode;
-                $this->setHeaders($this->conn->headers);
-                $this->setCookies($this->conn->cookies);
-            } else {
-                $this->conn->headers['http-code'] = $this->conn->statusCode;
-                $this->setHeaders($this->conn->headers);
-                $this->setCookies($this->conn->cookies);
+            if ($this->conn->errCode === 0) {
+                $this->conn->recv();
             }
+            $this->setContent(isset($this->conn->body) ? $this->conn->body : null);
+            $this->conn->headers['http-code'] = $this->conn->statusCode;
+            $this->setHeaders($this->conn->headers);
+            $this->setCookies($this->conn->cookies);
             Yii::$container->get('httpclient')->recycle($this->conn);
         } else {
             $this->setHeaders(['http-code' => 0]);

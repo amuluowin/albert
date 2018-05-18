@@ -59,7 +59,7 @@ class Client extends \yii\httpclient\Client
      * @param array $headers headers list.
      * @return Response request instance.
      */
-    public function createConn($conn)
+    public function createConn(?\Swoole\Coroutine\Http\Client $conn): Response
     {
         $config = $this->responseConfig;
         if (!isset($config['class'])) {
