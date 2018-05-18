@@ -27,7 +27,7 @@ class Response extends \yii\httpclient\Response
         return parent::getData();
     }
 
-    public function setConn(\Swoole\Coroutine\Http\Client $conn)
+    public function setConn($conn)
     {
         $this->conn = $conn;
     }
@@ -48,8 +48,7 @@ class Response extends \yii\httpclient\Response
             }
             Yii::$container->get('httpclient')->recycle($this->conn);
         } else {
-            $this->conn->headers['http-code'] = 0;
-            $this->conn->close();
+            $this->setHeaders(['http-code' => 0]);
         }
     }
 

@@ -100,7 +100,7 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
 
             return $nodes;
         } else {
-            print_r(sprintf("can not connect to service provider consul:%s:%d", $this->address, $this->port) . PHP_EOL);
+            print_r(sprintf("can not find service %s from consul:%s:%d", $serviceName, $this->address, $this->port) . PHP_EOL);
         }
     }
 

@@ -94,7 +94,7 @@ class SwooleTransport extends \yii\httpclient\Transport
             }
         } catch (\Exception $e) {
             Yii::endProfile($token, __METHOD__);
-            $response = $request->client->createConn($cli);
+            $response = $request->client->createConn(isset($cli) ? $cli : null);
             return $response;
         }
 

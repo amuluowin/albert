@@ -3,16 +3,12 @@ declare(strict_types=1);
 
 namespace yii\swoole\kafka;
 
-use Kafka\SocketSync;
+use Kafka\CommonSocket;
 use Yii;
 use yii\base\Exception;
 
-class CoroSocket extends SocketSync
+class CoroSocket extends CommonSocket
 {
-    /**
-     * @var callable|null
-     */
-    private $onReadable;
     /**
      * @var SaslMechanism|null
      */
@@ -54,7 +50,7 @@ class CoroSocket extends SocketSync
      *
      * @return String|int
      */
-    public function read($data): string
+    public function read($data): ?string
     {
         return $this->stream->recv();
     }
