@@ -32,16 +32,6 @@ class HttpServer extends Server
         $this->config = ArrayHelper::merge(ArrayHelper::getValue($config, 'web'), ArrayHelper::getValue($config, 'common'));
     }
 
-    protected function beforeStart()
-    {
-        foreach (Yii::$app->beforeStart as $handle) {
-            if (!$handle instanceof BootInterface) {
-                $handle = Yii::createObject($handle);
-            }
-            $handle->handle($this);
-        }
-    }
-
     public function start()
     {
         $this->name = $this->config['name'];

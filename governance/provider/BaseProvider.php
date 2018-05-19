@@ -15,7 +15,8 @@ class BaseProvider extends Component
 {
     public function getServiceFromCache(string $service): array
     {
-        return Yii::$app->cache->get($service);
+        $result = Yii::$app->cache->get($service);
+        return is_array($result) ? $result : [];
     }
 
     protected function setServiceToCache(array $services)

@@ -6,6 +6,7 @@ use swoole_server;
 use Yii;
 use yii\base\Component;
 use yii\swoole\async\Task;
+use yii\swoole\base\BootInterface;
 use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\shmcache\Cache;
 
@@ -69,7 +70,12 @@ abstract class Server extends Component
 
     protected function beforeStart()
     {
-
+        foreach (Yii::$app->beforeStart as $handle) {
+            if (!$handle instanceof BootInterface) {
+                $handle = Yii::createObject($handle);
+            }
+            $handle->handle($this);
+        }
     }
 
     /**
