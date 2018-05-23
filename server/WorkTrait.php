@@ -41,7 +41,7 @@ trait WorkTrait
         $config['aliases']['@webroot'] = $this->root;
         $config['aliases']['@web'] = '/';
         new Application($config);
-        Yii::$server = $this->server;
+        Yii::$server = $server;
         Yii::$app->language = $config['language'];
         Application::$workerApp = true;
         // init all yii components
@@ -53,7 +53,7 @@ trait WorkTrait
             if (!$handle instanceof BootInterface) {
                 $handle = Yii::createObject($handle);
             }
-            $handle->handle();
+            $handle->handle($this);
         }
 
         Yii::$app->setRootPath($this->root);

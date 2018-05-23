@@ -8,6 +8,7 @@ use yii\swoole\base\BootInterface;
 use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\helpers\SerializeHelper;
 use yii\swoole\rpc\RpcTrait;
+use yii\swoole\udp\UdpTrait;
 use yii\swoole\web\HttpTrait;
 
 /**
@@ -17,6 +18,7 @@ use yii\swoole\web\HttpTrait;
  */
 class HttpServer extends Server
 {
+    use UdpTrait;
     use RpcTrait;
     use HttpTrait;
 
@@ -42,7 +44,6 @@ class HttpServer extends Server
             $this->pidFile = $this->config['pidFile'];
         }
         $this->createServer();
-        Yii::$server = $this->server;
         $this->startServer();
     }
 

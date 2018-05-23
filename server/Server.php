@@ -70,6 +70,7 @@ abstract class Server extends Component
 
     protected function beforeStart()
     {
+        Yii::$server = $this->server;
         foreach (Yii::$app->beforeStart as $handle) {
             if (!$handle instanceof BootInterface) {
                 $handle = Yii::createObject($handle);

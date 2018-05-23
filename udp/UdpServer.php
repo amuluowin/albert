@@ -1,27 +1,26 @@
 <?php
+/**
+ * Created by PhpStorm.
+ * User: albert
+ * Date: 18-5-23
+ * Time: 下午3:59
+ */
 
-namespace yii\swoole\server;
+namespace yii\swoole\udp;
 
-use swoole_server;
 use Yii;
 use yii\swoole\helpers\ArrayHelper;
+use yii\swoole\server\Server;
 
-class RpcServer extends Server
+class UdpServer extends Server
 {
-    /**
-     * @var swoole_server
-     */
-    public $server;
-
-    /**
-     * @var RpcServer
-     */
+    use UdpTrait;
     public static $instance;
 
     public function __construct($config)
     {
-        $this->config = ArrayHelper::merge(ArrayHelper::getValue($config, 'tcp'), ArrayHelper::getValue($config, 'common'));
-        $this->server = new swoole_server($this->config['host'], $this->config['port']);
+        $this->config = ArrayHelper::merge(ArrayHelper::getValue($config, 'udp'), ArrayHelper::getValue($config, 'common'));
+        $this->server = new \Swoole\Server($this->config['host'], $this->config['port'], SWOOLE_PROCESS, SWOOLE_SOCK_UDP);
         $this->name = $this->config['name'];
         if (isset($this->config['pidFile'])) {
             $this->pidFile = $this->config['pidFile'];
@@ -32,12 +31,8 @@ class RpcServer extends Server
         $this->server->on('Start', array($this, 'onStart'));
         $this->server->on('workerStart', array($this, 'onWorkerStart'));
         $this->server->on('managerStart', [$this, 'onManagerStart']);
-        if (method_exists($this, 'onTask')) {
-            $this->server->on('task', [$this, 'onTask']);
-        }
-        if (method_exists($this, 'onFinish')) {
-            $this->server->on('finish', [$this, 'onFinish']);
-        }
+        $this->server->on('Task', array($this, 'onTask'));
+        $this->server->on('Finish', array($this, 'onFinish'));
         $this->beforeStart();
         $this->server->start();
     }
@@ -45,9 +40,8 @@ class RpcServer extends Server
     public static function getInstance($config)
     {
         if (!self::$instance) {
-            self::$instance = new RpcServer($config);
+            self::$instance = new UdpServer($config);
         }
         return self::$instance;
     }
-
 }

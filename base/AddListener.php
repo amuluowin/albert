@@ -2,19 +2,18 @@
 /**
  * Created by PhpStorm.
  * User: albert
- * Date: 18-5-17
- * Time: 下午9:57
+ * Date: 18-5-23
+ * Time: 下午5:45
  */
 
-namespace yii\swoole\tcp;
+namespace yii\swoole\base;
 
 use Yii;
 use yii\base\Component;
-use yii\swoole\base\BootInterface;
 use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\server\Server;
 
-class BootRpcServer extends Component implements BootInterface
+class AddListener extends Component implements BootInterface
 {
     /**
      * @var array

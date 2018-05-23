@@ -3,13 +3,12 @@
 namespace yii\swoole\commands;
 
 use Yii;
-use yii\swoole\server\HproseServer;
 use yii\swoole\server\HttpServer;
 use yii\swoole\server\ProcessServer;
-use yii\swoole\server\QueueServer;
 use yii\swoole\server\RpcServer;
 use yii\swoole\server\TaskServer;
 use yii\swoole\server\WebsocketServer;
+use yii\swoole\udp\UdpServer;
 
 class SwooleCommand
 {
@@ -83,6 +82,27 @@ class SwooleCommand
         }
     }
 
+    public static function Udp($app, $d = 0)
+    {
+        if (!isset($app)) {
+            exit("No argv.\n");
+        } else {
+            switch ($app) {
+                case 'start':
+                    Yii::$app->params['swoole']['udp']['server']['daemonize'] = $d;
+                    UdpServer::getInstance(Yii::$app->params['swoole']);
+                    break;
+                case 'stop':
+                    break;
+                case 'restart':
+                    break;
+                default:
+                    exit("Not support this argv.\n");
+                    break;
+            }
+        }
+    }
+
     public static function Task($app, $d = 0)
     {
         if (!isset($app)) {
@@ -109,7 +129,7 @@ class SwooleCommand
         if (!isset($app) || !isset($work)) {
             exit("No argv.\n");
         } else {
-            $work = $work && Yii::$app->get($work, false) ? Yii::$app->{$work} : new $work();
+            $work = $work && isset(Yii::$app->process[$work]) ? Yii::createObject(Yii::$app->process[$work]) : new $work();
             switch ($app) {
                 case 'start':
                     ProcessServer::getInstance()->start($work);

@@ -64,8 +64,7 @@ trait RpcTrait
                         $obj = Yii::$app->get($obj);
                         $result = $obj->{$method}(...$data['params']);
                     } else {
-                        list($class, $function) = $function;
-                        $result = $class::$function($data['params']);
+                        $result = call_user_func_array($function, [$data['params']]);
                     }
                 } else {
                     $result = new InvalidArgumentException('Error send data!');
@@ -74,7 +73,7 @@ trait RpcTrait
                 $serv->send($fd, TcpPack::encode($result, 'tcp'));
                 $this->setLog($result);
             } catch (\Exception $e) {
-                $serv->send($fd, TcpPack::encode($result, 'tcp'));
+                $serv->send($fd, TcpPack::encode(null, 'tcp'));
                 $this->setLog($e);
             }
         }

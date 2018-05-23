@@ -20,11 +20,6 @@ class AsyncSocket extends CommonSocket
     /**
      * @var string
      */
-    private $writeBuffer = '';
-
-    /**
-     * @var string
-     */
     private $readBuffer = '';
 
     /**
@@ -78,7 +73,6 @@ class AsyncSocket extends CommonSocket
         }
 
         $this->readBuffer = '';
-        $this->writeBuffer = '';
         $this->readNeedLength = 0;
     }
 
@@ -130,12 +124,8 @@ class AsyncSocket extends CommonSocket
     public function write(?string $data = null): void
     {
         if ($data !== null) {
-            $this->writeBuffer .= $data;
+            swoole_event_write($this->stream, $data);
         }
-//        $bytesToWrite = strlen($this->writeBuffer);
-        $bytesWritten = @fwrite($this->stream, $this->writeBuffer);
-
-        $this->writeBuffer = substr($this->writeBuffer, $bytesWritten);
     }
 
     /**
