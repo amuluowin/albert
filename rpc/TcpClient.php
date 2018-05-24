@@ -27,9 +27,14 @@ class TcpClient implements IRpcClient
      */
     public $timeout = 1;
 
+    /**
+     * @var array
+     */
+    public $setting = [];
+
     public function recv()
     {
-        $result = TcpPack::decode($this->client->recv(), 'tcp');
+        $result = TcpPack::decode($this->client->recv(), 'rpc');
         Yii::$app->rpc->afterRecv($result);
         Yii::$container->get('tcpclient')->recycle($this->client);
         return $result;
@@ -53,6 +58,7 @@ class TcpClient implements IRpcClient
                     'hostname' => $server,
                     'port' => $port,
                     'timeout' => $this->timeout,
+                    'setting' => $this->setting,
                     'pool_size' => $this->maxPoolSize,
                     'busy_size' => $this->busy_pool
                 ])
@@ -63,7 +69,7 @@ class TcpClient implements IRpcClient
         $data['params'] = array_shift($params);
         $data['fastCall'] = Yii::$app->rpc->fastCall;
         $data = Yii::$app->rpc->beforeSend($data);
-        $this->client->send(TcpPack::encode($data, 'tcp'));
+        $this->client->send(TcpPack::encode($data, 'rpc'));
         return $this;
     }
 }

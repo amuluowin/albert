@@ -9,17 +9,18 @@
 namespace yii\swoole\udp;
 
 use Yii;
+use yii\swoole\base\SingletonTrait;
 use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\server\Server;
 
 class UdpServer extends Server
 {
     use UdpTrait;
-    public static $instance;
 
-    public function __construct($config)
+    use SingletonTrait;
+
+    public function start()
     {
-        $this->config = ArrayHelper::merge(ArrayHelper::getValue($config, 'udp'), ArrayHelper::getValue($config, 'common'));
         $this->server = new \Swoole\Server($this->config['host'], $this->config['port'], SWOOLE_PROCESS, SWOOLE_SOCK_UDP);
         $this->name = $this->config['name'];
         if (isset($this->config['pidFile'])) {
@@ -35,13 +36,5 @@ class UdpServer extends Server
         $this->server->on('Finish', array($this, 'onFinish'));
         $this->beforeStart();
         $this->server->start();
-    }
-
-    public static function getInstance($config)
-    {
-        if (!self::$instance) {
-            self::$instance = new UdpServer($config);
-        }
-        return self::$instance;
     }
 }

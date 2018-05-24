@@ -20,8 +20,11 @@ class TcpPool extends \yii\swoole\pool\IPool
 
     protected function reConnect(&$conn, string $connName)
     {
-        $config = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['hostname', 'port', 'timeout'],
-            [true, 'localhost', Yii::$app->params['swoole']['tcp']['port'], 0.5]);
+        $config = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['hostname', 'port', 'timeout', 'setting'],
+            ['localhost', 0, 0.5, []]);
+        if ($config['setting'] && empty($conn->setting)) {
+            $conn->set($config['setting']);
+        }
         if (!$conn->connected && $conn->connect($config['hostname'], $config['port'], $config['timeout']) == false
         ) {
             if ($this->reconnect <= $this->curconnect) {

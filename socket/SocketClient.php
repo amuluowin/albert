@@ -9,9 +9,18 @@ use yii\swoole\helpers\CoroHelper;
 
 class SocketClient extends BaseClient implements ICoroutine
 {
+    /**
+     * @var float
+     */
     public $timeout = 0.5;
-    public $async = true;
+
+    /**
+     * @var array
+     */
     private $client = [];
+    /**
+     * @var array
+     */
     private $data = [];
 
     public function getClient()
@@ -62,7 +71,7 @@ class SocketClient extends BaseClient implements ICoroutine
                     'hostname' => $uri,
                     'port' => $port,
                     'timeout' => $this->timeout,
-                    'async' => $this->async,
+                    'setting' => $this->setting,
                     'pool_size' => $this->maxPoolSize,
                     'busy_size' => $this->busy_pool
                 ])

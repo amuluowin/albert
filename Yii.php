@@ -8,9 +8,6 @@
  */
 
 require(__DIR__ . '/../../yiisoft/yii2/BaseYii.php');
-//if (PHP_SAPI === 'cli' && extension_loaded('swoole')) {
-//    require(__DIR__ . "/funResplace.php");
-//}
 
 /**
  * Yii is a helper class serving common framework functionalities.

@@ -5,17 +5,16 @@ namespace yii\swoole\server;
 use swoole_server;
 use Yii;
 use yii\swoole\async\Task;
+use yii\swoole\base\SingletonTrait;
 use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\pack\TcpPack;
 
 class TaskServer extends Server
 {
+    use SingletonTrait;
 
-    public static $instance;
-
-    public function __construct($config)
+    public function start()
     {
-        $this->config = ArrayHelper::merge(ArrayHelper::getValue($config, 'tcp'), ArrayHelper::getValue($config, 'common'));
         $server = new swoole_server($this->config['host'], $this->config['port']);
         $this->name = $this->config['name'];
         if (isset($this->config['pidFile'])) {
@@ -57,13 +56,4 @@ class TaskServer extends Server
         echo "Task {$task_id} finish\n";
         echo "Result: {$data}\n";
     }
-
-    public static function getInstance($config)
-    {
-        if (!self::$instance) {
-            self::$instance = new TaskServer($config);
-        }
-        return self::$instance;
-    }
-
 }

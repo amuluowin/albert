@@ -27,7 +27,7 @@ class SwooleCommand
             switch ($app) {
                 case 'start':
                     Yii::$app->params['swoole']['web']['server']['daemonize'] = $d;
-                    HttpServer::getInstance(Yii::$app->params['swoole'])->start();
+                    HttpServer::getInstance('web', Yii::$app->params['swoole'])->start();
                     break;
                 case 'stop':
                     break;
@@ -48,7 +48,7 @@ class SwooleCommand
             switch ($app) {
                 case 'start':
                     Yii::$app->params['swoole']['web']['server']['daemonize'] = $d;
-                    WebsocketServer::getInstance(Yii::$app->params['swoole'])->start();
+                    WebsocketServer::getInstance('web', Yii::$app->params['swoole'])->start();
                     break;
                 case 'stop':
                     break;
@@ -61,15 +61,15 @@ class SwooleCommand
         }
     }
 
-    public static function Tcp($app, $d = 0)
+    public static function Rpc($app, $d = 0)
     {
         if (!isset($app)) {
             exit("No argv.\n");
         } else {
             switch ($app) {
                 case 'start':
-                    Yii::$app->params['swoole']['tcp']['server']['daemonize'] = $d;
-                    RpcServer::getInstance(Yii::$app->params['swoole']);
+                    Yii::$app->params['swoole']['rpc']['server']['daemonize'] = $d;
+                    RpcServer::getInstance('rpc', Yii::$app->params['swoole'])->start();
                     break;
                 case 'stop':
                     break;
@@ -90,7 +90,7 @@ class SwooleCommand
             switch ($app) {
                 case 'start':
                     Yii::$app->params['swoole']['udp']['server']['daemonize'] = $d;
-                    UdpServer::getInstance(Yii::$app->params['swoole']);
+                    UdpServer::getInstance('udp', Yii::$app->params['swoole'])->start();
                     break;
                 case 'stop':
                     break;
@@ -111,7 +111,7 @@ class SwooleCommand
             switch ($app) {
                 case 'start':
                     Yii::$app->params['swoole']['task']['server']['daemonize'] = $d;
-                    TaskServer::getInstance(Yii::$app->params['swoole']);
+                    TaskServer::getInstance('task', Yii::$app->params['swoole'])->start();
                     break;
                 case 'stop':
                     break;

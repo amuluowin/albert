@@ -17,14 +17,14 @@ trait RpcTrait
 {
     public function onReceive($serv, $fd, $from_id, $data)
     {
-        $data = TcpPack::decode($data, 'tcp');
+        $data = TcpPack::decode($data, 'rpc');
         $this->run($serv, $fd, $from_id, $data);
     }
 
     public function run($serv, $fd, $form_id, $data)
     {
         if ($data['fastCall']) {
-            $serv->send($fd, TcpPack::encode(['status' => 200, 'code' => 0, 'message' => 'success', 'data' => null], 'tcp'));
+            $serv->send($fd, TcpPack::encode(['status' => 200, 'code' => 0, 'message' => 'success', 'data' => null], 'rpc'));
         }
 
         $function = Yii::$app->RpcHelper->getCurCall($data['service'], $data['route'], $data['method']);
@@ -40,10 +40,10 @@ trait RpcTrait
                 Yii::$app->getRequest()->setQueryParams($query);
                 Yii::$app->refresh();
                 $result = Yii::$app->runAction($function, $query);
-                $serv->send($fd, TcpPack::encode($result, 'tcp'));
+                $serv->send($fd, TcpPack::encode($result, 'rpc'));
                 $this->setLog($result);
             } catch (\Exception $e) {
-                $serv->send($fd, TcpPack::encode(Yii::$app->getErrorHandler()->converter($e, 'convertExceptionToArray'), 'tcp'));
+                $serv->send($fd, TcpPack::encode(Yii::$app->getErrorHandler()->converter($e, 'convertExceptionToArray'), 'rpc'));
                 $this->setLog($e);
             }
 
@@ -70,10 +70,10 @@ trait RpcTrait
                     $result = new InvalidArgumentException('Error send data!');
                 }
 
-                $serv->send($fd, TcpPack::encode($result, 'tcp'));
+                $serv->send($fd, TcpPack::encode($result, 'rpc'));
                 $this->setLog($result);
             } catch (\Exception $e) {
-                $serv->send($fd, TcpPack::encode(null, 'tcp'));
+                $serv->send($fd, TcpPack::encode(null, 'rpc'));
                 $this->setLog($e);
             }
         }

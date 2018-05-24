@@ -85,6 +85,7 @@ class KProducer extends BaseObject
             if (!$this->started) {
                 $this->started = true;
             }
+            print_r($data);
             $this->producer->send($data);
         }
     }

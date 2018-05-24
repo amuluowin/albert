@@ -1,17 +1,21 @@
 <?php
+/**
+ * Created by PhpStorm.
+ * User: albert
+ * Date: 18-5-24
+ * Time: 下午3:08
+ */
 
-namespace yii\swoole\server;
+namespace yii\swoole\mqtt;
 
-use swoole_server;
-use Yii;
+
 use yii\swoole\base\SingletonTrait;
-use yii\swoole\helpers\ArrayHelper;
-use yii\swoole\rpc\RpcTrait;
+use yii\swoole\server\Server;
 
-class RpcServer extends Server
+class MqttServer extends Server
 {
     use SingletonTrait;
-    use RpcTrait;
+    use MqttTrait;
     /**
      * @var swoole_server
      */
@@ -19,7 +23,7 @@ class RpcServer extends Server
 
     public function start()
     {
-        $this->server = new swoole_server($this->config['host'], $this->config['port']);
+        $this->server = new \Swoole\Server($this->config['host'], $this->config['port']);
         $this->name = $this->config['name'];
         if (isset($this->config['pidFile'])) {
             $this->pidFile = $this->config['pidFile'];

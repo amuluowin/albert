@@ -7,6 +7,9 @@ use swoole_websocket_frame;
 use swoole_websocket_server;
 use Yii;
 use yii\helpers\ArrayHelper;
+use yii\swoole\base\SingletonTrait;
+use yii\swoole\web\WsAuthInterface;
+use yii\swoole\web\WsSendInterface;
 
 /**
  * WebSocket服务器
@@ -15,10 +18,15 @@ use yii\helpers\ArrayHelper;
  */
 class WebsocketServer extends HttpServer
 {
-    private static $instance;
-
+    use SingletonTrait;
+    /**
+     * @var WsAuthInterface
+     */
     private $wsAuth;
 
+    /**
+     * @var WsSendInterface
+     */
     private $wsSend;
 
     protected function createServer()
@@ -97,14 +105,4 @@ class WebsocketServer extends HttpServer
     {
         parent::onClose($server, $fd, $from_id);
     }
-
-
-    public static function getInstance($config)
-    {
-        if (!self::$instance) {
-            self::$instance = new WebsocketServer($config);
-        }
-        return self::$instance;
-    }
-
 }

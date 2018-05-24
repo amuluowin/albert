@@ -4,7 +4,7 @@ namespace yii\swoole\server;
 
 use swoole_http_server;
 use Yii;
-use yii\swoole\base\BootInterface;
+use yii\swoole\base\SingletonTrait;
 use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\helpers\SerializeHelper;
 use yii\swoole\rpc\RpcTrait;
@@ -18,21 +18,13 @@ use yii\swoole\web\HttpTrait;
  */
 class HttpServer extends Server
 {
-    use UdpTrait;
-    use RpcTrait;
+    use SingletonTrait;
     use HttpTrait;
 
     /**
      * @var string 缺省文件名
      */
     public $indexFile = 'index.php';
-
-    private static $instance;
-
-    public function __construct($config)
-    {
-        $this->config = ArrayHelper::merge(ArrayHelper::getValue($config, 'web'), ArrayHelper::getValue($config, 'common'));
-    }
 
     public function start()
     {
@@ -100,13 +92,4 @@ class HttpServer extends Server
     {
         print_r(SerializeHelper::unserialize($message));
     }
-
-    public static function getInstance($config)
-    {
-        if (!self::$instance) {
-            self::$instance = new HttpServer($config);
-        }
-        return self::$instance;
-    }
-
 }

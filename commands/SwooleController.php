@@ -26,9 +26,9 @@ class SwooleController extends Controller
         SwooleCommand::Websocket($app, $d);
     }
 
-    public function actionTcp($app, $d = 0)
+    public function actionRpc($app, $d = 0)
     {
-        SwooleCommand::Tcp($app, $d);
+        SwooleCommand::Rpc($app, $d);
     }
 
     public function actionTask($app, $d = 0)

@@ -3,11 +3,12 @@
 namespace yii\swoole\server;
 
 use Yii;
+use yii\swoole\base\SingletonTrait;
 use yii\swoole\process\IProcessServer;
 
 class ProcessServer implements IProcessServer
 {
-    public static $instance;
+    use SingletonTrait;
 
     public function start($work)
     {
@@ -20,13 +21,4 @@ class ProcessServer implements IProcessServer
     {
         $work->stopAll();
     }
-
-    public static function getInstance()
-    {
-        if (!self::$instance) {
-            self::$instance = new ProcessServer();
-        }
-        return self::$instance;
-    }
-
 }
