@@ -28,13 +28,6 @@ class HttpServer extends Server
 
     public function start()
     {
-        $this->name = $this->config['name'];
-        if (isset($this->config['debug'])) {
-            $this->debug = $this->config['debug'];
-        }
-        if (isset($this->config['pidFile'])) {
-            $this->pidFile = $this->config['pidFile'];
-        }
         $this->createServer();
         $this->startServer();
     }

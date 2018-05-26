@@ -30,6 +30,8 @@ class SwooleCommand
                     HttpServer::getInstance('web', Yii::$app->params['swoole'])->start();
                     break;
                 case 'stop':
+                    Yii::$app->params['swoole']['web']['server']['daemonize'] = $d;
+                    HttpServer::getInstance('web', Yii::$app->params['swoole'])->stop();
                     break;
                 case 'restart':
                     break;
@@ -51,6 +53,8 @@ class SwooleCommand
                     WebsocketServer::getInstance('web', Yii::$app->params['swoole'])->start();
                     break;
                 case 'stop':
+                    Yii::$app->params['swoole']['web']['server']['daemonize'] = $d;
+                    WebsocketServer::getInstance('web', Yii::$app->params['swoole'])->stop();
                     break;
                 case 'restart':
                     break;
@@ -72,6 +76,8 @@ class SwooleCommand
                     RpcServer::getInstance('rpc', Yii::$app->params['swoole'])->start();
                     break;
                 case 'stop':
+                    Yii::$app->params['swoole']['rpc']['server']['daemonize'] = $d;
+                    RpcServer::getInstance('rpc', Yii::$app->params['swoole'])->stop();
                     break;
                 case 'restart':
                     break;
@@ -93,6 +99,8 @@ class SwooleCommand
                     UdpServer::getInstance('udp', Yii::$app->params['swoole'])->start();
                     break;
                 case 'stop':
+                    Yii::$app->params['swoole']['udp']['server']['daemonize'] = $d;
+                    UdpServer::getInstance('udp', Yii::$app->params['swoole'])->stop();
                     break;
                 case 'restart':
                     break;
@@ -114,6 +122,8 @@ class SwooleCommand
                     TaskServer::getInstance('task', Yii::$app->params['swoole'])->start();
                     break;
                 case 'stop':
+                    Yii::$app->params['swoole']['task']['server']['daemonize'] = $d;
+                    TaskServer::getInstance('task', Yii::$app->params['swoole'])->stop();
                     break;
                 case 'restart':
                     break;

@@ -27,6 +27,12 @@ trait SingletonTrait
     {
         if ($key && $config) {
             $this->config = ArrayHelper::merge(ArrayHelper::getValue($config, $key), ArrayHelper::getValue($config, 'common'));
+            if (isset($this->config['name'])) {
+                $this->name = $this->config['name'];
+            }
+            if (isset($this->config['pidFile'])) {
+                $this->pidFile = $this->config['pidFile'];
+            }
         }
     }
 }

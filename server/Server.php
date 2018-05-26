@@ -79,6 +79,15 @@ abstract class Server extends Component
         }
     }
 
+    public function stop()
+    {
+        if ($this->pidFile) {
+            $pid = file_get_contents($this->pidFile);
+            \swoole_process::kill(intval($pid));
+            @unlink($this->pidFile);
+        }
+    }
+
     /**
      * @param $server
      */
