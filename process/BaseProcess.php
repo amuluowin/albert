@@ -3,6 +3,7 @@
 namespace yii\swoole\process;
 
 use Yii;
+use yii\swoole\base\Output;
 use yii\swoole\files\FileIO;
 
 abstract class BaseProcess extends \yii\base\Component
@@ -102,7 +103,7 @@ abstract class BaseProcess extends \yii\base\Component
                     }
                 }
             } catch (\Exception $e) {
-                print_r($e);
+                Output::writeln($e, Output::LIGHT_RED);
             } finally {
                 @unlink($this->pidFile);
             }

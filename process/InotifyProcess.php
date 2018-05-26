@@ -3,6 +3,7 @@
 namespace yii\swoole\process;
 
 use Yii;
+use yii\swoole\base\Output;
 
 class InotifyProcess extends BaseProcess
 {
@@ -17,7 +18,7 @@ class InotifyProcess extends BaseProcess
     public function init()
     {
         parent::init();
-        echo "启动了autoReload\n";
+        Output::writeln("启动了autoReload", Output::CYAN);
         $this->monitor_dir = Yii::getAlias('@addons');
     }
 

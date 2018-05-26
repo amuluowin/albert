@@ -6,6 +6,7 @@ use Yii;
 use yii\base\ErrorException;
 use yii\base\UserException;
 use yii\swoole\Application;
+use yii\swoole\base\Output;
 use yii\swoole\helpers\CoroHelper;
 use yii\web\HttpException;
 
@@ -198,7 +199,7 @@ class ErrorHandler extends \yii\web\ErrorHandler
                 Yii::$server->currentSwooleResponse[$id]->end($html);
             }
         } else {
-            print_r($this->convertExceptionToArray($exception));
+            Output::writeln($this->convertExceptionToArray($exception), Output::LIGHT_RED);
         }
     }
 

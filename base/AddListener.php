@@ -40,7 +40,7 @@ class AddListener extends Component implements BootInterface
                     $this->schme[$schme]->on($bind, $method);
                 }
                 $this->schme[$schme]->set($config['server']);
-                print_r(sprintf('listen %8s %s:%d' . PHP_EOL, $schme, $config['host'], $config['port']));
+                Output::writeln(sprintf('listen %s  %s:%d', $schme, $config['host'], $config['port']));
             }
         }
     }

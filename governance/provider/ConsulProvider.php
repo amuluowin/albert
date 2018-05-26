@@ -11,7 +11,7 @@ namespace yii\swoole\governance\provider;
 use Yii;
 use yii\helpers\VarDumper;
 use yii\httpclient\Client;
-use yii\swoole\files\OutPut;
+use yii\swoole\base\Output;
 
 class ConsulProvider extends BaseProvider implements ProviderInterface
 {
@@ -100,7 +100,7 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
 
             return $nodes;
         } else {
-            print_r(sprintf("can not find service %s from consul:%s:%d", $serviceName, $this->address, $this->port) . PHP_EOL);
+            Output::writeln(sprintf("can not find service %s from consul:%s:%d", $serviceName, $this->address, $this->port), Output::LIGHT_RED);
         }
     }
 
@@ -137,11 +137,11 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
     private function putService(string $url)
     {
         $response = Yii::$app->httpclient->put($url, $this->register)->setFormat(Client::FORMAT_JSON)->send();
-        $output = 'RPC service register service %s %s by consul ! tcp=%s:%d';
+        $output = 'RPC service register service %s %s by consul tcp=%s:%d';
         if (empty($result) && $response->getStatusCode() == 200) {
-            print_r(sprintf($output, $this->register['Name'], 'success', $this->register['Address'], $this->register['Port']) . PHP_EOL);
+            Output::writeln(sprintf($output, $this->register['Name'], 'success', $this->register['Address'], $this->register['Port']), Output::LIGHT_GREEN);
         } else {
-            print_r(sprintf($output, $this->register['Name'], 'failed', $this->register['Address'], $this->register['Port']) . PHP_EOL);
+            Output::writeln(sprintf($output, $this->register['Name'], 'failed', $this->register['Address'], $this->register['Port']), Output::LIGHT_RED);
         }
     }
 
