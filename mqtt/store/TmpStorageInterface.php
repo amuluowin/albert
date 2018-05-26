@@ -6,7 +6,7 @@
  * Time: 下午5:28
  */
 
-namespace yii\swoole\mqtt;
+namespace yii\swoole\mqtt\store;
 
 
 interface TmpStorageInterface

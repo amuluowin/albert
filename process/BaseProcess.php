@@ -12,15 +12,15 @@ abstract class BaseProcess extends \yii\base\Component
     public $pidFile;
     public $pids = [];
     public $memory = 512;
-    protected $config = [];
     protected $root;
     protected $server = null;
-    public $log_path = '/data/logs';
+    public $log_path = '@runtime/logs';
     public $boot = false;
     public $name;
     public $num = 1;
     public $inout = 0;
     public $pipe = 0;
+    public $isCo = true;
 
     public function init()
     {
@@ -38,9 +38,13 @@ abstract class BaseProcess extends \yii\base\Component
         } else {
             $p = new \swoole_process(function ($process) {
                 $process->name('swoole-' . $this->name);
-                go(function () {
+                if ($this->isCo) {
+                    go(function () {
+                        $this->start();
+                    });
+                } else {
                     $this->start();
-                });
+                }
             }, $this->inout, $this->pipe);
             $this->saveProcess($p);
         }
@@ -50,7 +54,7 @@ abstract class BaseProcess extends \yii\base\Component
 
     public function savePid()
     {
-        if ($this->pidFile && $this->pids) {
+        if (!$this->server && $this->pidFile && $this->pids) {
             go(function () {
                 FileIO::write($this->pidFile, implode(',', $this->pids));
             });
@@ -62,6 +66,7 @@ abstract class BaseProcess extends \yii\base\Component
     {
         if ($this->server) {
             $this->server->addProcess($p);
+            $this->server->process[$this->name][] = $p;
         } else {
             $pid = $p->start();
             if (!in_array($pid, $this->pids)) {
@@ -112,7 +117,7 @@ abstract class BaseProcess extends \yii\base\Component
     public function memoryExceeded($pid, $name)
     {
         if ((memory_get_usage() / 1024 / 1024) >= $this->memory) {
-            FileIO::write($this->log_path . '/' . $name . '.log', 'out of memory!', FILE_APPEND);
+            FileIO::write(Yii::getAlias($this->log_path . '/' . $name . '.log'), 'out of memory!', FILE_APPEND);
             $this->release();
             $this->stop($pid);
         }

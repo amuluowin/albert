@@ -6,7 +6,7 @@
  * Time: 下午11:38
  */
 
-namespace yii\swoole\mqtt;
+namespace yii\swoole\mqtt\log;
 
 
 interface MqttLogInterface

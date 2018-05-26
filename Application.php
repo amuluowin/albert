@@ -231,7 +231,7 @@ class Application extends Module implements ICoroutine
                     $obj['name'] = $name;
                     $process = Yii::createObject($obj);
                     $this->process[$name] = $process;
-                    ProcessServer::getInstance()->start($process);//启动定时任务
+                    ProcessServer::getInstance()->start($process);
                 }
             }
         }

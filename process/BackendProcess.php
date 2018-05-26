@@ -20,7 +20,6 @@ class BackendProcess extends BaseProcess
             $config['class'] = $class;
             $obj = Yii::createObject($config);
             $baseprocess = new \swoole_process(function ($process) use ($obj) {
-                $this->workerStart();
                 $process->name('swoole-' . $this->name . '-' . $obj->processName);
                 $process->retry = 0;
                 swoole_timer_tick($obj->ticket * 1000, function () use ($process, $obj) {

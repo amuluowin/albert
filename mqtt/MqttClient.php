@@ -8,24 +8,28 @@
 
 namespace yii\swoole\mqtt;
 
-
-use Inject\Injector;
+use Swoole\Client;
+use Yii;
+use yii\swoole\Container;
 use yii\swoole\mqtt\enum\ClientTriggers;
 use yii\swoole\mqtt\enum\MessageType;
 use yii\swoole\mqtt\enum\MqttVersion;
 use yii\swoole\mqtt\enum\Qos;
+use yii\swoole\mqtt\log\MqttLogInterface;
+use yii\swoole\mqtt\message\Connect;
 use yii\swoole\mqtt\message\MessageInterface;
 use yii\swoole\mqtt\message\Publish;
 use yii\swoole\mqtt\message\Suback;
 use yii\swoole\mqtt\message\Unsubscribe;
 use yii\swoole\mqtt\message\Will;
+use yii\swoole\mqtt\store\TmpStorageInterface;
 
 class MqttClient
 {
 
     const TIMER_TAG = 'Timer_';
 
-    /* @var \swoole_client $socket */
+    /* @var Client $socket */
     private $socket;
 
     private $keep_alive;
@@ -290,7 +294,7 @@ class MqttClient
     public function setTopics($topics)
     {
         foreach ($topics as $topic) {
-            /* @var \mqttclient\src\subscribe\Topic $topic */
+            /* @var Topic $topic */
             $this->topics[$topic->getTopic()] = $topic;
         }
         return $this;
@@ -335,175 +339,182 @@ class MqttClient
     public function connect($clean = true)
     {
         $this->clean = $clean;
-        $this->socket = new \swoole_client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_ASYNC);
-        $this->socket->set([
-            'open_mqtt_protocol' => true,
-            'package_max_length' => $this->package_max_length,  //协议最大长度
-        ]);
         $port = $this->port;
 
-        $this->socket->on('connect', function ($cli) {
-            $this->reconnect_count = 0;
-            /* @var \mqttclient\src\message\Connect */
-            $msg = Message::produce(MessageType::CONNECT, $this);
-            $this->write($msg);
-            $this->keep_alive_timer_id = swoole_timer_tick($this->keep_alive * 500, [$this, 'keepAlive']);
-            $this->trigger(ClientTriggers::SOCKET_CONNECT, null);
-        });
+        if (!$this->socket instanceof Client) {
+            $this->socket = new Client(SWOOLE_SOCK_TCP, SWOOLE_SOCK_ASYNC);
 
-        $this->socket->on('receive', function ($cli, $data) {
-            /* @var MessageInterface $message */
-            $message = $this->read($data);
-            switch ($message->getType()) {
-                case MessageType::CONNACK:
-                    $this->logger->log(MqttLogInterface::DEBUG, 'Receive CONNACK.');
-                    $this->subscribe();
-                    $this->trigger(ClientTriggers::RECEIVE_CONNACK, $message);
-                    break;
-                case MessageType::PINGRESP:
-                    $this->logger->log(MqttLogInterface::DEBUG, 'Receive PINGRESP.');
-                    $this->trigger(ClientTriggers::RECEIVE_PINGRESP, $message);
-                    break;
-                case MessageType::SUBACK:
-                    $msg_id = $message->getMessageId();
-                    $this->logger->log(MqttLogInterface::DEBUG, 'Receive SUBACK.');
-                    /* @var Suback $message */
-                    $result = $message->getResult();
-                    $req = $this->store->get(MessageType::SUBACK, 'requesting', $msg_id);
-                    if (!$req) {
-                        $this->logger->log(MqttLogInterface::ERROR, 'Subscribe request of msg id ' . $msg_id . ' not found.');
-                    } else {
-                        foreach ($result as $k => $qos) {
-                            $topic_name = $req[$k];
-                            if ($topic_name) {
-                                if ($qos != 0x80) {
-                                    if (isset($this->topics[$topic_name])) {
-                                        $this->topics[$topic_name]->setQos($qos);
+            $this->socket->set([
+                'open_mqtt_protocol' => true,
+                'package_max_length' => $this->package_max_length,  //协议最大长度
+            ]);
+
+            $this->socket->on('connect', function ($cli) {
+                $this->reconnect_count = 0;
+                /* @var Connect */
+                $msg = Message::produce(MessageType::CONNECT, $this);
+                $this->write($msg);
+                $this->keep_alive_timer_id = swoole_timer_tick($this->keep_alive * 500, [$this, 'keepAlive']);
+                $this->trigger(ClientTriggers::SOCKET_CONNECT, null);
+            });
+
+            $this->socket->on('receive', function ($cli, $data) {
+                /* @var MessageInterface $message */
+                $message = $this->read($data);
+                switch ($message->getType()) {
+                    case MessageType::CONNACK:
+                        $this->logger->log(MqttLogInterface::DEBUG, 'Receive CONNACK.');
+                        $this->subscribe();
+                        $this->trigger(ClientTriggers::RECEIVE_CONNACK, $message);
+                        break;
+                    case MessageType::PINGRESP:
+                        $this->logger->log(MqttLogInterface::DEBUG, 'Receive PINGRESP.');
+                        $this->trigger(ClientTriggers::RECEIVE_PINGRESP, $message);
+                        break;
+                    case MessageType::SUBACK:
+                        $msg_id = $message->getMessageId();
+                        $this->logger->log(MqttLogInterface::DEBUG, 'Receive SUBACK.');
+                        /* @var Suback $message */
+                        $result = $message->getResult();
+                        $req = $this->store->get(MessageType::SUBACK, 'requesting', $msg_id);
+                        if (!$req) {
+                            $this->logger->log(MqttLogInterface::ERROR, 'Subscribe request of msg id ' . $msg_id . ' not found.');
+                        } else {
+                            foreach ($result as $k => $qos) {
+                                $topic_name = $req[$k];
+                                if ($topic_name) {
+                                    if ($qos != 0x80) {
+                                        if (isset($this->topics[$topic_name])) {
+                                            $this->topics[$topic_name]->setQos($qos);
+                                        }
+                                    } else {
+                                        $this->logger->log(MqttLogInterface::ERROR, 'Subscribe ' . $topic_name . ' fail.');
                                     }
                                 } else {
-                                    $this->logger->log(MqttLogInterface::ERROR, 'Subscribe ' . $topic_name . ' fail.');
+                                    $this->logger->log(MqttLogInterface::ERROR, 'Subscribe topic not found.');
                                 }
-                            } else {
-                                $this->logger->log(MqttLogInterface::ERROR, 'Subscribe topic not found.');
                             }
+                            $this->store->delete(MessageType::SUBACK, 'requesting', $msg_id);
                         }
-                        $this->store->delete(MessageType::SUBACK, 'requesting', $msg_id);
-                    }
-                    $this->trigger(ClientTriggers::RECEIVE_SUBACK, $message);
-                    break;
-                case MessageType::PUBLISH:
-                    /* @var Publish $message */
-                    $qos = $message->getQos();
-                    $this->logger->log(MqttLogInterface::DEBUG, 'Receive PUBLISH. QOS:' . $qos);
-                    if ($qos == Qos::MOST_ONE_TIME) {
-                        $this->handleReceive($message);
-                    } elseif ($qos == Qos::LEAST_ONE_TIME) {
-                        $this->handleReceive($message);
-                        $msg_id = $message->getMessageId();
-                        $this->logger->log(MqttLogInterface::DEBUG, 'Puback');
-                        $puback = Message::produce(MessageType::PUBACK, $this);
-                        $puback->setMessageId($msg_id);
-                        $this->write($puback);
-                    } elseif ($qos == Qos::ONE_TIME) {
-                        $msg_id = $message->getMessageId();
-                        $this->logger->log(MqttLogInterface::DEBUG, 'Pubrec');
-                        $pubrec = Message::produce(MessageType::PUBREC, $this);
-                        $pubrec->setMessageId($msg_id);
-                        $this->write($pubrec);
-                        $this->getStore()->set(MessageType::PUBREL, 'pubrecing', $msg_id, $pubrec->encode());
-                        $this->registerResend(MessageType::PUBREL, 'pubrecing', $msg_id, $this->resend_times);
-                        $this->handleReceive($message);
-                    }
-                    $this->trigger(ClientTriggers::RECEIVE_PUBLISH, $message);
-                    break;
-                case MessageType::PUBACK:
-                    $msg_id = $message->getMessageId();
-                    $this->logger->log(MqttLogInterface::DEBUG, 'Receive PUBACK. MESSAGE_ID:' . $msg_id);
-                    $this->getStore()->delete(MessageType::PUBACK, 'publishing', $msg_id);
-                    $this->unregisterResend(MessageType::PUBACK, 'publishing', $msg_id);
-                    $this->trigger(ClientTriggers::RECEIVE_PUBACK, $message);
-                    break;
-                case MessageType::PUBREC:
-                    $msg_id = $message->getMessageId();
-                    $this->logger->log(MqttLogInterface::DEBUG, 'Receive PUBREC. MESSAGE_ID:' . $msg_id);
-                    $this->getStore()->delete(MessageType::PUBREC, 'publishing', $msg_id);
-                    $this->unregisterResend(MessageType::PUBREC, 'publishing', $msg_id);
-                    $pubrel = Message::produce(MessageType::PUBREL, $this);
-                    $pubrel->setMessageId($msg_id);
-                    $this->write($pubrel);
-                    $this->getStore()->set(MessageType::PUBCOMP, 'pubreling', $msg_id, $pubrel->encode());
-                    $this->registerResend(MessageType::PUBCOMP, 'pubreling', $msg_id, $this->resend_times);
-                    $this->trigger(ClientTriggers::RECEIVE_PUBREC, $message);
-                    break;
-                case MessageType::PUBREL:
-                    $msg_id = $message->getMessageId();
-                    $this->logger->log(MqttLogInterface::DEBUG, 'Receive PUBREL. MESSAGE_ID:' . $msg_id);
-                    $this->getStore()->delete(MessageType::PUBREL, 'pubrecing', $msg_id);
-                    $this->unregisterResend(MessageType::PUBREL, 'pubrecing', $msg_id);
-                    $pubcomp = Message::produce(MessageType::PUBCOMP, $this);
-                    $pubcomp->setMessageId($msg_id);
-                    $this->write($pubcomp);
-                    $this->trigger(ClientTriggers::RECEIVE_PUBREL, $message);
-                    break;
-                case MessageType::PUBCOMP:
-                    $msg_id = $message->getMessageId();
-                    $this->logger->log(MqttLogInterface::DEBUG, 'Receive PUBCOMP. MESSAGE_ID:' . $msg_id);
-                    $this->getStore()->delete(MessageType::PUBCOMP, 'pubreling', $msg_id);
-                    $this->unregisterResend(MessageType::PUBCOMP, 'pubreling', $msg_id);
-                    $this->trigger(ClientTriggers::RECEIVE_PUBCOMP, $message);
-                    break;
-                case MessageType::UNSUBACK:
-                    $msg_id = $message->getMessageId();
-                    $this->logger->log(MqttLogInterface::DEBUG, 'Receive UNSUBACK.');
-                    $topics = $this->store->get(MessageType::UNSUBACK, 'requesting', $msg_id);
-                    if (!$topics) {
-                        $this->logger->log(MqttLogInterface::ERROR, 'Unsubscribe request of msg id ' . $msg_id . ' not found.');
-                    } else {
-                        foreach ($topics as $topic) {
-                            $this->logger->log(MqttLogInterface::DEBUG, 'Unsubscribe ' . $topic);
-                            unset($this->topics[$topic]);
+                        $this->trigger(ClientTriggers::RECEIVE_SUBACK, $message);
+                        break;
+                    case MessageType::PUBLISH:
+                        /* @var Publish $message */
+                        $qos = $message->getQos();
+                        $this->logger->log(MqttLogInterface::DEBUG, 'Receive PUBLISH. QOS:' . $qos);
+                        if ($qos == Qos::MOST_ONE_TIME) {
+                            $this->handleReceive($message);
+                        } elseif ($qos == Qos::LEAST_ONE_TIME) {
+                            $this->handleReceive($message);
+                            $msg_id = $message->getMessageId();
+                            $this->logger->log(MqttLogInterface::DEBUG, 'Puback');
+                            $puback = Message::produce(MessageType::PUBACK, $this);
+                            $puback->setMessageId($msg_id);
+                            $this->write($puback);
+                        } elseif ($qos == Qos::ONE_TIME) {
+                            $msg_id = $message->getMessageId();
+                            $this->logger->log(MqttLogInterface::DEBUG, 'Pubrec');
+                            $pubrec = Message::produce(MessageType::PUBREC, $this);
+                            $pubrec->setMessageId($msg_id);
+                            $this->write($pubrec);
+                            $this->getStore()->set(MessageType::PUBREL, 'pubrecing', $msg_id, $pubrec->encode());
+                            $this->registerResend(MessageType::PUBREL, 'pubrecing', $msg_id, $this->resend_times);
+                            $this->handleReceive($message);
                         }
-                        $this->store->delete(MessageType::UNSUBACK, 'requesting', $msg_id);
-                    }
-                    $this->trigger(ClientTriggers::RECEIVE_UNSUBACK, $message);
-                    break;
-                default:
-                    break;
-            }
-            $this->trigger(ClientTriggers::SOCKET_RECEIVE, $message);
-        });
+                        $this->trigger(ClientTriggers::RECEIVE_PUBLISH, $message);
+                        break;
+                    case MessageType::PUBACK:
+                        $msg_id = $message->getMessageId();
+                        $this->logger->log(MqttLogInterface::DEBUG, 'Receive PUBACK. MESSAGE_ID:' . $msg_id);
+                        $this->getStore()->delete(MessageType::PUBACK, 'publishing', $msg_id);
+                        $this->unregisterResend(MessageType::PUBACK, 'publishing', $msg_id);
+                        $this->trigger(ClientTriggers::RECEIVE_PUBACK, $message);
+                        break;
+                    case MessageType::PUBREC:
+                        $msg_id = $message->getMessageId();
+                        $this->logger->log(MqttLogInterface::DEBUG, 'Receive PUBREC. MESSAGE_ID:' . $msg_id);
+                        $this->getStore()->delete(MessageType::PUBREC, 'publishing', $msg_id);
+                        $this->unregisterResend(MessageType::PUBREC, 'publishing', $msg_id);
+                        $pubrel = Message::produce(MessageType::PUBREL, $this);
+                        $pubrel->setMessageId($msg_id);
+                        $this->write($pubrel);
+                        $this->getStore()->set(MessageType::PUBCOMP, 'pubreling', $msg_id, $pubrel->encode());
+                        $this->registerResend(MessageType::PUBCOMP, 'pubreling', $msg_id, $this->resend_times);
+                        $this->trigger(ClientTriggers::RECEIVE_PUBREC, $message);
+                        break;
+                    case MessageType::PUBREL:
+                        $msg_id = $message->getMessageId();
+                        $this->logger->log(MqttLogInterface::DEBUG, 'Receive PUBREL. MESSAGE_ID:' . $msg_id);
+                        $this->getStore()->delete(MessageType::PUBREL, 'pubrecing', $msg_id);
+                        $this->unregisterResend(MessageType::PUBREL, 'pubrecing', $msg_id);
+                        $pubcomp = Message::produce(MessageType::PUBCOMP, $this);
+                        $pubcomp->setMessageId($msg_id);
+                        $this->write($pubcomp);
+                        $this->trigger(ClientTriggers::RECEIVE_PUBREL, $message);
+                        break;
+                    case MessageType::PUBCOMP:
+                        $msg_id = $message->getMessageId();
+                        $this->logger->log(MqttLogInterface::DEBUG, 'Receive PUBCOMP. MESSAGE_ID:' . $msg_id);
+                        $this->getStore()->delete(MessageType::PUBCOMP, 'pubreling', $msg_id);
+                        $this->unregisterResend(MessageType::PUBCOMP, 'pubreling', $msg_id);
+                        $this->trigger(ClientTriggers::RECEIVE_PUBCOMP, $message);
+                        break;
+                    case MessageType::UNSUBACK:
+                        $msg_id = $message->getMessageId();
+                        $this->logger->log(MqttLogInterface::DEBUG, 'Receive UNSUBACK.');
+                        $topics = $this->store->get(MessageType::UNSUBACK, 'requesting', $msg_id);
+                        if (!$topics) {
+                            $this->logger->log(MqttLogInterface::ERROR, 'Unsubscribe request of msg id ' . $msg_id . ' not found.');
+                        } else {
+                            foreach ($topics as $topic) {
+                                $this->logger->log(MqttLogInterface::DEBUG, 'Unsubscribe ' . $topic);
+                                unset($this->topics[$topic]);
+                            }
+                            $this->store->delete(MessageType::UNSUBACK, 'requesting', $msg_id);
+                        }
+                        $this->trigger(ClientTriggers::RECEIVE_UNSUBACK, $message);
+                        break;
+                    default:
+                        break;
+                }
+                $this->trigger(ClientTriggers::SOCKET_RECEIVE, $message);
+            });
 
-        $this->socket->on('error', function ($error) {
-            $this->logger->log(MqttLogInterface::ERROR, 'Connect fail:' . json_encode($error));
-            $this->reconnect_count++;
-            if ($this->max_reconnect_times_when_error == 0 || $this->reconnect_count <= $this->max_reconnect_times_when_error) {
-                swoole_timer_after($this->reconnect_interval, [$this, 'connect']);
-            } else {
-                $this->disconnect();
-            }
-            $this->trigger(ClientTriggers::SOCKET_ERROR, null);
-        });
+            $this->socket->on('error', function ($error) {
+                $this->logger->log(MqttLogInterface::ERROR, 'Connect fail:' . json_encode($error));
+                $this->reconnect_count++;
+                if ($this->max_reconnect_times_when_error == 0 || $this->reconnect_count <= $this->max_reconnect_times_when_error) {
+                    swoole_timer_after($this->reconnect_interval, [$this, 'connect']);
+                } else {
+                    $this->disconnect();
+                }
+                $this->trigger(ClientTriggers::SOCKET_ERROR, null);
+            });
 
-        $this->socket->on('close', function () {
-            $this->logger->log(MqttLogInterface::ERROR, 'Connect close.');
-            if ($this->keep_alive_timer_id != null) {
-                swoole_timer_clear($this->keep_alive_timer_id);
-                $this->keep_alive_timer_id = null;
-            }
+            $this->socket->on('close', function () {
+                $this->logger->log(MqttLogInterface::ERROR, 'Connect close.');
+                if ($this->keep_alive_timer_id != null) {
+                    swoole_timer_clear($this->keep_alive_timer_id);
+                    $this->keep_alive_timer_id = null;
+                }
 
-            $this->reconnect_count++;
-            if ($this->max_reconnect_times_when_error == 0 || $this->reconnect_count <= $this->max_reconnect_times_when_error) {
-                swoole_timer_after($this->reconnect_interval, [$this, 'connect']);
-            } else {
-                $this->disconnect();
-            }
+                $this->reconnect_count++;
+                if ($this->max_reconnect_times_when_error == 0 || $this->reconnect_count <= $this->max_reconnect_times_when_error) {
+                    swoole_timer_after($this->reconnect_interval, [$this, 'connect']);
+                } else {
+                    $this->disconnect();
+                }
 
-            $this->trigger(ClientTriggers::SOCKET_CLOSE, null);
-        });
+                $this->trigger(ClientTriggers::SOCKET_CLOSE, null);
+            });
+        }
 
-        swoole_async_dns_lookup($this->host, function ($host, $ip) use ($port) {
-            $this->socket->connect($ip, $port);
-        });
+        if (!$this->socket->isConnected()) {
+            swoole_async_dns_lookup($this->host, function ($host, $ip) use ($port) {
+                $this->socket->connect($ip, $port);
+            });
+        }
+
     }
 
     /**
@@ -720,20 +731,20 @@ class MqttClient
                         str_replace("/", "\/",
                             str_replace("$", '\$',
                                 $key)))) . "$/", $topic_name)) {
-                /* @var \mqttclient\src\subscribe\Topic $topic */
-                $container->call($topic->getHandler(), ['msg' => $publish->getMessage(), 'msg_id' => $publish->getMessageId()]);
+                /* @var Topic $topic */
+                $container->invoke($topic->getHandler(), ['msg' => $publish->getMessage(), 'msg_id' => $publish->getMessageId()]);
             }
         }
     }
 
     /**
      * 容器
-     * @return Injector
+     * @return Container
      */
     protected function produceContainer()
     {
-        $container = new Injector();
-        $container->mapData(MqttClient::class, $this);
+        $container = Yii::$container;
+        $container->set(MqttClient::class, $this);
         return $container;
     }
 
@@ -751,9 +762,11 @@ class MqttClient
      * @param $trigger
      * @param \Closure $call_back
      */
-    public function on($trigger, \Closure $call_back)
+    public function on($trigger, \Closure $call_back = null)
     {
-        $this->call_backs[$trigger] = $call_back;
+        if ($call_back instanceof \Closure) {
+            $this->call_backs[$trigger] = $call_back;
+        }
         return $this;
     }
 
@@ -766,7 +779,7 @@ class MqttClient
     {
         if (isset($this->call_backs[$trigger])) {
             $container = $this->produceContainer();
-            $container->call($this->call_backs[$trigger], ['msg' => $msg]);
+            $container->invoke($this->call_backs[$trigger], ['msg' => $msg]);
         }
     }
 }
