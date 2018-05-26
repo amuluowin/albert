@@ -20,7 +20,7 @@ class MysqlPool extends \yii\swoole\pool\IPool
     protected function reConnect(&$conn, string $connName)
     {
         $config = $this->connsConfig[$connName];
-        if (!$conn->connected && $conn->connect(['host' => $config['host'], 'port' => $config['port'], 'user' => $config['user'], 'password' => $config['password'],
+        if (!$conn->connected && $conn->connect(['host' => \Co::gethostbyname($config['host']), 'port' => $config['port'], 'user' => $config['user'], 'password' => $config['password'],
                 'database' => $config['database'], 'charset' => isset($config['charset']) ? $config['charset'] : 'utf-8',
                 'timeout' => isset($config['timeout']) ? $config['timeout'] : 1]) == false
         ) {

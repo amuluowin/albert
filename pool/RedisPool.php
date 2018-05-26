@@ -24,7 +24,7 @@ class RedisPool extends \yii\swoole\pool\IPool
     {
         $config = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['hostname', 'port', 'serialize'],
             ['localhost', 6379, true]);
-        if (!$conn->connected && $conn->connect($config['hostname'], $config['port'], false) == false
+        if (!$conn->connected && $conn->connect(\Co::gethostbyname($config['hostname']), $config['port'], false) == false
         ) {
             if ($this->reconnect <= $this->curconnect) {
                 $this->curconnect = 0;
