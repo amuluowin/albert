@@ -98,7 +98,7 @@ class SwaggerApiLogic
             if ($controller) {
                 $result[$module->id] = self::getRoutes([
                     Yii::getAlias('@vendor/albert/yii2-swoole/swagger/public'),
-                    Yii::getAlias('@addons' . $path),
+                    Yii::getAlias('@apis' . $path),
                     Yii::getAlias('@vendor/albert/yii2-swoole/swagger/defaultapi')
                 ], [], $controller);
             }

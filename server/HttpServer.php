@@ -5,10 +5,7 @@ namespace yii\swoole\server;
 use swoole_http_server;
 use Yii;
 use yii\swoole\base\SingletonTrait;
-use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\helpers\SerializeHelper;
-use yii\swoole\rpc\RpcTrait;
-use yii\swoole\udp\UdpTrait;
 use yii\swoole\web\HttpTrait;
 
 /**

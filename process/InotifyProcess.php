@@ -19,7 +19,7 @@ class InotifyProcess extends BaseProcess
     {
         parent::init();
         Output::writeln("启动了autoReload", Output::CYAN);
-        $this->monitor_dir = Yii::getAlias('@addons');
+        $this->monitor_dir = Yii::getAlias('@apis');
     }
 
     public function useInotify()

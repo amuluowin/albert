@@ -9,7 +9,7 @@ use yii\helpers\ArrayHelper;
 
 class Configs extends \yii\base\Object {
 
-    const CACHE_TAG = 'addons.system\sqlcache';
+    const CACHE_TAG = 'apis.system\sqlcache';
 
     /**
      * @var Connection Database connection.
@@ -86,7 +86,7 @@ class Configs extends \yii\base\Object {
      */
     public static function instance() {
         if (self::$_instance === null) {
-            $type = ArrayHelper::getValue(Yii::$app->params, 'addons.system.sqlcache.configs', []);
+            $type = ArrayHelper::getValue(Yii::$app->params, 'apis.system.sqlcache.configs', []);
             if (is_array($type) && !isset($type['class'])) {
                 $type['class'] = static::className();
             }

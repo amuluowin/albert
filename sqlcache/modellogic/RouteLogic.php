@@ -14,7 +14,7 @@ use yii\helpers\VarDumper;
 class RouteLogic
 {
 
-    const CACHE_TAG = 'addons.system.sqlcache.route';
+    const CACHE_TAG = 'apis.system.sqlcache.route';
 
     /**
      * Get avaliable and assigned routes

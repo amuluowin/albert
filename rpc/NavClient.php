@@ -13,7 +13,7 @@ class NavClient implements IRpcClient
     public function recv()
     {
         list($service, $route) = Yii::$app->rpc->getService();
-        $data = call_user_func_array(Yii::$app->RpcHelper->getCurCall($service, $route, $this->method), $this->data);
+        $data = call_user_func_array(LocalServices::getCurCall($service, $route, $this->method), $this->data);
         return $data;
     }
 

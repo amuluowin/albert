@@ -11,7 +11,6 @@ namespace yii\swoole\mqtt;
 
 use yii\base\Component;
 use yii\swoole\helpers\ArrayHelper;
-use yii\swoole\mqtt\enum\ClientTriggers;
 use yii\swoole\mqtt\log\MqttLogInterface;
 use yii\swoole\mqtt\store\TmpStorageInterface;
 

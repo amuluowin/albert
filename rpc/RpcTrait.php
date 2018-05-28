@@ -27,7 +27,7 @@ trait RpcTrait
             $serv->send($fd, TcpPack::encode(['status' => 200, 'code' => 0, 'message' => 'success', 'data' => null], 'rpc'));
         }
 
-        $function = Yii::$app->RpcHelper->getCurCall($data['service'], $data['route'], $data['method']);
+        $function = LocalServices::getCurCall($data['service'], $data['route'], $data['method']);
 
         if (is_string($function) && strpos($function, '\\') === false && strpos($function, '/') !== false) {
             try {

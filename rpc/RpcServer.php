@@ -5,7 +5,6 @@ namespace yii\swoole\server;
 use swoole_server;
 use Yii;
 use yii\swoole\base\SingletonTrait;
-use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\rpc\RpcTrait;
 
 class RpcServer extends Server

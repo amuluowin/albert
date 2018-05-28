@@ -8,7 +8,6 @@ use Kafka\Protocol\Protocol;
 use function fclose;
 use function feof;
 use function fread;
-use function fwrite;
 use function is_resource;
 use function stream_set_blocking;
 use function stream_set_read_buffer;

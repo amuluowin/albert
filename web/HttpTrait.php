@@ -4,9 +4,6 @@ namespace yii\swoole\web;
 
 use Yii;
 use yii\base\ErrorException;
-use yii\base\InvalidRouteException;
-use yii\filters\ContentNegotiator;
-use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\helpers\CoroHelper;
 
 trait HttpTrait
@@ -37,26 +34,7 @@ trait HttpTrait
         $this->server->currentSwooleResponse[$id] = $response;
         try {
             Yii::$app->beforeRun();
-            //判断转发RPC
-            $service = explode('/', ltrim($request->server['request_uri'], '/'));
-            if (count($service) !== 3) {
-                throw new InvalidRouteException();
-            }
-            list($service, $route, $method) = $service;
-            if (!in_array($route, Yii::$rpcList[$service])
-                || in_array($route, ArrayHelper::getValue(Yii::$app->rpc->remoteList, $service, []))
-            ) {
-                $appResponse = Yii::$app->getResponse();
-                $appResponse->data = Yii::$app->rpc->create($service, $route)->$method([Yii::$app->getRequest()->getQueryParams(), Yii::$app->getRequest()->getBodyParams()])->recv();
-                $filter = new ContentNegotiator(['formats' => [
-                    'application/json' => Response::FORMAT_JSON,
-                    'application/xml' => Response::FORMAT_XML,
-                ]]);
-                $filter->bootstrap(Yii::$app);
-                Yii::$app->end();
-            } else {
-                Yii::$app->run();
-            }
+            Yii::$app->run();
         } catch (ErrorException $e) {
             Yii::$app->getErrorHandler()->handleException($e);
         } catch (\Exception $e) {

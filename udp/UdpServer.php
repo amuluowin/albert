@@ -10,7 +10,6 @@ namespace yii\swoole\udp;
 
 use Yii;
 use yii\swoole\base\SingletonTrait;
-use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\server\Server;
 
 class UdpServer extends Server

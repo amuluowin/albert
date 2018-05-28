@@ -48,7 +48,7 @@ class RpcClient extends Component
         return isset($this->service[CoroHelper::getId()]) ? $this->service[CoroHelper::getId()] : [null, null];
     }
 
-    public function create(string $ser, string $route)
+    public function call(string $ser, string $route)
     {
         $this->service[CoroHelper::getId()] = [$ser, $route];
         return $this;

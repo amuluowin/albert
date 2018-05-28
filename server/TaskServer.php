@@ -6,7 +6,6 @@ use swoole_server;
 use Yii;
 use yii\swoole\async\Task;
 use yii\swoole\base\SingletonTrait;
-use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\pack\TcpPack;
 
 class TaskServer extends Server
