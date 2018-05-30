@@ -37,6 +37,9 @@ class TcpClient implements IRpcClient
         $result = TcpPack::decode($this->client->recv(), 'rpc');
         Yii::$app->rpc->afterRecv($result);
         Yii::$container->get('tcpclient')->recycle($this->client);
+        if ($result instanceof \Exception) {
+            throw $result;
+        }
         return $result;
     }
 

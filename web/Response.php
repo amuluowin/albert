@@ -352,9 +352,9 @@ class Response extends \yii\base\Response implements ICoroutine
         } else {
             throw new InvalidConfigException("Unsupported response format: " . $this->getFormat());
         }
-        if (is_array($this->content[$id])) {
+        if (isset($this->content[$id]) && is_array($this->content[$id])) {
             throw new InvalidParamException("Response content must not be an array.");
-        } elseif (is_object($this->content[$id])) {
+        } elseif (isset($this->content[$id]) && is_object($this->content[$id])) {
             if (method_exists($this->content[$id], '__toString')) {
                 $this->content[$id] = $this->content[$id]->__toString();
             } else {
@@ -472,7 +472,7 @@ class Response extends \yii\base\Response implements ICoroutine
     {
         $id = CoroHelper::getId();
         if ($this->getStream() === null) {
-            Yii::$server->currentSwooleResponse[$id]->end($this->content[$id]);
+            Yii::$server->currentSwooleResponse[$id]->end(isset($this->content[$id]) ? $this->content[$id] : '');
             return;
         }
 

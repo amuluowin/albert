@@ -26,7 +26,7 @@ class MysqlPool extends \yii\swoole\pool\IPool
         ) {
             if ($this->reconnect <= $this->curconnect) {
                 $this->curconnect = 0;
-                throw new ServerErrorHttpException($conn->error);
+                throw new ServerErrorHttpException($conn->connect_error);
             } else {
                 $this->curconnect++;
                 $this->reConnect($conn, $connName);

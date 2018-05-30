@@ -90,8 +90,7 @@ class Connection extends \yii\swoole\db\Connection implements ICoroutine
         $id = CoroHelper::getId();
         if (Yii::$container->hasSingleton('mysqlclient') && isset($this->pdo[$id])) {
             Yii::$container->get('mysqlclient')->recycle($this->pdo[$id]);
-            unset($this->pdo[$id]);
-            Yii::info('Closing DB connection:' . $this->dsn);
+            Yii::info('recyle DB connection:' . $this->dsn);
         }
     }
 

@@ -73,7 +73,7 @@ trait RpcTrait
                 $serv->send($fd, TcpPack::encode($result, 'rpc'));
                 $this->setLog($result);
             } catch (\Exception $e) {
-                $serv->send($fd, TcpPack::encode(null, 'rpc'));
+                $serv->send($fd, TcpPack::encode(Yii::$app->getErrorHandler()->handleException($e), 'rpc'));
                 $this->setLog($e);
             }
         }

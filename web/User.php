@@ -14,11 +14,6 @@ class User extends \yii\web\User implements ICoroutine
     private $_access = [];
     private $_identity = [];
 
-    public function setIdentityClass($class)
-    {
-        $this->identityClass = $class;
-    }
-
     public function getIdentity($autoRenew = true)
     {
         $id = CoroHelper::getId();

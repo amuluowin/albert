@@ -23,44 +23,6 @@ class ActiveRecord extends \yii\db\ActiveRecord
         return Yii::createObject(ActiveQuery::className(), [get_called_class()]);
     }
 
-    private function doWork($body, $class)
-    {
-        if (is_string($class)) {
-            $method = $class;
-            $param = [];
-            $class = get_class($this);
-            $class = (str_replace('models', 'customba', $class)) . 'BA';
-            return call_user_func_array([$class, $method], [$this, $body, $param]);
-        } elseif (is_array($class)) {
-            foreach ($class as $module => $config) {
-                if ((bool)count(array_filter(array_keys($config), 'is_string'))) {
-                    foreach ($config as $method => $param) {
-                        $logic = get_class($this);
-                        $logic = (str_replace('models', 'customba', $logic)) . 'BA';
-                        return call_user_func_array([$logic, $method], [$this, $body, $param]);
-                    }
-                } else {
-                    $count = count($config);
-                    if ($count === 2) {
-                        list($logic, $param) = $config;
-                    } elseif ($count === 1) {
-                        $logic = array_shift($config);
-                        $param = [];
-                    }
-                    return Yii::$app->rpc->create($module)->sendAndrecv([$logic, [$this, $body, $param]]);
-                }
-            }
-        }
-    }
-
-    private function baWork($body, $class = null)
-    {
-        if ($class) {
-            return $this->doWork($body, $class);
-        }
-        return [$this::ACTION_NEXT, $body];
-    }
-
 
     /*
      * 查询前

@@ -20,7 +20,7 @@ class NavClient implements IRpcClient
     public function __call($name, $params)
     {
         $this->method = $name;
-        $this->data = array_shift($params);
+        $this->data = $params;
         return $this;
     }
 }

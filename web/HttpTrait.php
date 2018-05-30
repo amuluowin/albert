@@ -35,10 +35,12 @@ trait HttpTrait
         try {
             Yii::$app->beforeRun();
             Yii::$app->run();
-        } catch (ErrorException $e) {
-            Yii::$app->getErrorHandler()->handleException($e);
         } catch (\Exception $e) {
-            Yii::$app->getErrorHandler()->handleException($e);
+            /**
+             * @var ErrorHandler
+             */
+            $errorHandle = Yii::$app->getErrorHandler();
+            $errorHandle->handleException($e);
         } finally {
             //结束
             Yii::getLogger()->flush(true);

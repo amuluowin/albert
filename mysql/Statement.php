@@ -4,6 +4,7 @@ namespace yii\swoole\mysql;
 
 use Yii;
 use yii\base\BaseObject;
+use yii\swoole\base\Output;
 use yii\web\ServerErrorHttpException;
 
 class Statement extends BaseObject
@@ -34,23 +35,27 @@ class Statement extends BaseObject
     public function execute($timeout = 10)
     {
         try {
-            if (empty($this->params)) {
-                $this->data = $this->pdo->query($this->sql, $timeout);
-            } else {
-                $values = [];
-                foreach ($this->params as $name => $value) {
-                    $this->sql = preg_replace('/' . $name . '/', '?', $this->sql, 1);
-                    $values[] = $value;
-                }
-                $statement = $this->pdo->prepare($this->sql);
-                if ($statement == false) {
-                    throw new ServerErrorHttpException($this->pdo->errno);
-                } else {
-                    $this->data = $statement->execute($values);
-                }
-            }
+//            if (empty($this->params)) {
+//                $this->data = $this->pdo->query($this->sql, $timeout);
+//            } else {
+//                $values = [];
+//                foreach ($this->params as $name => $value) {
+//                    $this->sql = preg_replace('/' . $name . '/', '?', $this->sql, 1);
+//                    $values[] = $value;
+//                }
+//                $statement = $this->pdo->prepare($this->sql);
+//                if (!$statement instanceof \Swoole\Coroutine\MySQL\Statement) {
+//                    throw new ServerErrorHttpException($this->pdo->connect_error);
+//                } else {
+//                    $this->data = $statement->execute($values);
+//                    if ($this->data === false) {
+//                        throw new ServerErrorHttpException($this->pdo->connect_error);
+//                    }
+//                }
+
+            $this->data = $this->pdo->query($this->sql, $timeout);
         } catch (\Exception $e) {
-            Yii::warning($e->getMessage());
+            Yii::error($e->getMessage());
         } finally {
             $this->db->release();
         }
