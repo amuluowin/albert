@@ -9,8 +9,12 @@
 namespace yii\swoole\base;
 
 
+use yii\base\ArrayableTrait;
+use yii\swoole\helpers\ArrayHelper;
+
 class BaseModel
 {
+    use ArrayableTrait;
     /**
      * @var array
      */
@@ -34,8 +38,11 @@ class BaseModel
         $this->_attributes[$name] = $value;
     }
 
-    public function toArray()
+    public function toArray(array $fields = [])
     {
+        if ($fields) {
+            return ArrayHelper::getValueByArray($this->_attributes, $fields);
+        }
         return $this->_attributes;
     }
 
