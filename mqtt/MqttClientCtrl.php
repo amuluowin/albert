@@ -11,6 +11,7 @@ namespace yii\swoole\mqtt;
 
 use yii\base\Component;
 use yii\swoole\helpers\ArrayHelper;
+use yii\swoole\mqtt\enum\ClientTriggers;
 use yii\swoole\mqtt\log\MqttLogInterface;
 use yii\swoole\mqtt\store\TmpStorageInterface;
 
@@ -69,28 +70,54 @@ class MqttClientCtrl extends Component
     public function subscribe(int $client_id, array $topics, bool $clear = false): MqttClient
     {
         $r = $this->connect($client_id);
-        if ($clear) {
-            $r->setTopics($topics);
+        if (!$r->getSocket()->isConnected()) {
+            $r->on(ClientTriggers::SOCKET_CONNECT, function (MqttClient $client) use ($topics) {
+                if ($clear) {
+                    $client->setTopics($topics);
+                } else {
+                    $client->setTopics(ArrayHelper::merge($client->getTopics(), $topics));
+                }
+                $r->subscribe();
+            });
         } else {
-            $r->setTopics(ArrayHelper::merge($r->getTopics(), $topics));
+            if ($clear) {
+                $r->setTopics($topics);
+            } else {
+                $r->setTopics(ArrayHelper::merge($r->getTopics(), $topics));
+            }
+            $r->subscribe();
         }
-        $r->subscribe();
         return $r;
     }
 
     public function unsubscribe(int $client_id, array $topics): MqttClient
     {
         $r = $this->connect($client_id);
-        $r->unsubscribe($topics);
+        if (!$r->getSocket()->isConnected()) {
+            $r->on(ClientTriggers::SOCKET_CONNECT, function (MqttClient $client) use ($topics) {
+                $client->unsubscribe($topics);
+            });
+        } else {
+            $r->unsubscribe($topics);
+        }
         return $r;
     }
 
     public function publish(int $client_id, array $message): MqttClient
     {
         $r = $this->connect($client_id);
-        foreach ($message as $m) {
-            list($route, $content, $qos) = $m;
-            $r->publish($route, $content, $qos);
+        if (!$r->getSocket()->isConnected()) {
+            $r->on(ClientTriggers::SOCKET_CONNECT, function (MqttClient $client) use ($message) {
+                foreach ($message as $m) {
+                    list($route, $content, $qos) = $m;
+                    $client->publish($route, $content, $qos);
+                }
+            });
+        } else {
+            foreach ($message as $m) {
+                list($route, $content, $qos) = $m;
+                $r->publish($route, $content, $qos);
+            }
         }
         return $r;
     }

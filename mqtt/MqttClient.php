@@ -110,6 +110,12 @@ class MqttClient
         $this->package_max_length = 1024 * 1024 * 2;
     }
 
+    public function getSocket(): \Swoole\Client
+    {
+        return $this->socket;
+    }
+
+
     /**
      * @return mixed
      */
