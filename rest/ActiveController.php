@@ -122,8 +122,6 @@ class ActiveController extends Controller
 //            'view' => ['GET', 'HEAD', 'POST'],
 //            'create' => ['POST'],
 //            'update' => ['PUT', 'POST'],
-//            'batch' => ['PATCH', 'POST'],
-//            'method' => ['GET', 'POST'],
 //            'delete' => ['DELETE', 'POST']
 //        ];
 //    }

@@ -137,7 +137,7 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
     private function putService(string $url)
     {
         $response = Yii::$app->httpclient->put($url, $this->register)->setFormat(Client::FORMAT_JSON)->send();
-        $output = 'RPC service register service %s %s by consul tcp=%s:%d';
+        $output = 'RPC register service %s %s by consul tcp=%s:%d';
         if (empty($result) && $response->getStatusCode() == 200) {
             Output::writeln(sprintf($output, $this->register['Name'], 'success', $this->register['Address'], $this->register['Port']), Output::LIGHT_GREEN);
         } else {

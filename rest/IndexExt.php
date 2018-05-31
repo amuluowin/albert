@@ -19,9 +19,10 @@ class IndexExt
             $page = (int)Yii::$app->request->get('page', 1) - 1;
         }
 
-        $scenes = ArrayHelper::remove($filter, 'beforeIndex','');
-        if (in_array($scenes, $model->sceneList)) {
-            list($status, $filter) = $model->$scenes($filter);
+        $bscenes = ArrayHelper::remove($filter, 'beforeIndex', '');
+        $ascenes = ArrayHelper::remove($filter, 'afterIndex', '');
+        if (key_exists($bscenes, $model->sceneList) && method_exists($model, $model->sceneList[$bscenes])) {
+            list($status, $filter) = $model->{$model->sceneList[$bscenes]}($filter);
             if ($status >= $model::ACTION_RETURN) {
                 return $filter;
             }
@@ -32,9 +33,9 @@ class IndexExt
         } else {
             list($total, $data) = DBHelper::SearchList($model::find(), $filter, $page);
         }
-        $scenes = ArrayHelper::remove($filter, 'afterIndex','');
-        if (in_array($scenes, $model->sceneList)) {
-            list($status, $filter) = $model->$scenes($filter);
+
+        if (key_exists($ascenes, $model->sceneList) && method_exists($model, $model->sceneList[$ascenes])) {
+            list($status, $filter) = $model->{$model->sceneList[$ascenes]}($filter);
             if ($status >= $model::ACTION_RETURN) {
                 return $filter;
             }

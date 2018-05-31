@@ -33,18 +33,19 @@ class ViewAction extends Action
             return Yii::$app->rpc->call($serivce, $route)->View($filter, $id);
         }
         $modelClass = new $this->modelClass();
-        $scenes = ArrayHelper::remove($filter, 'beforeView','');
-        if ($scenes( $modelClass->sceneList)) {
-            list($status, $filter) = $modelClass->$scenes($filter);
+        $bscenes = ArrayHelper::remove($filter, 'beforeView', '');
+        $ascenes = ArrayHelper::remove($filter, 'afterView', '');
+        if (key_exists($bscenes, $modelClass->sceneList) && method_exists($modelClass, $modelClass->sceneList[$bscenes])) {
+            list($status, $filter) = $modelClass->{$modelClass->sceneList[$bscenes]}($filter);
             if ($status >= $modelClass::ACTION_RETURN) {
                 return $filter;
             }
         }
         $model = $this->searchModel($filter, $id);
 
-        $scenes = ArrayHelper::remove($filter, 'afterView','');
-        if ($scenes( $modelClass->sceneList)) {
-            list($status, $filter) = $modelClass->$scenes($filter);
+
+        if (key_exists($ascenes, $modelClass->sceneList) && method_exists($modelClass, $modelClass->sceneList[$ascenes])) {
+            list($status, $filter) = $modelClass->{$modelClass->sceneList[$ascenes]}($filter);
             if ($status >= $modelClass::ACTION_RETURN) {
                 return $filter;
             }

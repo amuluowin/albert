@@ -6,7 +6,6 @@ use Yii;
 use yii\base\InvalidArgumentException;
 use yii\swoole\db\DBHelper;
 use yii\swoole\db\Query;
-use yii\swoole\web\NoParamsException;
 use yii\web\ServerErrorHttpException;
 
 class UpdateExt extends \yii\base\Object
@@ -16,18 +15,19 @@ class UpdateExt extends \yii\base\Object
     {
         $transaction = $transaction ? $transaction : $model->getDb()->beginTransaction();
         if ($body) {
+            $bscenes = ArrayHelper::remove($filter, 'beforeUpdate', '');
+            $ascenes = ArrayHelper::remove($filter, 'afterUpdate', '');
             if (isset($body['batch'])) {
-                $scenes = ArrayHelper::remove($filter, 'beforeUpdate','');
-                if ($scenes( $model->sceneList)) {
-                    list($status, $filter) = $model->$scenes($filter);
+                if (key_exists($bscenes, $model->sceneList) && method_exists($model, $model->sceneList[$bscenes])) {
+                    list($status, $filter) = $model->{$model->sceneList[$bscenes]}($filter);
                     if ($status >= $model::ACTION_RETURN) {
                         return $filter;
                     }
                 }
                 $result = $model::getDb()->updateSeveral($model, $body['batch']);
-                $scenes = ArrayHelper::remove($filter, 'afterUpdate','');
-                if ($scenes( $model->sceneList)) {
-                    list($status, $filter) = $model->$scenes($filter);
+
+                if (key_exists($ascenes, $model->sceneList) && method_exists($model, $model->sceneList[$ascenes])) {
+                    list($status, $filter) = $model->{$model->sceneList[$ascenes]}($filter);
                     if ($status >= $model::ACTION_RETURN) {
                         return $filter;
                     }
@@ -51,18 +51,17 @@ class UpdateExt extends \yii\base\Object
                     throw new ServerErrorHttpException('Failed to update the object for unknown reason.');
                 }
             } else {
-                $scenes = ArrayHelper::remove($filter, 'beforeUpdate','');
-                if ($scenes( $model->sceneList)) {
-                    list($status, $filter) = $model->$scenes($filter);
+                if (key_exists($bscenes, $model->sceneList) && method_exists($model, $model->sceneList[$bscenes])) {
+                    list($status, $filter) = $model->{$model->sceneList[$bscenes]}($filter);
                     if ($status >= $model::ACTION_RETURN) {
                         return $filter;
                     }
                 }
                 $result = self::updateSeveral($model, $body, $transaction);
 
-                $scenes = ArrayHelper::remove($filter, 'afterUpdate','');
-                if ($scenes( $model->sceneList)) {
-                    list($status, $filter) = $model->$scenes($filter);
+
+                if (key_exists($ascenes, $model->sceneList) && method_exists($model, $model->sceneList[$ascenes])) {
+                    list($status, $filter) = $model->{$model->sceneList[$ascenes]}($filter);
                     if ($status >= $model::ACTION_RETURN) {
                         return $filter;
                     }
@@ -103,22 +102,22 @@ class UpdateExt extends \yii\base\Object
                     $model = $exit;
                 }
             }
-            $scenes = ArrayHelper::remove($filter, 'beforeUpdate','');
-            if ($scenes( $model->sceneList)) {
-                list($status, $filter) = $model->$scenes($filter);
+            $bscenes = ArrayHelper::remove($filter, 'beforeUpdate', '');
+            $ascenes = ArrayHelper::remove($filter, 'afterUpdate', '');
+            if (key_exists($bscenes, $model->sceneList) && method_exists($model, $model->sceneList[$bscenes])) {
+                list($status, $filter) = $model->{$model->sceneList[$bscenes]}($filter);
                 if ($status >= $model::ACTION_RETURN) {
                     return $filter;
                 }
             }
 
             $model->load($body, '');
-            yii::$app->BaseHelper->validate($model, $transaction);
+            Yii::$app->BaseHelper->validate($model, $transaction);
             if ($model->save(false) === false && !$model->hasErrors()) {
                 throw new ServerErrorHttpException('Failed to update the object for unknown reason.');
             } else {
-                $scenes = ArrayHelper::remove($filter, 'afterUpdate','');
-                if ($scenes( $model->sceneList)) {
-                    list($status, $filter) = $model->$scenes($filter);
+                if (key_exists($ascenes, $model->sceneList) && method_exists($model, $model->sceneList[$ascenes])) {
+                    list($status, $filter) = $model->{$model->sceneList[$ascenes]}($filter);
                     if ($status >= $model::ACTION_RETURN) {
                         return $filter;
                     }

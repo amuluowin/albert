@@ -52,21 +52,21 @@ class UpdateAction extends Action
             $model->scenario = $this->scenario;
             $transaction = $model->getDb()->beginTransaction();
             try {
-                $scenes = ArrayHelper::remove($filter, 'beforeUpdate','');
-                if ($scenes( $modelClass->sceneList)) {
-                    list($status, $filter) = $modelClass->$scenes($filter);
+                $bscenes = ArrayHelper::remove($filter, 'beforeUpdate', '');
+                $ascenes = ArrayHelper::remove($filter, 'afterUpdate', '');
+                if (key_exists($bscenes, $modelClass->sceneList) && method_exists($modelClass, $modelClass->sceneList[$bscenes])) {
+                    list($status, $filter) = $modelClass->{$modelClass->sceneList[$bscenes]}($filter);
                     if ($status >= $modelClass::ACTION_RETURN) {
                         return $filter;
                     }
                 }
                 $model->load($body, '');
-                yii::$app->BaseHelper->validate($model, $transaction);
+                Yii::$app->BaseHelper->validate($model, $transaction);
                 if ($model->save(false) === false && !$model->hasErrors()) {
                     throw new ServerErrorHttpException('Failed to update the object for unknown reason.');
                 } else {
-                    $scenes = ArrayHelper::remove($filter, 'afterUpdate','');
-                    if ($scenes( $modelClass->sceneList)) {
-                        list($status, $filter) = $modelClass->$scenes($filter);
+                    if (key_exists($ascenes, $modelClass->sceneList) && method_exists($modelClass, $modelClass->sceneList[$ascenes])) {
+                        list($status, $filter) = $modelClass->{$modelClass->sceneList[$ascenes]}($filter);
                         if ($status >= $modelClass::ACTION_RETURN) {
                             return $filter;
                         }

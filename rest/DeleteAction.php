@@ -39,9 +39,10 @@ class DeleteAction extends Action
             if ($this->checkAccess) {
                 call_user_func($this->checkAccess, $this->id, $model);
             }
-            $scenes = ArrayHelper::remove($filter, 'beforeDelete','');
-            if ($scenes( $modelClass->sceneList)) {
-                list($status, $filter) = $modelClass->$scenes($filter);
+            $bscenes = ArrayHelper::remove($filter, 'beforeDelete', '');
+            $ascenes = ArrayHelper::remove($filter, 'afterDelete', '');
+            if (key_exists($bscenes, $modelClass->sceneList) && method_exists($modelClass, $modelClass->sceneList[$bscenes])) {
+                list($status, $filter) = $modelClass->{$modelClass->sceneList[$bscenes]}($filter);
                 if ($status >= $modelClass::ACTION_RETURN) {
                     return $filter;
                 }
@@ -51,9 +52,8 @@ class DeleteAction extends Action
                 throw new ServerErrorHttpException('Failed to delete the object for unknown reason.');
             }
 
-            $scenes = ArrayHelper::remove($filter, 'afterDelete','');
-            if ($scenes( $modelClass->sceneList)) {
-                list($status, $filter) = $modelClass->$scenes($filter);
+            if (key_exists($ascenes, $modelClass->sceneList) && method_exists($modelClass, $modelClass->sceneList[$ascenes])) {
+                list($status, $filter) = $modelClass->{$modelClass->sceneList[$ascenes]}($filter);
                 if ($status >= $modelClass::ACTION_RETURN) {
                     return $filter;
                 }

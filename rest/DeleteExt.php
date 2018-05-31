@@ -17,33 +17,34 @@ class DeleteExt extends \yii\base\Object
         $transaction = $transaction ? $transaction : $model->getDb()->beginTransaction();
         if ($body) {
             if (isset($body["batch"])) {
-                $scenes = ArrayHelper::remove($filter, 'beforeDelete','');
-                if ($scenes( $model->sceneList)) {
-                    list($status, $filter) = $model->$scenes($filter);
+                $bscenes = ArrayHelper::remove($filter, 'beforeDelete', '');
+                $ascenes = ArrayHelper::remove($filter, 'afterDelete', '');
+                if (key_exists($bscenes, $model->sceneList) && method_exists($model, $model->sceneList[$bscenes])) {
+                    list($status, $filter) = $model->{$model->sceneList[$bscenes]}($filter);
                     if ($status >= $model::ACTION_RETURN) {
                         return $filter;
                     }
                 }
                 $result = $model::getDb()->deleteSeveral($model, $body['batch']);
-                $scenes = ArrayHelper::remove($filter, 'afterDelete','');
-                if ($scenes( $model->sceneList)) {
-                    list($status, $filter) = $model->$scenes($filter);
+                if (key_exists($ascenes, $model->sceneList) && method_exists($model, $model->sceneList[$ascenes])) {
+                    list($status, $filter) = $model->{$model->sceneList[$ascenes]}($filter);
                     if ($status >= $model::ACTION_RETURN) {
                         return $filter;
                     }
                 }
             } else {
-                $scenes = ArrayHelper::remove($filter, 'beforeDelete','');
-                if ($scenes( $model->sceneList)) {
-                    list($status, $filter) = $model->$scenes($filter);
+                $bscenes = ArrayHelper::remove($filter, 'beforeDelete', '');
+                $ascenes = ArrayHelper::remove($filter, 'afterDelete', '');
+                if (key_exists($bscenes, $model->sceneList) && method_exists($model, $model->sceneList[$bscenes])) {
+                    list($status, $filter) = $model->{$model->sceneList[$bscenes]}($filter);
                     if ($status >= $model::ACTION_RETURN) {
                         return $filter;
                     }
                 }
                 $result = $model->deleteAll(DBHelper::Search((new Query()), $body)->where);
-                $scenes = ArrayHelper::remove($filter, 'afterDelete','');
-                if ($scenes( $model->sceneList)) {
-                    list($status, $filter) = $model->$scenes($filter);
+
+                if (key_exists($ascenes, $model->sceneList) && method_exists($model, $model->sceneList[$ascenes])) {
+                    list($status, $filter) = $model->{$model->sceneList[$ascenes]}($filter);
                     if ($status >= $model::ACTION_RETURN) {
                         return $filter;
                     }
