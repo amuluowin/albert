@@ -26,28 +26,27 @@ class ViewAction extends Action
      */
     public function run($id = null)
     {
-//        if ($id)
-//        {
-//            $model = $this->findModel($id);
-//        }
-//        else
-//        {
+
         $filter = Yii::$app->getRequest()->getBodyParams();
+        if (is_array($this->modelClass)) {
+            list($serivce, $route) = $this->modelClass;
+            return Yii::$app->rpc->call($serivce, $route)->View($filter, $id);
+        }
         $modelClass = new $this->modelClass();
-        if (method_exists($modelClass, 'before_AView')) {
-            $class = \yii\swoole\helpers\ArrayHelper::remove($filter, 'before');
-            list($status, $filter) = $modelClass->before_AView($filter, $class);
+        $scenes = ArrayHelper::remove($filter, 'beforeView','');
+        if ($scenes( $modelClass->sceneList)) {
+            list($status, $filter) = $modelClass->$scenes($filter);
             if ($status >= $modelClass::ACTION_RETURN) {
                 return $filter;
             }
         }
         $model = $this->searchModel($filter, $id);
-//        }
-        if (method_exists($modelClass, 'after_AView')) {
-            $class = \yii\swoole\helpers\ArrayHelper::remove($filter, 'after');
-            list($status, $model) = $modelClass->after_AView($model, $class);
+
+        $scenes = ArrayHelper::remove($filter, 'afterView','');
+        if ($scenes( $modelClass->sceneList)) {
+            list($status, $filter) = $modelClass->$scenes($filter);
             if ($status >= $modelClass::ACTION_RETURN) {
-                return $model;
+                return $filter;
             }
         }
         if ($this->checkAccess) {

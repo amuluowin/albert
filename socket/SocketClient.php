@@ -23,7 +23,7 @@ class SocketClient extends BaseClient implements ICoroutine
      */
     private $data = [];
 
-    public function getClient()
+    public function getClient(): ?\Swoole\Coroutine\Client
     {
         $id = CoroHelper::getId();
         return isset($this->client[$id]) ? $this->client[$id] : null;
@@ -83,7 +83,10 @@ class SocketClient extends BaseClient implements ICoroutine
         $this->trigger(self::EVENT_BEFORE_SEND);
         $this->getClient()->send($data);
         $this->trigger(self::EVENT_AFTER_SEND);
-        return $this;
+        if ($this->defer) {
+            return $this;
+        }
+        return $this->recv();
     }
 
     public function release()

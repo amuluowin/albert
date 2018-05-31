@@ -396,14 +396,14 @@ class Request extends \yii\web\Request implements ICoroutine
             $http = $secure ? 'https' : 'http';
 
             if ($this->headers->has('X-Forwarded-Host')) {
-                $this->_hostInfo = $http . '://' . $this->headers->get('X-Forwarded-Host');
+                $this->_hostInfo[$id] = $http . '://' . $this->headers->get('X-Forwarded-Host');
             } elseif ($this->headers->has('Host')) {
-                $this->_hostInfo = $http . '://' . $this->headers->get('Host');
+                $this->_hostInfo[$id] = $http . '://' . $this->headers->get('Host');
             } elseif (isset($_SERVER['SERVER_NAME'])) {
-                $this->_hostInfo = $http . '://' . $_SERVER['SERVER_NAME'];
+                $this->_hostInfo[$id] = $http . '://' . $_SERVER['SERVER_NAME'];
                 $port = $secure ? $this->getSecurePort() : $this->getPort();
                 if (($port !== 80 && !$secure) || ($port !== 443 && $secure)) {
-                    $this->_hostInfo .= ':' . $port;
+                    $this->_hostInfo[$id] .= ':' . $port;
                 }
             }
         }

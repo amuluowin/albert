@@ -2,8 +2,11 @@
 
 namespace yii\swoole\coroutine;
 
+use yii\swoole\base\Defer;
+
 abstract class BaseClient extends \yii\base\Component
 {
+    use Defer;
     /**
      * @var int
      */
@@ -27,11 +30,4 @@ abstract class BaseClient extends \yii\base\Component
     abstract public function send($uri, $port, $data);
 
     abstract public function recv();
-
-    public function sendAndrecv($uri, $port, $data)
-    {
-        $this->send($uri, $port, $data);
-        return $this->recv();
-    }
-
 }

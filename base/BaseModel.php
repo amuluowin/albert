@@ -14,7 +14,7 @@ class BaseModel
     /**
      * @var array
      */
-    private $_attributes = [];
+    protected $_attributes = [];
 
     public function __construct(array $config = [])
     {

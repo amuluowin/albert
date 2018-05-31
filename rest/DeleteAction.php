@@ -8,7 +8,8 @@
 
 namespace yii\swoole\rest;
 
-use yii;
+use Yii;
+use yii\swoole\helpers\ArrayHelper;
 use yii\web\ServerErrorHttpException;
 
 /**
@@ -27,18 +28,22 @@ class DeleteAction extends Action
      */
     public function run($id = null)
     {
+        $body = Yii::$app->getRequest()->getBodyParams();
+        if (is_array($this->modelClass)) {
+            list($service, $route) = $this->modelClass;
+            return Yii::$app->rpc->call($service, $route)->Delte($body, $id);
+        }
         if ($id) {
             $model = $this->findModel($id);
 
             if ($this->checkAccess) {
                 call_user_func($this->checkAccess, $this->id, $model);
             }
-            $body = Yii::$app->getRequest()->getBodyParams();
-            if (method_exists($model, 'before_ADelete')) {
-                $class = yii\swoole\helpers\ArrayHelper::remove($body, 'before');
-                list($status, $model) = $model->before_ADelete($model, $class);
-                if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
-                    return $model;
+            $scenes = ArrayHelper::remove($filter, 'beforeDelete','');
+            if ($scenes( $modelClass->sceneList)) {
+                list($status, $filter) = $modelClass->$scenes($filter);
+                if ($status >= $modelClass::ACTION_RETURN) {
+                    return $filter;
                 }
             }
 
@@ -46,11 +51,11 @@ class DeleteAction extends Action
                 throw new ServerErrorHttpException('Failed to delete the object for unknown reason.');
             }
 
-            if (method_exists($model, 'after_ADelete')) {
-                $class = yii\swoole\helpers\ArrayHelper::remove($body, 'after');
-                list($status, $model) = $model->after_ADelete($model, $class);
-                if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
-                    return $model;
+            $scenes = ArrayHelper::remove($filter, 'afterDelete','');
+            if ($scenes( $modelClass->sceneList)) {
+                list($status, $filter) = $modelClass->$scenes($filter);
+                if ($status >= $modelClass::ACTION_RETURN) {
+                    return $filter;
                 }
             }
 

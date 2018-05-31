@@ -19,25 +19,18 @@ class IndexAction extends Action
 {
 
     /**
-     * @var callable a PHP callable that will be called to prepare a data provider that
-     * should return a collection of the models. If not set, [[prepareDataProvider()]] will be used instead.
-     * The signature of the callable should be:
-     *
-     * ```php
-     * function ($action) {
-     *     // $action is the action object currently running
-     * }
-     * ```
-     *
-     * The callable should return an instance of [[ActiveDataProvider]].
-     */
-    public $prepareDataProvider;
-
-    /**
      * @return ActiveDataProvider
      */
     public function run($filter = null)
     {
+        if (is_array($this->modelClass)) {
+            if (!$filter) {
+                $filter = Yii::$app->getRequest()->getBodyParams();
+            }
+            $page = (int)Yii::$app->request->get('page', 1) - 1;
+            list($service, $route) = $this->modelClass;
+            return Yii::$app->rpc->call($service, $route)->Index($filter, $page);
+        }
         if ($this->checkAccess) {
             call_user_func($this->checkAccess, $this->id);
         }

@@ -6,7 +6,7 @@ use Swoole\Coroutine\Client;
 use Yii;
 use yii\swoole\pack\TcpPack;
 
-class TcpClient implements IRpcClient
+class TcpClient extends IRpcClient
 {
     /**
      * @var int
@@ -34,6 +34,7 @@ class TcpClient implements IRpcClient
 
     public function recv()
     {
+        $this->defer = false;
         $result = TcpPack::decode($this->client->recv(), 'rpc');
         Yii::$app->rpc->afterRecv($result);
         Yii::$container->get('tcpclient')->recycle($this->client);
@@ -73,6 +74,9 @@ class TcpClient implements IRpcClient
         $data['fastCall'] = Yii::$app->rpc->fastCall;
         $data = Yii::$app->rpc->beforeSend($data);
         $this->client->send(TcpPack::encode($data, 'rpc'));
-        return $this;
+        if ($this->defer) {
+            return $this;
+        }
+        return $this->recv();
     }
 }

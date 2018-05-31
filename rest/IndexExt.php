@@ -2,13 +2,15 @@
 
 namespace yii\swoole\rest;
 
-use yii;
+use Yii;
+use yii\db\Query;
 use yii\swoole\db\DBHelper;
+use yii\swoole\helpers\ArrayHelper;
 
-class IndexExt extends \yii\base\Object
+class IndexExt
 {
 
-    public static function actionDo($modelClass, $filter = null, $page = null)
+    public static function actionDo($model, $filter = null, $page = null)
     {
         if (!$filter) {
             $filter = Yii::$app->getRequest()->getBodyParams();
@@ -17,27 +19,27 @@ class IndexExt extends \yii\base\Object
             $page = (int)Yii::$app->request->get('page', 1) - 1;
         }
 
-        if (method_exists($modelClass, 'before_AIndex')) {
-            $class = yii\swoole\helpers\ArrayHelper::remove($filter, 'before');
-            list($status, $filter) = $modelClass->before_AIndex($filter, $class);
-            if ($status >= $modelClass::ACTION_RETURN) {
+        $scenes = ArrayHelper::remove($filter, 'beforeIndex','');
+        if (in_array($scenes, $model->sceneList)) {
+            list($status, $filter) = $model->$scenes($filter);
+            if ($status >= $model::ACTION_RETURN) {
                 return $filter;
             }
         }
         $res = new ResponeModel();
-        if ($filter instanceof \yii\db\Query) {
+        if ($filter instanceof Query) {
             list($total, $data) = DBHelper::SearchList($filter, [], $page);
         } else {
-            list($total, $data) = DBHelper::SearchList($modelClass::find(), $filter, $page);
+            list($total, $data) = DBHelper::SearchList($model::find(), $filter, $page);
         }
-        if (method_exists($modelClass, 'after_AIndex')) {
-            $class = yii\swoole\helpers\ArrayHelper::remove($filter, 'after');
-            list($status, $data) = $modelClass->after_Aindex($data, $class);
-            if ($status >= $modelClass::ACTION_RETURN) {
-                return $data;
+        $scenes = ArrayHelper::remove($filter, 'afterIndex','');
+        if (in_array($scenes, $model->sceneList)) {
+            list($status, $filter) = $model->$scenes($filter);
+            if ($status >= $model::ACTION_RETURN) {
+                return $filter;
             }
         }
-        return $res->setModel('200', 0, '操作成功!', $data, ['totalCount' => $total]);
+        return $res->setModel('200', 0, 'success!', $data, ['totalCount' => $total]);
     }
 
 }

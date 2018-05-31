@@ -8,9 +8,10 @@
 
 namespace yii\swoole\rest;
 
-use yii;
+use Yii;
 use yii\base\Model;
 use yii\db\ActiveRecord;
+use yii\swoole\helpers\ArrayHelper;
 use yii\web\ServerErrorHttpException;
 
 /**
@@ -35,6 +36,11 @@ class UpdateAction extends Action
      */
     public function run($id = null)
     {
+        $body = Yii::$app->getRequest()->getBodyParams();
+        if (is_array($this->modelClass)) {
+            list($service, $route) = $this->modelClass;
+            return Yii::$app->rpc->call($service, $route)->Update($body, $id);
+        }
         if ($id) {
             /* @var $model ActiveRecord */
             $model = $this->findModel($id);
@@ -44,20 +50,13 @@ class UpdateAction extends Action
             }
 
             $model->scenario = $this->scenario;
-            $body = Yii::$app->getRequest()->getBodyParams();
             $transaction = $model->getDb()->beginTransaction();
             try {
-                if (method_exists($model, 'before_AUpdate')) {
-                    $class = yii\swoole\helpers\ArrayHelper::remove($body, 'before');
-                    list($status, $body) = $model->before_AUpdate($body, $class);
-                    if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN_COMMIT) {
-                        if ($transaction->getIsActive()) {
-                            $transaction->commit();
-                        }
-
-                        return $body;
-                    } elseif ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
-                        return $body;
+                $scenes = ArrayHelper::remove($filter, 'beforeUpdate','');
+                if ($scenes( $modelClass->sceneList)) {
+                    list($status, $filter) = $modelClass->$scenes($filter);
+                    if ($status >= $modelClass::ACTION_RETURN) {
+                        return $filter;
                     }
                 }
                 $model->load($body, '');
@@ -65,17 +64,11 @@ class UpdateAction extends Action
                 if ($model->save(false) === false && !$model->hasErrors()) {
                     throw new ServerErrorHttpException('Failed to update the object for unknown reason.');
                 } else {
-                    if (method_exists($model, 'after_AUpdate')) {
-                        $class = yii\swoole\helpers\ArrayHelper::remove($body, 'after');
-                        list($status, $body) = $model->after_AUpdate($body, $class);
-                        if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN_COMMIT) {
-                            if ($transaction->getIsActive()) {
-                                $transaction->commit();
-                            }
-
-                            return $body;
-                        } elseif ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
-                            return $body;
+                    $scenes = ArrayHelper::remove($filter, 'afterUpdate','');
+                    if ($scenes( $modelClass->sceneList)) {
+                        list($status, $filter) = $modelClass->$scenes($filter);
+                        if ($status >= $modelClass::ACTION_RETURN) {
+                            return $filter;
                         }
                     }
                     $model = UpdateExt::saveRealation($model, $body, $transaction);

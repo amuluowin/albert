@@ -2,8 +2,10 @@
 
 namespace yii\swoole\rest;
 
-use yii;
+use Yii;
+use yii\base\InvalidArgumentException;
 use yii\swoole\db\DBHelper;
+use yii\swoole\db\Query;
 use yii\swoole\web\NoParamsException;
 use yii\web\ServerErrorHttpException;
 
@@ -15,31 +17,19 @@ class UpdateExt extends \yii\base\Object
         $transaction = $transaction ? $transaction : $model->getDb()->beginTransaction();
         if ($body) {
             if (isset($body['batch'])) {
-                if (method_exists($model, 'before_BCreate')) {
-                    $class = yii\swoole\helpers\ArrayHelper::remove($body, 'before');
-                    list($status, $body) = $model->before_BUpdate($body, $class);
-                    if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN_COMMIT) {
-                        if ($transaction->getIsActive()) {
-                            $transaction->commit();
-                        }
-
-                        return $body;
-                    } elseif ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
-                        return $body;
+                $scenes = ArrayHelper::remove($filter, 'beforeUpdate','');
+                if ($scenes( $model->sceneList)) {
+                    list($status, $filter) = $model->$scenes($filter);
+                    if ($status >= $model::ACTION_RETURN) {
+                        return $filter;
                     }
                 }
                 $result = $model::getDb()->updateSeveral($model, $body['batch']);
-                if (method_exists($model, 'after_AUpdate')) {
-                    $class = yii\swoole\helpers\ArrayHelper::remove($body, 'after');
-                    list($status, $body) = $model->after_AUpdate($body, $class);
-                    if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN_COMMIT) {
-                        if ($transaction->getIsActive()) {
-                            $transaction->commit();
-                        }
-
-                        return $body;
-                    } elseif ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
-                        return $body;
+                $scenes = ArrayHelper::remove($filter, 'afterUpdate','');
+                if ($scenes( $model->sceneList)) {
+                    list($status, $filter) = $model->$scenes($filter);
+                    if ($status >= $model::ACTION_RETURN) {
+                        return $filter;
                     }
                 }
             } elseif (isset($body['batchMTC'])) {
@@ -52,7 +42,7 @@ class UpdateExt extends \yii\base\Object
                     $result[] = $res;
                 }
             } elseif (isset($body['condition']) && $body['condition']) {
-                $condition = DBHelper::Search((new \yii\swoole\db\Query()), $body['condition'])->where;
+                $condition = DBHelper::Search((new Query()), $body['condition'])->where;
                 $result = $model->updateAll($body['edit'], $condition);
                 if ($result === false) {
                     if ($transaction) {
@@ -61,32 +51,20 @@ class UpdateExt extends \yii\base\Object
                     throw new ServerErrorHttpException('Failed to update the object for unknown reason.');
                 }
             } else {
-                if (method_exists($model, 'before_AUpdate')) {
-                    $class = yii\swoole\helpers\ArrayHelper::remove($body, 'before');
-                    list($status, $body) = $model->before_AUpdate($body, $class);
-                    if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN_COMMIT) {
-                        if ($transaction->getIsActive()) {
-                            $transaction->commit();
-                        }
-
-                        return $body;
-                    } elseif ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
-                        return $body;
+                $scenes = ArrayHelper::remove($filter, 'beforeUpdate','');
+                if ($scenes( $model->sceneList)) {
+                    list($status, $filter) = $model->$scenes($filter);
+                    if ($status >= $model::ACTION_RETURN) {
+                        return $filter;
                     }
                 }
                 $result = self::updateSeveral($model, $body, $transaction);
 
-                if (method_exists($model, 'after_AUpdate')) {
-                    $class = yii\swoole\helpers\ArrayHelper::remove($body, 'after');
-                    list($status, $body) = $model->after_AUpdate($body, $class);
-                    if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN_COMMIT) {
-                        if ($transaction->getIsActive()) {
-                            $transaction->commit();
-                        }
-
-                        return $body;
-                    } elseif ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
-                        return $body;
+                $scenes = ArrayHelper::remove($filter, 'afterUpdate','');
+                if ($scenes( $model->sceneList)) {
+                    list($status, $filter) = $model->$scenes($filter);
+                    if ($status >= $model::ACTION_RETURN) {
+                        return $filter;
                     }
                 }
             }
@@ -94,7 +72,7 @@ class UpdateExt extends \yii\base\Object
             if ($transaction) {
                 $transaction->rollBack();
             }
-            throw new NoParamsException('缺少参数!');
+            throw new InvalidArgumentException('缺少参数!');
         }
 
         if ($transaction->getIsActive()) {
@@ -125,14 +103,11 @@ class UpdateExt extends \yii\base\Object
                     $model = $exit;
                 }
             }
-            if (method_exists($model, 'before_AUpdate')) {
-                $class = yii\swoole\helpers\ArrayHelper::remove($body, 'before');
-                list($status, $body) = $model->before_AUpdate($body, $class);
-                if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
-                    if ($transaction->getIsActive()) {
-                        $transaction->commit();
-                    }
-                    return $body;
+            $scenes = ArrayHelper::remove($filter, 'beforeUpdate','');
+            if ($scenes( $model->sceneList)) {
+                list($status, $filter) = $model->$scenes($filter);
+                if ($status >= $model::ACTION_RETURN) {
+                    return $filter;
                 }
             }
 
@@ -141,17 +116,11 @@ class UpdateExt extends \yii\base\Object
             if ($model->save(false) === false && !$model->hasErrors()) {
                 throw new ServerErrorHttpException('Failed to update the object for unknown reason.');
             } else {
-                if (method_exists($model, 'after_AUpdate')) {
-                    $class = yii\swoole\helpers\ArrayHelper::remove($body, 'after');
-                    list($status, $body) = $model->after_AUpdate($body, $class);
-                    if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN_COMMIT) {
-                        if ($transaction->getIsActive()) {
-                            $transaction->commit();
-                        }
-
-                        return $body;
-                    } elseif ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
-                        return $body;
+                $scenes = ArrayHelper::remove($filter, 'afterUpdate','');
+                if ($scenes( $model->sceneList)) {
+                    list($status, $filter) = $model->$scenes($filter);
+                    if ($status >= $model::ACTION_RETURN) {
+                        return $filter;
                     }
                 }
                 $model = self::saveRealation($model, $body, $transaction);

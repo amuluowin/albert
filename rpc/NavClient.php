@@ -4,7 +4,7 @@ namespace yii\swoole\rpc;
 
 use Yii;
 
-class NavClient implements IRpcClient
+class NavClient extends IRpcClient
 {
 
     private $data;
@@ -21,6 +21,9 @@ class NavClient implements IRpcClient
     {
         $this->method = $name;
         $this->data = $params;
-        return $this;
+        if ($this->defer) {
+            return $this;
+        }
+        return $this->recv();
     }
 }

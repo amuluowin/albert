@@ -36,7 +36,13 @@ class CreateAction extends Action
      * @return \yii\swoole\db\ActiveRecordInterface the model newly created
      * @throws ServerErrorHttpException if there is any error when creating the model
      */
-    public function run() {
+    public function run()
+    {
+        $body = Yii::$app->getRequest()->getBodyParams();
+        if (is_array($this->modelClass)) {
+            list($service, $route) = $this->modelClass;
+            return Yii::$app->rpc->call($service, $route)->Create($body);
+        }
         if ($this->checkAccess) {
             call_user_func($this->checkAccess, $this->id);
         }
@@ -45,8 +51,6 @@ class CreateAction extends Action
         $model = new $this->modelClass([
             'scenario' => $this->scenario,
         ]);
-
-        $body = Yii::$app->getRequest()->getBodyParams();
 
         return CreateExt::actionDo($model, $body);
     }

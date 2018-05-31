@@ -26,7 +26,7 @@ class TcpClient extends BaseClient implements ICoroutine
      */
     private $data = [];
 
-    public function getClient()
+    public function getClient(): ?\Swoole\Coroutine\Client
     {
         $id = CoroHelper::getId();
         return isset($this->client[$id]) ? $this->client[$id] : null;
@@ -93,7 +93,10 @@ class TcpClient extends BaseClient implements ICoroutine
         $data = $class->encode(...([$this->getData(), $params]));
         $this->getClient()->send($data);
         $this->trigger(self::EVENT_AFTER_SEND);
-        return $this;
+        if ($this->defer) {
+            return $this;
+        }
+        return $this->recv();
     }
 
     public function release()

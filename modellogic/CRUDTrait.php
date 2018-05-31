@@ -1,4 +1,5 @@
 <?php
+
 namespace yii\swoole\modellogic;
 
 use yii;
@@ -32,7 +33,7 @@ trait CRUDTrait
 
     public static function View($filter, $id, $modelClass = null)
     {
-        $modelClass = ($modelClass ? $modelClass : static::$modelClass);
+        $modelClass = ($modelClass ?: static::$modelClass);
         $modelClass = new $modelClass();
         $keys = $modelClass::primaryKey();
         foreach ($keys as $index => $key) {
@@ -58,7 +59,7 @@ trait CRUDTrait
 
     public static function Index($filter = null, $page = 0, $modelClass = null)
     {
-        $modelClass = ($modelClass ? $modelClass : static::$modelClass);
+        $modelClass = ($modelClass ?  : static::$modelClass);
         $modelClass = new $modelClass();
         return IndexExt::actionDo($modelClass, $filter, $page);
     }
@@ -73,6 +74,7 @@ trait CRUDTrait
 
     public static function Update($body, $id = null, $modelClass = null)
     {
+        $modelClass = ($modelClass ? $modelClass : static::$modelClass);
         if ($id) {
             /* @var $model ActiveRecord */
             $model = self::findModel($id, $modelClass);
@@ -130,8 +132,9 @@ trait CRUDTrait
         }
     }
 
-    public static function delete($body = null, $id = null, $modelClass = null)
+    public static function Delete($body = null, $id = null, $modelClass = null)
     {
+        $modelClass = ($modelClass ? $modelClass : static::$modelClass);
         if ($id) {
             $model = self::findModel($id, $modelClass);
 

@@ -2,7 +2,8 @@
 
 namespace yii\swoole\rest;
 
-use yii;
+use Yii;
+use yii\swoole\helpers\ArrayHelper;
 use yii\web\ServerErrorHttpException;
 
 class CreateExt extends \yii\base\Object
@@ -13,31 +14,19 @@ class CreateExt extends \yii\base\Object
         $transaction = $transaction ? $transaction : $model->getDb()->beginTransaction();
         try {
             if (isset($body["batch"])) {
-                if (method_exists($model, 'bebore_BCreate')) {
-                    $class = yii\swoole\helpers\ArrayHelper::remove($body, 'before');
-                    list($status, $body) = $model->before_BCreate($body, $class);
-                    if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN_COMMIT) {
-                        if ($transaction->getIsActive()) {
-                            $transaction->commit();
-                        }
-
-                        return $body;
-                    } elseif ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
-                        return $body;
+                $scenes = ArrayHelper::remove($filter, 'beforeCreate','');
+                if (in_array($scenes, $model->sceneList)) {
+                    list($status, $filter) = $model->$scenes($filter);
+                    if ($status >= $model::ACTION_RETURN) {
+                        return $filter;
                     }
                 }
                 $result = $model::getDb()->insertSeveral($model, $body['batch']);
-                if (method_exists($model, 'after_ACreate')) {
-                    $class = yii\swoole\helpers\ArrayHelper::remove($body, 'after');
-                    list($status, $body) = $model->after_ACreate($body, $class);
-                    if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN_COMMIT) {
-                        if ($transaction->getIsActive()) {
-                            $transaction->commit();
-                        }
-
-                        return $body;
-                    } elseif ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
-                        return $body;
+                $scenes = ArrayHelper::remove($filter, 'afertCreate','');
+                if (in_array($scenes, $model->sceneList)) {
+                    list($status, $filter) = $model->$scenes($filter);
+                    if ($status >= $model::ACTION_RETURN) {
+                        return $filter;
                     }
                 }
             } elseif (isset($body["batchMTC"])) {
@@ -67,31 +56,20 @@ class CreateExt extends \yii\base\Object
     public static function createSeveral($model, $body, $transaction)
     {
         $model->load($body, '');
-        if (method_exists($model, 'before_ACreate')) {
-            $class = yii\swoole\helpers\ArrayHelper::remove($body, 'before');
-            list($status, $body) = $model->before_ACreate($body, $class);
-            if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN_COMMIT) {
-                if ($transaction->getIsActive()) {
-                    $transaction->commit();
-                }
-                return $body;
-            } elseif ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
-                return $body;
+        $scenes = ArrayHelper::remove($filter, 'beforeCreate','');
+        if (in_array($scenes, $model->sceneList)) {
+            list($status, $filter) = $model->$scenes($filter);
+            if ($status >= $model::ACTION_RETURN) {
+                return $filter;
             }
         }
         yii::$app->BaseHelper->validate($model, $transaction);
         if ($model->save(false)) {
-            if (method_exists($model, 'after_ACreate')) {
-                $class = yii\swoole\helpers\ArrayHelper::remove($body, 'after');
-                list($status, $body) = $model->after_ACreate($body, $class);
-                if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN_COMMIT) {
-                    if ($transaction->getIsActive()) {
-                        $transaction->commit();
-                    }
-
-                    return $body;
-                } elseif ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
-                    return $body;
+            $scenes = ArrayHelper::remove($filter, 'afterCreate','');
+            if (in_array($scenes, $model->sceneList)) {
+                list($status, $filter) = $model->$scenes($filter);
+                if ($status >= $model::ACTION_RETURN) {
+                    return $filter;
                 }
             }
             $model = self::saveRealation($model, $body, $transaction);

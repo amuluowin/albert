@@ -2,9 +2,11 @@
 
 namespace yii\swoole\rest;
 
-use yii;
+use Yii;
+use yii\base\InvalidArgumentException;
 use yii\swoole\db\DBHelper;
-use yii\swoole\web\NoParamsException;
+use yii\swoole\db\Query;
+use yii\swoole\helpers\ArrayHelper;
 use yii\web\ServerErrorHttpException;
 
 class DeleteExt extends \yii\base\Object
@@ -15,46 +17,35 @@ class DeleteExt extends \yii\base\Object
         $transaction = $transaction ? $transaction : $model->getDb()->beginTransaction();
         if ($body) {
             if (isset($body["batch"])) {
+                $scenes = ArrayHelper::remove($filter, 'beforeDelete','');
+                if ($scenes( $model->sceneList)) {
+                    list($status, $filter) = $model->$scenes($filter);
+                    if ($status >= $model::ACTION_RETURN) {
+                        return $filter;
+                    }
+                }
                 $result = $model::getDb()->deleteSeveral($model, $body['batch']);
-                if (method_exists($model, 'after_ADelete') && $result !== false) {
-                    $class = yii\swoole\helpers\ArrayHelper::remove($body, 'after');
-                    list($status, $result) = $model->after_ADelete($result, $class);
-                    if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN_COMMIT) {
-                        if ($transaction->getIsActive()) {
-                            $transaction->commit();
-                        }
-
-                        return $body;
-                    } elseif ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
-                        return $body;
+                $scenes = ArrayHelper::remove($filter, 'afterDelete','');
+                if ($scenes( $model->sceneList)) {
+                    list($status, $filter) = $model->$scenes($filter);
+                    if ($status >= $model::ACTION_RETURN) {
+                        return $filter;
                     }
                 }
             } else {
-                if (method_exists($model, 'before_ADelete')) {
-                    $class = yii\swoole\helpers\ArrayHelper::remove($body, 'before');
-                    list($status, $body) = $model->before_ADelete($body, $class);
-                    if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN_COMMIT) {
-                        if ($transaction->getIsActive()) {
-                            $transaction->commit();
-                        }
-
-                        return $body;
-                    } elseif ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
-                        return $body;
+                $scenes = ArrayHelper::remove($filter, 'beforeDelete','');
+                if ($scenes( $model->sceneList)) {
+                    list($status, $filter) = $model->$scenes($filter);
+                    if ($status >= $model::ACTION_RETURN) {
+                        return $filter;
                     }
                 }
-                $result = $model->deleteAll(DBHelper::Search((new \yii\swoole\db\Query()), $body)->where);
-                if (method_exists($model, 'after_ADelete')) {
-                    $class = yii\swoole\helpers\ArrayHelper::remove($body, 'after');
-                    list($status, $body) = $model->after_ADelete($body, $class);
-                    if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN_COMMIT) {
-                        if ($transaction->getIsActive()) {
-                            $transaction->commit();
-                        }
-
-                        return $body;
-                    } elseif ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
-                        return $body;
+                $result = $model->deleteAll(DBHelper::Search((new Query()), $body)->where);
+                $scenes = ArrayHelper::remove($filter, 'afterDelete','');
+                if ($scenes( $model->sceneList)) {
+                    list($status, $filter) = $model->$scenes($filter);
+                    if ($status >= $model::ACTION_RETURN) {
+                        return $filter;
                     }
                 }
             }
@@ -69,7 +60,7 @@ class DeleteExt extends \yii\base\Object
             }
             return $result;
         } else {
-            throw new NoParamsException('缺少参数!');
+            throw new InvalidArgumentException('Invalid Argument!');
         }
     }
 
