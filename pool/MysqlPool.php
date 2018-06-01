@@ -3,6 +3,7 @@
 namespace yii\swoole\pool;
 
 use Yii;
+use yii\db\Exception;
 use yii\web\ServerErrorHttpException;
 
 class MysqlPool extends \yii\swoole\pool\IPool
@@ -26,7 +27,8 @@ class MysqlPool extends \yii\swoole\pool\IPool
         ) {
             if ($this->reconnect <= $this->curconnect) {
                 $this->curconnect = 0;
-                throw new ServerErrorHttpException($conn->connect_error);
+                $conn->close();
+                throw new Exception(sprintf('connect to mysql hsot=%s:%d error:%s', $config['host'], $config['port'], $conn->error));
             } else {
                 $this->curconnect++;
                 $this->reConnect($conn, $connName);

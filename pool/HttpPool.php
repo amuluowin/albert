@@ -3,6 +3,7 @@
 namespace yii\swoole\pool;
 
 use Yii;
+use yii\httpclient\Exception;
 use yii\swoole\helpers\ArrayHelper;
 
 class HttpPool extends \yii\swoole\pool\IPool
@@ -20,17 +21,17 @@ class HttpPool extends \yii\swoole\pool\IPool
     {
         $config = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['hostname', 'port', 'timeout', 'scheme'],
             ['localhost', 80, 0.5, 'http']);
-        if ($ret = \Co::gethostbyname($config['hostname'])) {
-            $conn = new \Swoole\Coroutine\Http\Client($ret, $config['port'], $config['scheme'] === 'https' ? true : false);
-            if ($conn->errCode !== 0) {
-                if ($this->reconnect <= $this->curconnect) {
-                    $this->curconnect = 0;
-                } else {
-                    $this->curconnect++;
-                    $this->reConnect($conn, $connName);
-                }
+        $conn = new \Swoole\Coroutine\Http\Client(\Co::gethostbyname($config['hostname']), $config['port'], $config['scheme'] === 'https' ? true : false);
+        if ($conn->errCode !== 0) {
+            if ($this->reconnect <= $this->curconnect) {
+                $this->curconnect = 0;
+                $conn->close();
+                throw new Exception(sprintf(sprintf('connect to %s:%d error:', $config['hostname'], $config['port'], $conn->error)));
+            } else {
+                $this->curconnect++;
+                $this->reConnect($conn, $connName);
             }
-            $this->saveConn($connName, $conn);
         }
+        $this->saveConn($connName, $conn);
     }
 }

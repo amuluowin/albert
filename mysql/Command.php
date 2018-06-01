@@ -53,6 +53,7 @@ class Command extends \yii\db\Command
         } catch (\Exception $e) {
             $message = $e->getMessage() . "\nFailed to prepare SQL: $sql";
             $errorInfo = $e instanceof \PDOException ? $e->errorInfo : null;
+            $pdo->release();
             throw new Exception($message, $errorInfo, (int)$e->getCode(), $e);
         }
     }
@@ -84,6 +85,7 @@ class Command extends \yii\db\Command
             return $n;
         } catch (\Exception $e) {
             $profile and Yii::endProfile($rawSql, __METHOD__);
+            $pdo->release();
             throw $this->db->getSchema()->convertException($e, $rawSql ?: $this->getRawSql());
         }
     }
@@ -147,9 +149,9 @@ class Command extends \yii\db\Command
             }
 
             $profile and Yii::endProfile($rawSql, 'yii\db\Command::query');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $profile and Yii::endProfile($rawSql, 'yii\db\Command::query');
-            throw $this->db->getSchema()->convertException($e, $rawSql ?: $this->getRawSql());
+            throw $e;
         }
 
         if (isset($cache, $cacheKey, $info)) {

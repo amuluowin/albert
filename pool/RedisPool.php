@@ -3,6 +3,7 @@
 namespace yii\swoole\pool;
 
 use Yii;
+use yii\base\Exception;
 use yii\swoole\helpers\ArrayHelper;
 use yii\web\ServerErrorHttpException;
 
@@ -28,7 +29,8 @@ class RedisPool extends \yii\swoole\pool\IPool
         ) {
             if ($this->reconnect <= $this->curconnect) {
                 $this->curconnect = 0;
-                throw new ServerErrorHttpException($conn->error);
+                $conn->close();
+                throw new Exception(sprintf('connect to redis %s:%p eooro:', $config['hostname'], $confi['port'], $conn->error));
             } else {
                 $this->curconnect++;
                 $this->reConnect($conn, $connName);
