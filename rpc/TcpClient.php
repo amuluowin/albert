@@ -50,7 +50,7 @@ class TcpClient extends IRpcClient
         list($data['service'], $data['route']) = Yii::$app->rpc->getService();
         $server = Yii::$app->gr->provider->getServices($data['service']);
         list($server, $port) = Yii::$app->gr->balance->select($data['service'])->getCurrentService($server);
-        $key = 'corotcp:' . $server;
+        $key = sprintf('rpc:%s:%d', $server, $port);
         if (!Yii::$container->hasSingleton('tcpclient')) {
             Yii::$container->setSingleton('tcpclient', [
                 'class' => 'yii\swoole\pool\TcpPool'

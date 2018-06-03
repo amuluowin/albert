@@ -59,7 +59,7 @@ class SocketClient extends BaseClient implements ICoroutine
 
     public function send($uri, $port, $data)
     {
-        $key = md5('corosocket:' . $uri);
+        $key = sprintf('tcp:%s:%d', $uri, $port);
         if (!Yii::$container->hasSingleton('socketclient')) {
             Yii::$container->setSingleton('socketclient', [
                 'class' => 'yii\swoole\pool\TcpPool'

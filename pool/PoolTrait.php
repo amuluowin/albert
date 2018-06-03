@@ -5,6 +5,9 @@ namespace yii\swoole\pool;
 use Yii;
 use yii\base\Exception;
 use yii\base\InvalidArgumentException;
+use yii\helpers\VarDumper;
+use yii\swoole\base\Output;
+use yii\swoole\configcenter\ConfigInterface;
 use yii\web\ServerErrorHttpException;
 
 trait PoolTrait
@@ -30,7 +33,19 @@ trait PoolTrait
         if ($config['pool_size'] <= 0 || $config['busy_size'] <= 0) {
             throw new InvalidArgumentException("Invalid maxSpareConns or maxConns in {$connName}");
         }
+        if (($center = Yii::$app->get('csconf', false)) !== null) {
+            $center->putConfig($connName, $config);
+            Yii::$confKeys[$connName] = [$this, 'setConfig'];
+        }
         return $this;
+    }
+
+    public function setConfig(string $connName, array $config)
+    {
+        if ($config && $this->connsConfig[$connName] !== $config) {
+            $this->connsConfig[$connName] = $config;
+            Output::writeln(sprintf('%s config changed to %s', $connName, VarDumper::export($config)));
+        }
     }
 
     public function recycle($conn)

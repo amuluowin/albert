@@ -2,16 +2,18 @@
 /**
  * Created by PhpStorm.
  * User: 76587
- * Date: 2018-06-02
- * Time: 23:40
+ * Date: 2018-06-03
+ * Time: 21:53
  */
 
 namespace yii\swoole\configcenter;
 
 use Yii;
-use yii\swoole\process\BaseProcess;
+use yii\base\Component;
+use yii\swoole\base\BootInterface;
+use yii\swoole\server\Server;
 
-class ConfigProcess extends BaseProcess
+class ConfigRefresh extends Component implements BootInterface
 {
     /**
      * @var int
@@ -25,16 +27,18 @@ class ConfigProcess extends BaseProcess
 
     public function init()
     {
-        parent::init();
         if (!$this->client instanceof ConfigInterface) {
             $this->client = Yii::$app->csconf;
         }
     }
 
-    public function start()
+    public function handle(Server $server = null)
     {
         swoole_timer_tick($this->ticket * 1000, function () {
-            $configs = $this->client->getConfig(APP_NAME);
+            foreach (Yii::$confKeys as $key => $callBack) {
+                $configs = $this->client->getConfig($key);
+                call_user_func_array($callBack, [$key, $configs[$key]]);
+            }
         });
     }
 }

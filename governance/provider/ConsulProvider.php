@@ -110,10 +110,10 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
      *
      * @return bool
      */
-    public function registerService(...$params)
+    public function registerService(...$params): bool
     {
         $url = sprintf('%s:%d%s', $this->client->address, $this->client->port, self::REGISTER_PATH);
-
+        $result = true;
         if (!empty($this->services)) {
             foreach ($this->services as $service) {
                 $id = sprintf('service-%s-%s', $this->register['Check']['tcp'], $service);
@@ -121,26 +121,28 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
                 $this->register['Name'] = $service;
                 $this->register['Check']['id'] = $id;
                 $this->register['Check']['name'] = $service;
-                $this->putService($url);
+                $result &= $this->putService($url);
             }
         } else {
             $id = sprintf('service-%s-%s', $this->register['Check']['tcp'], $this->register['Name']);
             $this->register['ID'] = $id;
             $this->register['Check']['id'] = $id;
-            $this->putService($url);
+            $result &= $this->putService($url);
         }
 
-        return true;
+        return $result;
     }
 
-    private function putService(string $url)
+    private function putService(string $url): bool
     {
         $response = Yii::$app->consul->httpClient->put($url, $this->register)->setFormat(Client::FORMAT_JSON)->send();
         $output = 'RPC register service %s %s by consul tcp=%s:%d';
         if (empty($result) && $response->getStatusCode() == 200) {
             Output::writeln(sprintf($output, $this->register['Name'], 'success', $this->register['Address'], $this->register['Port']), Output::LIGHT_GREEN);
+            return true;
         } else {
             Output::writeln(sprintf($output, $this->register['Name'], 'failed', $this->register['Address'], $this->register['Port']), Output::LIGHT_RED);
+            return false;
         }
     }
 

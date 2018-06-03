@@ -59,10 +59,7 @@ class ConsulConfig extends Component implements ConfigInterface
         $result = $respones->getData();
         $data = [];
         foreach ($result as $config) {
-            if (isset(Yii::$configs[$config['Key']]) && Yii::$configs[$config['Key']] === $config['Value']) {
-                continue;
-            }
-            Yii::$configs[$config['Key']] = $config['Value'];
+            $config['Key'] = str_replace('yiisw/', '', $config['Key']);
             $data[$config['Key']] = json_decode(base64_decode($config['Value']), true);
         }
 
@@ -71,6 +68,6 @@ class ConsulConfig extends Component implements ConfigInterface
 
     private function getPath(string $key)
     {
-        return sprintf('%s:%d%s', $this->client->address, $this->client->port, self::KV_PATH . '/' . $key);
+        return sprintf('%s:%d%s', $this->client->address, $this->client->port, self::KV_PATH . '/' . APP_NAME . '/' . $key);
     }
 }

@@ -65,7 +65,7 @@ class TcpClient extends BaseClient implements ICoroutine
 
     public function send($uri, $port, $data)
     {
-        $key = md5('corotcp:' . $uri);
+        $key = sprintf('tcp:%s%d', $uri, $port);
         if (!Yii::$container->hasSingleton('tcpclient')) {
             Yii::$container->setSingleton('tcpclient', [
                 'class' => 'yii\swoole\pool\TcpPool'
