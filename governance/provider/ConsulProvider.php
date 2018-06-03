@@ -12,6 +12,7 @@ use Yii;
 use yii\helpers\VarDumper;
 use yii\httpclient\Client;
 use yii\swoole\base\Output;
+use yii\swoole\consul\ConsulClient;
 
 class ConsulProvider extends BaseProvider implements ProviderInterface
 {
@@ -24,16 +25,6 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
      * Discovery path
      */
     const DISCOVERY_PATH = '/v1/health/service/';
-
-    /**
-     * @var string
-     */
-    public $address = "http://127.0.0.1";
-
-    /**
-     * @var int
-     */
-    public $port = 8500;
 
     /**
      * @var array
@@ -58,11 +49,19 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
     const HTTP = 1;
     const DNS = 2;
 
+    /**
+     * @var ConsulClient
+     */
+    public $client;
+
     public function init()
     {
         parent::init();
         if (empty($this->register['Name'])) {
             $this->services = array_keys(Yii::$rpcList);
+        }
+        if (!$this->client instanceof ConsulClient) {
+            $this->client = Yii::$app->consul;
         }
     }
 
@@ -79,7 +78,7 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
     private function get(string $serviceName, ...$params)
     {
         $url = $this->getDiscoveryUrl($serviceName);
-        $services = Yii::$app->httpclient->get($url)->send()->getData();
+        $services = Yii::$app->consul->httpClient->get($url)->send()->getData();
         if (is_array($services)) {
             // 数据格式化
             $nodes = [];
@@ -100,7 +99,7 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
 
             return $nodes;
         } else {
-            Output::writeln(sprintf("can not find service %s from consul:%s:%d", $serviceName, $this->address, $this->port), Output::LIGHT_RED);
+            Output::writeln(sprintf("can not find service %s from consul:%s:%d", $serviceName, $this->client->address, $this->client->port), Output::LIGHT_RED);
         }
     }
 
@@ -113,7 +112,7 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
      */
     public function registerService(...$params)
     {
-        $url = sprintf('%s:%d%s', $this->address, $this->port, self::REGISTER_PATH);
+        $url = sprintf('%s:%d%s', $this->client->address, $this->client->port, self::REGISTER_PATH);
 
         if (!empty($this->services)) {
             foreach ($this->services as $service) {
@@ -136,7 +135,7 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
 
     private function putService(string $url)
     {
-        $response = Yii::$app->httpclient->put($url, $this->register)->setFormat(Client::FORMAT_JSON)->send();
+        $response = Yii::$app->consul->httpClient->put($url, $this->register)->setFormat(Client::FORMAT_JSON)->send();
         $output = 'RPC register service %s %s by consul tcp=%s:%d';
         if (empty($result) && $response->getStatusCode() == 200) {
             Output::writeln(sprintf($output, $this->register['Name'], 'success', $this->register['Address'], $this->register['Port']), Output::LIGHT_GREEN);
@@ -165,7 +164,7 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
         $queryStr = http_build_query($query);
         $path = sprintf('%s%s', self::DISCOVERY_PATH, $serviceName);
 
-        return sprintf('%s:%d%s?%s', $this->address, $this->port, $path, $queryStr);
+        return sprintf('%s:%d%s?%s', $this->client->address, $this->client->port, $path, $queryStr);
     }
 
     public function dnsCheck()

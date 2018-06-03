@@ -16,7 +16,7 @@ class ProviderProcess extends BaseProcess
     /**
      * @var int
      */
-    public $ticket = 2;
+    public $ticket = 60;
 
     public function start()
     {
