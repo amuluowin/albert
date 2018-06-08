@@ -22,6 +22,8 @@ class Yii extends \yii\BaseYii
 {
     public static $server;
 
+    public static $apis = [];
+
     public static $confKeys = [];
 
     public static $rpcList = [];

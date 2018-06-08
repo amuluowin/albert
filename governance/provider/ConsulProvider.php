@@ -42,9 +42,24 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
     public $checkType = 1;
 
     /**
+     * @var string
+     */
+    public $servicePrefix = 'service-';
+
+    /**
+     * @var string
+     */
+    public $apiPrefix = 'api-';
+
+    /**
      * @var array
      */
     private $services = [];
+
+    /**
+     * @var array
+     */
+    private $apis = [];
 
     const HTTP = 1;
     const DNS = 2;
@@ -57,9 +72,8 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
     public function init()
     {
         parent::init();
-        if (empty($this->register['Name'])) {
-            $this->services = array_keys(Yii::$rpcList);
-        }
+        $this->services = array_keys(Yii::$rpcList);
+        $this->apis = Yii::$apis;
         if (!$this->client instanceof ConsulClient) {
             $this->client = Yii::$app->consul;
         }
@@ -114,19 +128,24 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
     {
         $url = sprintf('%s:%d%s', $this->client->address, $this->client->port, self::REGISTER_PATH);
         $result = true;
-        if (!empty($this->services)) {
-            foreach ($this->services as $service) {
-                $id = sprintf('service-%s-%s', $this->register['Check']['tcp'], $service);
-                $this->register['ID'] = $id;
-                $this->register['Name'] = $service;
-                $this->register['Check']['id'] = $id;
-                $this->register['Check']['name'] = $service;
-                $result &= $this->putService($url);
-            }
-        } else {
-            $id = sprintf('service-%s-%s', $this->register['Check']['tcp'], $this->register['Name']);
+        foreach ($this->services as $service) {
+            $service = $this->servicePrefix . $service;
+            $id = sprintf('service-%s-%s', $this->register['Check']['tcp'], $service);
             $this->register['ID'] = $id;
+            $this->register['Name'] = $service;
             $this->register['Check']['id'] = $id;
+            $this->register['Check']['name'] = $service;
+            $result &= $this->putService($url);
+        }
+
+        foreach ($this->apis as $api) {
+            $api = $this->apiPrefix . $api;
+            $id = sprintf('api-%s-%s', $this->register['Check']['tcp'], $api);
+            $this->register['ID'] = $id;
+            $this->register['Name'] = $api;
+            $this->register['Port'] = 80;
+            $this->register['Check']['id'] = $id;
+            $this->register['Check']['name'] = $api;
             $result &= $this->putService($url);
         }
 
@@ -153,6 +172,7 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
      */
     private function getDiscoveryUrl(string $serviceName): string
     {
+        $serviceName = $this->servicePrefix . $serviceName;
         $query = [
             'passing' => $this->discovery['passing'],
             'dc' => $this->discovery['dc'],

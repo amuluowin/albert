@@ -20,6 +20,16 @@ class ConsulConfig extends Component implements ConfigInterface
     use ConsulTrait;
 
     /**
+     * @var int
+     */
+    public $retry = 3;
+
+    /**
+     * @var int
+     */
+    public $sleep = 1;
+
+    /**
      * @var string
      */
     public $dc = 'dc1';
@@ -37,9 +47,15 @@ class ConsulConfig extends Component implements ConfigInterface
         if ($client === null) {
             $client = Yii::$app->consul->httpClient;
         }
-        $respones = $client->put($this->getPath($key), $config)->setFormat(Client::FORMAT_JSON)->send();
-        if ($respones->getData() != true) {
-            Output::writeln(sprintf('can not put config to consul %s:%d', $this->client->address, $this->client->port), Output::LIGHT_RED);
+        for ($i = 0; $i < $this->retry; $i++) {
+            $respones = $client->put($this->getPath($key), $config)->setFormat(Client::FORMAT_JSON)->send();
+            if ($respones->getStatusCode() != 200) {
+                Output::writeln(sprintf('can not put config to consul %s:%d', $this->client->address, $this->client->port), Output::LIGHT_RED);
+                \Co::sleep($this->sleep);
+            } else {
+                Output::writeln(sprintf('put config to consul %s:%d success', $this->client->address, $this->client->port), Output::LIGHT_GREEN);
+                break;
+            }
         }
     }
 

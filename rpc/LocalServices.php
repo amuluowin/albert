@@ -44,6 +44,15 @@ class LocalServices
         }
     }
 
+    public static function getApis()
+    {
+        $modules = [];
+        foreach (Yii::$app->getModules() as $module) {
+            $modules[] = $module->id;
+        }
+        return $modules;
+    }
+
     public static function getCurCall($service, $route, $method)
     {
         return ["services\\" . $service . "\\" . $route, $method];

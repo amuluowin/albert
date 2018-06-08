@@ -33,6 +33,9 @@ trait PoolTrait
         if ($config['pool_size'] <= 0 || $config['busy_size'] <= 0) {
             throw new InvalidArgumentException("Invalid maxSpareConns or maxConns in {$connName}");
         }
+        /**
+         * @var ConfigInterface $center
+         */
         if (($center = Yii::$app->get('csconf', false)) !== null) {
             $center->putConfig($connName, $config);
             Yii::$confKeys[$connName] = [$this, 'setConfig'];

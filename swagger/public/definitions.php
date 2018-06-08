@@ -2,7 +2,7 @@
 /**
  * @SWG\Swagger(
  *     schemes={"http"},
- *     host="192.168.99.100:9501",
+ *     host="192.168.99.100",
  *     basePath="/",
  *     @SWG\Info(
  *         version="1.0.0",
