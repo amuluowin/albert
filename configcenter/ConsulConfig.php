@@ -75,7 +75,7 @@ class ConsulConfig extends Component implements ConfigInterface
         $result = $respones->getData();
         $data = [];
         foreach ($result as $config) {
-            $config['Key'] = str_replace('yiisw/', '', $config['Key']);
+            $config['Key'] = str_replace(APP_NAME . '/', '', $config['Key']);
             $data[$config['Key']] = json_decode(base64_decode($config['Value']), true);
         }
 
