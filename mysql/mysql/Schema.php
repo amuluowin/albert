@@ -22,7 +22,9 @@ class Schema extends \yii\db\mysql\Schema
     {
         $id = CoroHelper::getId();
         if ($this->db->isActive) {
-            return $this->db->pdo[$id]->insert_id;
+            $insertId = $this->db->insertId[$id];
+            unset($this->db->insertId[$id]);
+            return $insertId;
         } else {
             throw new InvalidCallException('DB Connection is not active.');
         }
