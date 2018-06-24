@@ -7,6 +7,7 @@
 
 namespace yii\swoole\mysql\mysql;
 
+use yii\base\InvalidCallException;
 use yii\swoole\helpers\CoroHelper;
 
 /**
