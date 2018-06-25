@@ -10,6 +10,8 @@ namespace yii\swoole\timertask;
 
 use Yii;
 use yii\base\Component;
+use yii\base\ErrorException;
+use yii\base\Exception;
 use yii\swoole\timertask\model\TaskModel;
 
 class TimerTask extends Component
@@ -21,7 +23,12 @@ class TimerTask extends Component
 
     public function startTimer(string $startTime, TaskModel $model, int $ticket = 0, string $endTime = null)
     {
-        $timeItem = ParseDate::parseByDate($startTime, $endTime);
+        $startTime = strtotime($startDate);
+        $endTime = $endTime ? strtotime($endTime) : $endTime;
+        if ($endTime && ($endTime <= $startDate || $endTime <= time())) {
+            throw new ErrorException('The endTime can not leq startTime!');
+        }
+        $timeItem = ParseDate::parseByTimestamp($startTime, $endTime);
         if ($timeItem['start']['ticket'] && $timeItem['start']['days']) {
             $ticket ? Yii::$server ? Yii::$server->after($timeItem['start']['ticket'] * 1000, [$this, 'beforeStartTime'], [$timeItem['start'], $ticket, $model]) :
                 \Swoole\Timer::after($timeItem['start']['ticket'] * 1000, [$this, 'beforeStartTime'], [$timeItem['start'], $ticket, $model]) : $this->timerCallback($model->taskId, $model);
@@ -60,7 +67,6 @@ class TimerTask extends Component
 
     public function timerCallback(int $id, TaskModel $model)
     {
-        echo $id . PHP_EOL;
         Yii::$app->rpc->call($model->service, $model->route)->{$model->method}($model->params);
     }
 
