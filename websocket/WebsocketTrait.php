@@ -1,6 +1,6 @@
 <?php
 
-namespace yii\swoole\web;
+namespace yii\swoole\websocket;
 
 use Yii;
 

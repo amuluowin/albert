@@ -20,12 +20,6 @@ class BootFunction implements BootInterface
     public function handle(Server $server = null)
     {
         Yii::$app->initProcess();
-
-        //创建websocket连接内存表
-        $server->server->clientTable = new Table(1024);
-        $server->server->clientTable->column('fd', Table::TYPE_INT, 8);
-        $server->server->clientTable->create();
-
         //创建缓存内存表
         $server->server->cacheTable = Cache::initCacheTable(1024);
 

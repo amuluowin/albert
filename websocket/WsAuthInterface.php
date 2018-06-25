@@ -6,7 +6,7 @@
  * Time: 下午4:28
  */
 
-namespace yii\swoole\web;
+namespace yii\swoole\websocket;
 
 
 interface WsAuthInterface
