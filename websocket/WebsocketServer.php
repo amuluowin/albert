@@ -23,12 +23,12 @@ class WebsocketServer extends HttpServer
     /**
      * @var WsAuthInterface
      */
-    private $wsAuth;
+    public $wsAuth;
 
     /**
      * @var WsSendInterface
      */
-    private $wsSend;
+    public $wsSend;
 
     protected function createServer()
     {

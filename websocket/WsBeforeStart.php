@@ -8,18 +8,18 @@
 
 namespace yii\swoole\websocket;
 
-
+use Swoole\Table as SwooleTable;
 use yii\swoole\base\BootInterface;
+use yii\swoole\memory\Table;
 use yii\swoole\server\Server;
-use Swoole\Table;
 
 class WsBeforeStart implements BootInterface
 {
     public function handle(Server $server = null)
     {
         //创建websocket连接内存表
-        $server->server->clientTable = new Table(1024);
-        $server->server->clientTable->column('fd', Table::TYPE_INT, 8);
-        $server->server->clientTable->create();
+        $table = new Table('wsClient', 1024, ['fd' => [SwooleTable::TYPE_INT, 8]]);
+        $table->create();
+        $server->server->Tables[$table->getName()] = $table;
     }
 }

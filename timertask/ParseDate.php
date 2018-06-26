@@ -18,11 +18,11 @@ class ParseDate
         return self::parseByTimestamp(strtotime($startDate), $endDate ? strtotime($endDate) : null);
     }
 
-    public static function parseByTimestamp(int $startTime, int $endTime = null): array
+    public static function parseByTimestamp(int $startTime = null, int $endTime = null): array
     {
         $result = [];
         $now = time();
-        $startSec = $startTime - $now;
+        $startSec = $startTime ? $startTime - $now : 0;
         $endSec = $endTime ? $now - $endTime : 0;
         if ($startSec <= 0) {
             $result = [

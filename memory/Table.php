@@ -3,6 +3,7 @@
 namespace yii\swoole\memory;
 
 use Swoole\Table as SwooleTable;
+use yii\base\Component;
 
 /**
  * Table operations
