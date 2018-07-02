@@ -7,7 +7,7 @@ use yii\swoole\server\HttpServer;
 use yii\swoole\server\ProcessServer;
 use yii\swoole\server\RpcServer;
 use yii\swoole\server\TaskServer;
-use yii\swoole\server\WebsocketServer;
+use yii\swoole\websocket\WebsocketServer;
 use yii\swoole\udp\UdpServer;
 
 class SwooleCommand

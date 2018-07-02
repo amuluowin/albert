@@ -68,14 +68,19 @@ abstract class Server extends Component
         }
     }
 
-    protected function beforeStart()
+    protected function beforeStart(array $beforeStart = null)
     {
         Yii::$server = $this->server;
-        foreach (Yii::$app->beforeStart as $handle) {
+        $beforeStart = $beforeStart ?: Yii::$app->beforeStart;
+        foreach ($beforeStart as $handle) {
             if (!$handle instanceof BootInterface) {
-                $handle = Yii::createObject($handle);
+                if (!key_exists('class', $handle)) {
+                    $this->beforeStart($handle);
+                } else {
+                    $handle = Yii::createObject($handle);
+                    $handle->handle($this);
+                }
             }
-            $handle->handle($this);
         }
     }
 

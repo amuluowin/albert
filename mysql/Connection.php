@@ -26,6 +26,8 @@ class Connection extends \yii\swoole\db\Connection implements ICoroutine
 
     private $_schema;
 
+    public $insertId = [];
+
     private static $isSchemaLoaded = false;
 
     public $schemaMap = [
@@ -83,6 +85,7 @@ class Connection extends \yii\swoole\db\Connection implements ICoroutine
         }
         $id = CoroHelper::getId();
         if (Yii::$container->hasSingleton('mysqlclient') && isset($this->pdo[$id])) {
+            $this->insertId[$id] = $this->pdo[$id]->insert_id;
             Yii::$container->get('mysqlclient')->recycle($this->pdo[$id]);
             unset($this->pdo[$id]);
             Yii::info('recyle DB connection:' . $this->dsn);
@@ -91,7 +94,8 @@ class Connection extends \yii\swoole\db\Connection implements ICoroutine
 
     public function getIsActive()
     {
-        return isset($this->pdo[CoroHelper::getId()]);
+        $id = CoroHelper::getId();
+        return isset($this->pdo[$id]) || isset($this->insertId[$id]);
     }
 
     public function initSchema()

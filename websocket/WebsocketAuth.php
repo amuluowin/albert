@@ -6,7 +6,7 @@
  * Time: 下午3:58
  */
 
-namespace yii\swoole\web;
+namespace yii\swoole\websocket;
 
 use Yii;
 use yii\base\BaseObject;

@@ -32,6 +32,11 @@ class Response extends \yii\httpclient\Response
         $this->conn = $conn;
     }
 
+    public function getConn()
+    {
+        return $this->conn;
+    }
+
     private function recv()
     {
         if ($this->conn) {

@@ -6,7 +6,7 @@
  * Time: 下午5:08
  */
 
-namespace yii\swoole\web;
+namespace yii\swoole\websocket;
 
 
 interface WsSendInterface

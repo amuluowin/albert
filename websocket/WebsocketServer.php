@@ -1,6 +1,6 @@
 <?php
 
-namespace yii\swoole\server;
+namespace yii\swoole\websocket;
 
 use swoole_server;
 use swoole_websocket_frame;
@@ -8,6 +8,7 @@ use swoole_websocket_server;
 use Yii;
 use yii\helpers\ArrayHelper;
 use yii\swoole\base\SingletonTrait;
+use yii\swoole\server\HttpServer;
 use yii\swoole\web\WsAuthInterface;
 use yii\swoole\web\WsSendInterface;
 
@@ -22,12 +23,12 @@ class WebsocketServer extends HttpServer
     /**
      * @var WsAuthInterface
      */
-    private $wsAuth;
+    public $wsAuth;
 
     /**
      * @var WsSendInterface
      */
-    private $wsSend;
+    public $wsSend;
 
     protected function createServer()
     {
