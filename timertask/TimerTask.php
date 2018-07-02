@@ -12,6 +12,7 @@ use Yii;
 use yii\base\Component;
 use yii\base\ErrorException;
 use yii\base\Exception;
+use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\helpers\SerializeHelper;
 use yii\swoole\memory\Table;
 use yii\swoole\timertask\model\TaskModel;
@@ -63,6 +64,17 @@ class TimerTask extends Component
         $this->table->set($key, $item);
     }
 
+    private function getTask(TaskModel $model): TaskModel
+    {
+        $item = $model->toArray();
+        $item['params'] = SerializeHelper::serialize($item['params']);
+        $key = $this->keyPrefix . md5($item['params']);
+        $item = $this->table->get($key);
+        $item['params'] = SerializeHelper::unserialize($item['params']);
+        $model->load($item, '');
+        return $model;
+    }
+
     private function delTask(TaskModel $model)
     {
         $item = $model->toArray();
@@ -78,58 +90,68 @@ class TimerTask extends Component
         }
     }
 
-    public function startTimer(TaskModel $model, int $ticket = 0, string $startTime = null, string $endTime = null)
+    public function startTimer(TaskModel $model)
     {
         $this->saveTask($model);
-        $startTime = $startDate ? strtotime($startDate) : $startDate;
-        $endTime = $endTime ? strtotime($endTime) : $endTime;
-        if ($endTime && ($endTime <= $startDate || $endTime <= time())) {
-            throw new ErrorException('The endTime can not leq startTime!');
+        $startTime = $model->startDate ? strtotime($model->startDate) : $model->startDate;
+        $endTime = $model->endDate ? strtotime($model->endDate) : $model->endDate;
+        if ($endTime && ($endTime <= $startTime || $endTime <= time())) {
+            throw new ErrorException('The startTime can not leq endTime!');
         }
-        $timeItem = ParseDate::parseByTimestamp($startTime, $endTime);
-        if ($timeItem['start']['ticket'] && $timeItem['start']['days']) {
-            $ticket ? Yii::$server ? Yii::$server->after($timeItem['start']['ticket'] * 1000, [$this, 'beforeStartTime'], [$timeItem['start'], $ticket, $model]) :
-                \Swoole\Timer::after($timeItem['start']['ticket'] * 1000, [$this, 'beforeStartTime'], [$timeItem['start'], $ticket, $model]) : $this->timerCallback($model->taskId, $model);
+        $timeItem = ParseDate::parseByTimestamp($startTime);
+        if ($timeItem['ticket']) {
+            $model->ticket ? (Yii::$server ? Yii::$server->after($timeItem['ticket'] * 1000, [$this, 'beforeStartTime'], [$timeItem, $model, 0]) :
+                \Swoole\Timer::after($timeItem['ticket'] * 1000, [$this, 'beforeStartTime'], [$timeItem, $model, 0])) : $this->timerCallback($model->taskId, $model);
         } else {
-            Yii::$server ? Yii::$server->tick($ticket * 1000, [$this, 'timerCallback'], $model) :
-                \Swoole\Timer::tick($ticket * 1000, [$this, 'timerCallback'], $model);
-        }
-        if ($timeItem['end']['ticket'] && $timeItem['end']['days']) {
-            Yii::$server ? Yii::$server->after($timeItem['end']['ticket'] * 1000, [$this, 'beforeEndTime'], [$timeItem['end'], $model]) :
-                \Swoole\Timer::after($timeItem['end']['ticket'] * 1000, [$this, 'beforeEndTime'], [$timeItem['end'], $model]);
+            $model->ticket ? (Yii::$server ? Yii::$server->tick($model->ticket * 1000, [$this, 'timerCallback'], $model) :
+                \Swoole\Timer::tick($model->ticket * 1000, [$this, 'timerCallback'], $model)) : $this->timerCallback($model->taskId, $model);
         }
     }
 
-    public function beforeStartTime(array $params, int $num = 0)
+    public function beforeStartTime(array $params)
     {
-        list($timeItem, $ticket, $model) = $params;
+        /**
+         * @var TaskModel $model
+         */
+        list($timeItem, $model, $num) = $params;
         if ($num === $timeItem['days']) {
-            Yii::$server ? Yii::$server->tick($ticket * 1000, [$this, 'timerCallback'], $model) :
-                \Swoole\Timer::tick($ticket * 1000, [$this, 'timerCallback'], $model);
+            Yii::$server ? Yii::$server->tick($model->ticket * 1000, [$this, 'timerCallback'], $model) :
+                \Swoole\Timer::tick($model->ticket * 1000, [$this, 'timerCallback'], $model);
+            var_dump(123 + $model->taskId);
+            $endTime = $model->endDate ? strtotime($model->endDate) : $model->endDate;
+            $timeItem = ParseDate::parseByTimestamp($endTime);
+            if ($timeItem['ticket']) {
+                var_dump(456 + $model->taskId);
+                Yii::$server ? Yii::$server->after($timeItem['ticket'] * 1000, [$this, 'beforeEndTime'], [$timeItem, $model, 0]) :
+                    \Swoole\Timer::after($timeItem['ticket'] * 1000, [$this, 'beforeEndTime'], [$timeItem, $model, 0]);
+            }
         } else {
-            Yii::$server ? Yii::$server->after(ParseDate::$oneDay * 1000, [$this, 'beforeStartTime'], ...[$params, $num++]) :
-                \Swoole\Timer::after(ParseDate::$oneDay * 1000, [$this, 'beforeStartTime'], ...[$params, $num++]);
+            Yii::$server ? Yii::$server->after(ParseDate::$oneDay * 1000, [$this, 'beforeStartTime'], [$timeItem, $model, $num++]) :
+                \Swoole\Timer::after(ParseDate::$oneDay * 1000, [$this, 'beforeStartTime'], [$timeItem, $model, $num++]);
         }
     }
 
-    public function beforeEndTime(array $params, int $num = 0)
+    public function beforeEndTime(array $params)
     {
-        list($timeItem, $model) = $params;
+        /**
+         * @var TaskModel $model
+         */
+        list($timeItem, $model, $num) = $params;
         if ($num === $timeItem['days']) {
-            Yii::$server ? Yii::$server->tick($ticket * 1000, [$this, 'clearCallback'], $model) :
-                \Swoole\Timer::tick($ticket * 1000, [$this, 'clearCallback'], $model);
+            $model = $this->getTask($model);
+            $this->clearTimer($model->taskId, $model);
         } else {
-            Yii::$server ? Yii::$server->after($timeItem['end']['ticket'] * 1000, [$this, 'beforeEndTime'], ...[$params, $num++]) :
-                \Swoole\Timer::after($timeItem['end']['ticket'] * 1000, [$this, 'beforeEndTime'], ...[$params, $num++]);
+            Yii::$server ? Yii::$server->after(ParseDate::$oneDay * 1000, [$this, 'beforeEndTime'], [$timeItem, $model, $num++]) :
+                \Swoole\Timer::after(ParseDate::$oneDay * 1000, [$this, 'beforeEndTime'], [$timeItem, $model, $num++]);
         }
     }
 
     public function timerCallback(int $id, TaskModel $model)
     {
+        $model = $this->getTask($model);
         $model->num++;
         $model->taskId = $id;
-        $this->saveTask($model, false);
-        if ($model->total > 0 && $model->num == $model->total) {
+        if ($model->total > 0 && $model->num === $model->total) {
             $this->clearTimer($id, $model);
             return;
         }

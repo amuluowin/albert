@@ -19,6 +19,7 @@ class TaskModel extends \yii\swoole\base\Model
     public $service;
     public $route;
     public $method;
+    public $ticket = 0;
     public $num = 0;
     public $total = 0;
     public $succeceRun = 0;
@@ -26,13 +27,17 @@ class TaskModel extends \yii\swoole\base\Model
     public $taskId;
     public $params;
     public $status = 1;
+    public $startDate = null;
+    public $endDate = null;
 
     public function rules()
     {
         return [
             [['service', 'route', 'method', 'taskId'], 'required'],
-            [['params', 'num', 'retry'], 'safe'],
-            [['num', 'retry'], 'integer']
+            [['params'], 'safe'],
+            [['num', 'retry', 'ticket', 'succeceRun', 'failRun'], 'integer'],
+            [['startDate', 'endDate'], 'default', 'value' => null],
+            [['num', 'retry', 'ticket'], 'default', 'value' => 0]
         ];
     }
 }

@@ -9,23 +9,32 @@
 namespace yii\swoole\timertask;
 
 use Swoole\Table as SwooleTable;
+use yii\base\BaseObject;
 use yii\swoole\base\BootInterface;
 use yii\swoole\memory\Table;
 use yii\swoole\server\Server;
 
-class TaskBoot implements BootInterface
+class TaskBoot extends BaseObject implements BootInterface
 {
+    public $size = 8192;
+
     public function handle(Server $server = null)
     {
-        $table = new Table('TimerTask', 8192, [
+        $table = new Table('TimerTask', $this->size, [
+            'id' => [SwooleTable::TYPE_INT, '11'],
             'service' => [SwooleTable::TYPE_STRING, '32'],
             'route' => [SwooleTable::TYPE_STRING, '16'],
             'method' => [SwooleTable::TYPE_STRING, '16'],
+            'ticket' => [SwooleTable::TYPE_INT, '14'],
             'num' => [SwooleTable::TYPE_INT, '4'],
             'total' => [SwooleTable::TYPE_INT, '4'],
-            'retry' => [SwooleTable::TYPE_INT, '2'],
             'taskId' => [SwooleTable::TYPE_INT, '11'],
-            'params' => [SwooleTable::TYPE_STRING, '1024']
+            'succeceRun' => [SwooleTable::TYPE_INT, '11'],
+            'failRun' => [SwooleTable::TYPE_INT, '11'],
+            'status' => [SwooleTable::TYPE_INT, '2'],
+            'startDate' => [SwooleTable::TYPE_STRING, '20'],
+            'endDate' => [SwooleTable::TYPE_STRING, '20'],
+            'params' => [SwooleTable::TYPE_STRING, '512']
         ]);
         $table->create();
         $server->server->Tables[$table->getName()] = $table;
