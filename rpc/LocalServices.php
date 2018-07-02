@@ -29,7 +29,7 @@ class LocalServices
                         $real_path = $path . '/' . $file;
                         if (is_dir($real_path)) {
                             $queue[] = $real_path;
-                        } else {
+                        } elseif (strpos($real_path, 'Logic') !== false) {
                             $file = str_replace(['services/', '.php'], ['', ''], substr($real_path, strpos($real_path, 'services')));
                             $file = explode('/', $file);
                             $files[array_shift($file)][] = array_shift($file);

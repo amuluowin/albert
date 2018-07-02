@@ -21,16 +21,6 @@ class RpcClient extends Component
     /**
      * @var array
      */
-    public $remoteList = [];
-
-    /**
-     * @var array
-     */
-    public $selfList = [];
-
-    /**
-     * @var array
-     */
     private $service = [];
 
     /**
@@ -75,9 +65,7 @@ class RpcClient extends Component
     public function __call($name, $params)
     {
         list($ser, $route) = $this->getService();
-        if (!isset(Yii::$rpcList) || (key_exists($ser, Yii::$rpcList) && in_array($route, Yii::$rpcList[$ser])
-                && !empty($this->remoteList)
-                && !(key_exists($ser, $this->remoteList) && in_array($route, $this->remoteList[$ser])))) {
+        if (!isset(Yii::$rpcList) || (key_exists($ser, Yii::$rpcList) && in_array($route, Yii::$rpcList[$ser]))) {
             $client = is_array($this->config_n) ? Yii::createObject($this->config_n) : clone $this->config_n;
         } else {
             $client = is_array($this->config_r) ? Yii::createObject($this->config_r) : clone $this->config_r;
