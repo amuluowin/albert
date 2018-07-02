@@ -47,7 +47,8 @@ class SwooleTransport extends \yii\httpclient\Transport
                         'port' => $port,
                         'timeout' => $request->dns_timeout,
                         'pool_size' => $request->pool_size,
-                        'busy_size' => $request->busy_size
+                        'busy_size' => $request->busy_size,
+                        'scheme' => $urlarr['scheme']
                     ])
                     ->fetch($key);
             }

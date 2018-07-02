@@ -5,6 +5,7 @@ namespace yii\swoole\web;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\swoole\coroutine\ICoroutine;
+use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\helpers\CoroHelper;
 use yii\web\Cookie;
 use yii\web\CookieCollection;
@@ -54,7 +55,7 @@ class Request extends \yii\web\Request implements ICoroutine
         $id = CoroHelper::getId();
         if (!isset($this->_headers[$id])) {
             $this->_headers[$id] = new HeaderCollection;
-            $headers = Yii::$server->currentSwooleRequest[$id]->header;
+            $headers = ArrayHelper::getValue(Yii::$server->currentSwooleRequest[$id], 'header', []);
             foreach ($headers as $name => $value) {
                 $this->_headers[$id]->add($name, $value);
             }

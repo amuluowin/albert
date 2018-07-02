@@ -75,12 +75,12 @@ class RpcClient extends Component
     public function __call($name, $params)
     {
         list($ser, $route) = $this->getService();
-        if (key_exists($ser, Yii::$rpcList) && in_array($route, Yii::$rpcList[$ser])
-            && !empty($this->remoteList)
-            && !(key_exists($ser, $this->remoteList) && in_array($route, $this->remoteList[$ser]))) {
-            $client = clone $this->config_n;
+        if (!isset(Yii::$rpcList) || (key_exists($ser, Yii::$rpcList) && in_array($route, Yii::$rpcList[$ser])
+                && !empty($this->remoteList)
+                && !(key_exists($ser, $this->remoteList) && in_array($route, $this->remoteList[$ser])))) {
+            $client = is_array($this->config_n) ? Yii::createObject($this->config_n) : clone $this->config_n;
         } else {
-            $client = clone $this->config_r;
+            $client = is_array($this->config_r) ? Yii::createObject($this->config_r) : clone $this->config_r;
         }
         return $client->$name(...$params);
     }
