@@ -10,7 +10,7 @@ class HttpPool extends \yii\swoole\pool\IPool
 {
     public function createConn(string $connName, $conn = null)
     {
-        if ($conn) {
+        if ($conn && $conn->errCode === 0) {
             return $conn;
         }
         $this->reConnect($conn, $connName);
@@ -21,14 +21,15 @@ class HttpPool extends \yii\swoole\pool\IPool
     {
         $config = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['hostname', 'port', 'timeout', 'scheme'],
             ['localhost', 80, 0.5, 'http']);
-        $conn = new \Swoole\Coroutine\Http\Client(\Co::gethostbyname($config['hostname']), $config['port'], $config['scheme'] === 'https' ? true : false);
+        $conn = new \Swoole\Coroutine\Http\Client($config['hostname'], $config['port'], $config['scheme'] === 'https' ? true : false);
         if ($conn->errCode !== 0) {
             if ($this->reconnect <= $this->curconnect) {
                 $this->curconnect = 0;
                 $conn->close();
-                throw new Exception(sprintf(sprintf('connect to %s:%d error:', $config['hostname'], $config['port'], $conn->error)));
+                throw new Exception(sprintf('connect to %s:%d error:', $config['hostname'], $config['port'], $conn->error));
             } else {
                 $this->curconnect++;
+                $conn->close();
                 $this->reConnect($conn, $connName);
             }
         }

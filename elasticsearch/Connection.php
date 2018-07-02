@@ -49,10 +49,10 @@ class Connection extends \yii\elasticsearch\Connection
         $requestConfig = [];
 
         if ($this->connectionTimeout !== null) {
-            $requestConfig['dns_timeout'] = $this->connectionTimeout;
+            $requestConfig['timeout'] = $this->connectionTimeout;
         }
         if ($this->dataTimeout !== null) {
-            $requestConfig['dns_timeout'] = $this->dataTimeout;
+            $requestConfig['timeout'] = $this->dataTimeout;
         }
         if ($method == 'HEAD') {
             $requestBody = [];
@@ -76,10 +76,7 @@ class Connection extends \yii\elasticsearch\Connection
         if ($profile !== false) {
             Yii::beginProfile($profile, __METHOD__);
         }
-        $responese = (new Client(['requestConfig' => [
-            'dns_timeout' => 1,
-            'client_timeout' => 1
-        ]]))->createRequest()->setUrl($url)->setMethod($method)->setData($requestBody)->setHeaders($headers)->send();
+        $responese = (new Client(['requestConfig' => $requestConfig]))->createRequest()->setUrl($url)->setMethod($method)->setData($requestBody)->setHeaders($headers)->send();
         $body = $responese->getData();
         if (!$responese->getIsOk()) {
             throw new Exception('Elasticsearch request failed: ' . $responese->getConn()->errno . ' - ' . $responese->getConn()->error, [

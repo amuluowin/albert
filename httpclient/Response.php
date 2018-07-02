@@ -47,7 +47,7 @@ class Response extends \yii\httpclient\Response
             $this->conn->headers['http-code'] = $this->conn->statusCode;
             $this->setHeaders($this->conn->headers);
             $this->setCookies($this->conn->cookies);
-            Yii::$container->get('httpclient')->recycle($this->conn);
+            Yii::$container->has('httpclient') ? Yii::$container->get('httpclient')->recycle($this->conn) : $this->conn->close();
         } else {
             $this->setHeaders(['http-code' => 0]);
         }

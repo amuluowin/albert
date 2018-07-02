@@ -3,11 +3,14 @@
 namespace yii\swoole\httpclient;
 
 use Yii;
+use yii\httpclient\Exception;
 use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\pool\HttpPool;
 
 class SwooleTransport extends \yii\httpclient\Transport
 {
+    protected $reconnect = 3;
+    protected $curconnect = 0;
 
     /**
      * @inheritdoc
@@ -33,25 +36,7 @@ class SwooleTransport extends \yii\httpclient\Transport
         Yii::beginProfile($token, __METHOD__);
 
         try {
-            if (!Yii::$container->hasSingleton('httpclient')) {
-                Yii::$container->setSingleton('httpclient', [
-                    'class' => HttpPool::class
-                ]);
-            }
-            $port = isset($urlarr['port']) ? $urlarr['port'] : ($urlarr['scheme'] === 'http' ? 80 : 443);
-            $key = sprintf('httpclient:%s:%s', $urlarr['host'], $port);
-            if (($cli = Yii::$container->get('httpclient')->fetch($key)) === null) {
-                $cli = Yii::$container->get('httpclient')->create($key,
-                    [
-                        'hostname' => $urlarr['host'],
-                        'port' => $port,
-                        'timeout' => $request->dns_timeout,
-                        'pool_size' => $request->pool_size,
-                        'busy_size' => $request->busy_size,
-                        'scheme' => $urlarr['scheme']
-                    ])
-                    ->fetch($key);
-            }
+            $cli = $this->getConn($urlarr, $request);
             //headers
             $headers = $request->getHeaders();
             $sendHeaders = [];
@@ -76,7 +61,7 @@ class SwooleTransport extends \yii\httpclient\Transport
             $cli->setHeaders($sendHeaders);
             $cli->setCookies($sendCookies);
             $cli->set(ArrayHelper::merge([
-                'timeout' => isset($options['timeout']) ? $options['timeout'] : $request->client_timeout,
+                'timeout' => isset($options['timeout']) ? $options['timeout'] : $request->timeout,
                 'keep_alive' => $request->keep_alive,
                 'websocket_mask' => $request->websocket_mask,
             ], array_filter([
@@ -104,6 +89,24 @@ class SwooleTransport extends \yii\httpclient\Transport
         $request->afterSend($response);
 
         return $response;
+    }
+
+    protected function getConn(array $urlarr, Request $request)
+    {
+        $port = isset($urlarr['port']) ? $urlarr['port'] : ($urlarr['scheme'] === 'http' ? 80 : 443);
+        $conn = new \Swoole\Coroutine\Http\Client($urlarr['host'], $port, $urlarr['scheme'] === 'https' ? true : false);
+        if ($conn->errCode !== 0) {
+            if ($this->reconnect <= $this->curconnect) {
+                $this->curconnect = 0;
+                $conn->close();
+                throw new Exception(sprintf('connect to %s:%d error:', $config['hostname'], $config['port'], $conn->error));
+            } else {
+                $this->curconnect++;
+                $conn->close();
+                $conn = $this->getConn($urlarr, $request);
+            }
+        }
+        return $conn;
     }
 
 }

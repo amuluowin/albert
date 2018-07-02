@@ -10,7 +10,7 @@ class Client extends \yii\httpclient\Client
     /**
      * @var Transport|array|string|callable HTTP message transport.
      */
-    private $_transport = 'yii\swoole\httpclient\SwooleTransport';
+    private $_transport = PoolTransport::class;
 
 
     /**
