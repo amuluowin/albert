@@ -53,6 +53,11 @@ class Response extends \yii\httpclient\Response
         }
     }
 
+    public function getIsOk()
+    {
+        return strncmp('20', $this->getStatusCode(), 2) === 0;
+    }
+
     public function getStatusCode()
     {
         if (!$this->isGet) {
