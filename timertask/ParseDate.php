@@ -20,13 +20,11 @@ class ParseDate
 
     public static function parseByTimestamp(int $time = null): array
     {
-        $result = [];
-        $now = time();
-        $sec = abs($now - $time);
+        $sec = $time - time();
         if ($sec > 0) {
             $result = [
-                'ticket' => $startSec % self::$oneDay,
-                'days' => $startSec / self::$oneDay,
+                'ticket' => $sec % self::$oneDay,
+                'days' => intval($sec / self::$oneDay),
             ];
         } else {
             $result = [

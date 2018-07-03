@@ -8,19 +8,27 @@
 
 namespace yii\swoole\timertask;
 
+use Yii;
 use Swoole\Table as SwooleTable;
 use yii\base\BaseObject;
+use yii\base\Component;
 use yii\swoole\base\BootInterface;
 use yii\swoole\memory\Table;
 use yii\swoole\server\Server;
+use yii\swoole\timertask\model\TaskModel;
 
-class TaskBoot extends BaseObject implements BootInterface
+class TaskBoot extends Component implements BootInterface
 {
+    /**
+     * @var int
+     */
     public $size = 8192;
+
+    public $tableName = 'TimerTask';
 
     public function handle(Server $server = null)
     {
-        $table = new Table('TimerTask', $this->size, [
+        $table = new Table($this->tableName, $this->size, [
             'id' => [SwooleTable::TYPE_INT, '11'],
             'service' => [SwooleTable::TYPE_STRING, '32'],
             'route' => [SwooleTable::TYPE_STRING, '16'],

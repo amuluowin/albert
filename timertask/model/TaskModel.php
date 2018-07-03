@@ -10,8 +10,9 @@ namespace yii\swoole\timertask\model;
 
 class TaskModel extends \yii\swoole\base\Model
 {
+    const Task_READY = 99;
     const TASK_STOP = 0;
-    const TASK_START = 1;
+    const TASK_PAUSE = 1;
     const TASK_PROCESSING = 2;
     const TASK_FINISH = 3;
 
@@ -26,7 +27,7 @@ class TaskModel extends \yii\swoole\base\Model
     public $failRun = 0;
     public $taskId;
     public $params;
-    public $status = 1;
+    public $status = self::Task_READY;
     public $startDate = null;
     public $endDate = null;
 
@@ -35,7 +36,8 @@ class TaskModel extends \yii\swoole\base\Model
         return [
             [['service', 'route', 'method', 'taskId'], 'required'],
             [['params'], 'safe'],
-            [['num', 'retry', 'ticket', 'succeceRun', 'failRun'], 'integer'],
+            [['num', 'retry', 'ticket', 'succeceRun', 'failRun', 'status'], 'integer'],
+            [['startDate', 'endDate'], 'date'],
             [['startDate', 'endDate'], 'default', 'value' => null],
             [['num', 'retry', 'ticket'], 'default', 'value' => 0]
         ];
