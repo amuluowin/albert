@@ -73,4 +73,24 @@ class FileIO
             return false;
         }
     }
+
+    public static function getsAll(string $filename, int $index = 0, int $seek = 0)
+    {
+        try {
+            if (($fp = @fopen($filename, 'r+')) === false) {
+                throw new InvalidConfigException("Unable to open file: $filename");
+            }
+            @flock($fp, LOCK_SH);
+            @fseek($fp, $index, $seek);
+            $content = '';
+            while (!feof($fp)) {
+                $content .= \Swoole\Coroutine::fgets($fp);
+            }
+            @flock($fp, LOCK_UN);
+            @fclose($fp);
+            return $content;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
 }
