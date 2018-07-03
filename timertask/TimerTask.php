@@ -166,7 +166,7 @@ class TimerTask extends Component
                 return $id;
             }
             $result = Yii::$app->rpc->call($model->service, $model->route)->{$model->method}($model->params);
-            if ($result['status'] = 1) {
+            if ($result['status']) {
                 $model->succeceRun++;
             } else {
                 $model->failRun++;
