@@ -12,7 +12,7 @@ class TcpClient extends BaseClient implements ICoroutine
     /**
      * @var float
      */
-    public $timeout = 0.5;
+    public $timeout = -1;
     /**
      * @var array
      */
@@ -53,7 +53,7 @@ class TcpClient extends BaseClient implements ICoroutine
     public function recv()
     {
         $this->trigger(self::EVENT_BEFORE_RECV);
-        $result = $this->getClient()->recv();
+        $result = $this->getClient()->recv($this->timeout);
         list($class, $params) = $this->pack;
         $class = Yii::createObject($class);
         $result = $class->decode(...[$result, $params]);

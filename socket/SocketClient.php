@@ -12,7 +12,7 @@ class SocketClient extends BaseClient implements ICoroutine
     /**
      * @var float
      */
-    public $timeout = 0.5;
+    public $timeout = -1;
 
     /**
      * @var array
@@ -50,7 +50,7 @@ class SocketClient extends BaseClient implements ICoroutine
     public function recv()
     {
         $this->trigger(self::EVENT_BEFORE_RECV);
-        $result = $this->getClient()->recv();
+        $result = $this->getClient()->recv($this->timeout);
         $this->setData($result);
         $this->trigger(self::EVENT_AFTER_RECV);
         $this->release();
