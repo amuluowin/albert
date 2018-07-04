@@ -30,20 +30,26 @@ class TimerProcess extends BaseProcess
 
     public function start()
     {
-        \Swoole\Timer::tick($this->ticket * 1000, function (int $tick_id) {
+        /**
+         * @var TimerTask $timerTask
+         */
+        $timerTask = Yii::$app->timertask;
+        \Swoole\Timer::tick($this->ticket * 1000, function (int $tick_id) use ($timerTask) {
             $now = time();
-            foreach (Yii::$app->timertask->getTasks() as $model) {
+            foreach ($timerTask->getTasks() as $model) {
                 $model = new TaskModel($model);
                 $startTime = $model->startDate ? strtotime($model->startDate) : $model->startDate;
                 if ($model->taskId === 0 && $model->status === TaskModel::Task_READY && $startTime >= $now) {
-                    Yii::$app->timertask->setTaskStatus($model, TaskModel::TASK_PROCESSING);
-                    $model->taskId = $model->ticket ? \Swoole\Timer::tick($model->ticket * 1000, [Yii::$app->timertask, 'timerCallback'], $model) : Yii::$app->timertask->timerCallback($model->taskId, $model);
+                    $timerTask->setTaskStatus($model, TaskModel::TASK_PROCESSING);
+                    $model->taskId = $model->ticket ? \Swoole\Timer::tick($model->ticket * 1000, function (int $tick_id) use ($timerTask, $model) {
+                        $timerTask->timerCallback($tick_id, $model);
+                    }) : $timerTask->timerCallback($model->taskId, $model);
                 }
 
                 $endTime = $model->endDate ? strtotime($model->endDate) : $model->endDate;
                 if ($model->taskId > 0 && $endTime <= $now) {
-                    Yii::$app->timertask->setTaskStatus($model, TaskModel::TASK_FINISH);
-                    Yii::$app->timertask->clearTimer($model->taskId, $model);
+                    $timerTask->setTaskStatus($model, TaskModel::TASK_FINISH);
+                    $timerTask->clearTimer($model->taskId, $model);
                 }
             }
         });

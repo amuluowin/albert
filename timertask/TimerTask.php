@@ -116,7 +116,7 @@ class TimerTask extends Component
         return $model;
     }
 
-    public function timerCallback(int $id, TaskModel $model): TaskModel
+    public function timerCallback(int $id, TaskModel $model): array
     {
         $model = $this->getTask($model);
         if ($model->status !== TaskModel::TASK_PAUSE) {
@@ -135,7 +135,7 @@ class TimerTask extends Component
             }
             $this->saveTask($model, false);
         }
-        return $model;
+        return $result;
     }
 
     public function clearTimer(int $id, TaskModel $model): TaskModel
