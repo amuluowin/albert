@@ -48,16 +48,18 @@ class TimerTask extends Component
         return $result;
     }
 
-    public function setTaskStatus(TaskModel $model, int $status)
+    public function setTaskStatus(TaskModel $model, int $status): TaskModel
     {
         $model = $this->getTask($model);
         $model->status = $status;
         $this->saveTask($model, false);
+        return $model;
     }
 
-    public function removeTask(TaskModel $model)
+    public function removeTask(TaskModel $model): TaskModel
     {
         $this->clearTimer($model->taskId, $model);
+        return $this->getTask($model);
     }
 
     public function startOnceNow(TaskModel $model)
@@ -65,7 +67,7 @@ class TimerTask extends Component
         return Yii::$app->rpc->call($model->service, $model->route)->{$model->method}($model->params);
     }
 
-    public function saveTask(TaskModel $model, bool $isCheck = true)
+    private function saveTask(TaskModel $model, bool $isCheck = true)
     {
         $item = $model->toArray();
         $item['params'] = SerializeHelper::serialize($item['params']);
@@ -93,6 +95,7 @@ class TimerTask extends Component
         $item['params'] = SerializeHelper::serialize($item['params']);
         $key = $this->keyPrefix . md5($item['params']);
         $this->table->del($key);
+        return $model;
     }
 
     private function checkTask(string $key)
@@ -102,7 +105,7 @@ class TimerTask extends Component
         }
     }
 
-    public function addTask(TaskModel $model): array
+    public function addTask(TaskModel $model): TaskModel
     {
         $startTime = $model->startDate ? strtotime($model->startDate) : $model->startDate;
         $endTime = $model->endDate ? strtotime($model->endDate) : $model->endDate;
@@ -110,51 +113,10 @@ class TimerTask extends Component
             throw new ErrorException('The startDate can not leq endDate!');
         }
         $this->saveTask($model);
-        return [$startTime, $endTime];
+        return $model;
     }
 
-    public function startTimer(TaskModel $model)
-    {
-        list($startTime, $endTime) = $this->addTask($model);
-        $startItem = ParseDate::parseByTimestamp($startTime);
-        if ($startItem['ticket']) {
-            \Swoole\Timer::after($startItem['ticket'] * 1000, [$this, 'beforeStartTime'], [$startItem, $model, 0]);
-        }
-        $endItem = ParseDate::parseByTimestamp($endTime);
-        if ($endItem['ticket']) {
-            \Swoole\Timer::after($endItem['ticket'] * 1000, [$this, 'beforeEndTime'], [$endItem, $model, 0]);
-        }
-    }
-
-    public function beforeStartTime(array $params)
-    {
-        /**
-         * @var TaskModel $model
-         */
-        list($timeItem, $model, $num) = $params;
-        if ($num === $timeItem['days']) {
-            $model->taskId = $model->ticket ? \Swoole\Timer::tick($model->ticket * 1000, [$this, 'timerCallback'], $model) : $this->timerCallback($model->taskId, $model);
-        } else {
-            \Swoole\Timer::after(ParseDate::$oneDay * 1000, [$this, 'beforeStartTime'], [$timeItem, $model, $num++]);
-        }
-    }
-
-    public function beforeEndTime(array $params)
-    {
-        /**
-         * @var TaskModel $model
-         */
-        list($timeItem, $model, $num) = $params;
-        if ($num === $timeItem['days']) {
-            $model = $this->getTask($model);
-            $this->setTaskStatus($model, TaskModel::TASK_FINISH);
-            $this->clearTimer($model->taskId, $model);
-        } else {
-            \Swoole\Timer::after(ParseDate::$oneDay * 1000, [$this, 'beforeEndTime'], [$timeItem, $model, $num++]);
-        }
-    }
-
-    public function timerCallback(int $id, TaskModel $model): int
+    public function timerCallback(int $id, TaskModel $model): TaskModel
     {
         $model = $this->getTask($model);
         if ($model->status !== TaskModel::TASK_PAUSE) {
@@ -173,13 +135,13 @@ class TimerTask extends Component
             }
             $this->saveTask($model, false);
         }
-        return $id;
+        return $model;
     }
 
-    public function clearTimer(int $id, TaskModel $model): bool
+    public function clearTimer(int $id, TaskModel $model): TaskModel
     {
         \Swoole\Timer::clear($model->taskId);
         $this->delTask($model);
-        return true;
+        return $model;
     }
 }
