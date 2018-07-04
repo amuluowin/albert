@@ -55,6 +55,7 @@ class Transaction extends \yii\db\Transaction
             Yii::trace('Commit transaction', __METHOD__);
             $this->db->commit();
             $this->db->trigger(Connection::EVENT_COMMIT_TRANSACTION);
+            $this->db->release();
             return;
         }
 
@@ -80,6 +81,7 @@ class Transaction extends \yii\db\Transaction
             Yii::trace('Roll back transaction', __METHOD__);
             $this->db->rollBack();
             $this->db->trigger(Connection::EVENT_ROLLBACK_TRANSACTION);
+            $this->db->release();
             return;
         }
 

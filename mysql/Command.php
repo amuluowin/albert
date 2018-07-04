@@ -34,7 +34,7 @@ class Command extends \yii\db\Command
             return;
         }
 
-        $sql = $this->getRawSql();
+        $sql = $this->getSql();
 
         if ($this->db->getTransaction()) {
             // master is in a transaction. use the same connection.
@@ -53,7 +53,7 @@ class Command extends \yii\db\Command
         } catch (\Exception $e) {
             $message = $e->getMessage() . "\nFailed to prepare SQL: $sql";
             $errorInfo = $e instanceof \PDOException ? $e->errorInfo : null;
-            $pdo->release();
+            $this->db->release();
             throw new Exception($message, $errorInfo, (int)$e->getCode(), $e);
         }
     }
@@ -77,7 +77,7 @@ class Command extends \yii\db\Command
 
             $profile and Yii::beginProfile($rawSql, __METHOD__);
 
-            $this->pdoStatement->execute();
+            $this->pdoStatement->execute($this->db->timeout);
             $n = $this->pdoStatement->rowCount();
             $profile and Yii::endProfile($rawSql, __METHOD__);
 
@@ -85,7 +85,7 @@ class Command extends \yii\db\Command
             return $n;
         } catch (\Exception $e) {
             $profile and Yii::endProfile($rawSql, __METHOD__);
-            $pdo->release();
+            $this->db->release();
             throw $this->db->getSchema()->convertException($e, $rawSql ?: $this->getRawSql());
         }
     }
@@ -137,7 +137,7 @@ class Command extends \yii\db\Command
 
             $profile and Yii::beginProfile($rawSql, 'yii\db\Command::query');
 
-            $this->pdoStatement->execute();
+            $this->pdoStatement->execute($this->db->timeout);
 
             if ($method === '') {
                 $result = new DataReader($this);

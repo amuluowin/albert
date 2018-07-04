@@ -8,13 +8,18 @@ use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
 use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\helpers\CoroHelper;
+use yii\swoole\pool\MysqlPool;
 
 class Connection extends \yii\swoole\db\Connection implements ICoroutine
 {
     public $maxPoolSize = 30;
     public $busy_pool = 30;
 
-    public $timeout = 1;
+    public $timeout = 0;
+
+    public $strict_type = false;
+
+    public $fetch_more = false;
 
     private $key;
 
@@ -88,6 +93,9 @@ class Connection extends \yii\swoole\db\Connection implements ICoroutine
             $this->insertId[$id] = $this->pdo[$id]->insert_id;
             Yii::$container->get('mysqlclient')->recycle($this->pdo[$id]);
             unset($this->pdo[$id]);
+            unset($this->_master[$id]);
+            unset($this->_slave[$id]);
+            unset($this->_transaction[$id]);
             Yii::info('recyle DB connection:' . $this->dsn);
         }
     }
@@ -189,25 +197,19 @@ class Connection extends \yii\swoole\db\Connection implements ICoroutine
     public function begin()
     {
         $id = CoroHelper::getId();
-        $this->pdo[$id]->setDefer();
         $this->pdo[$id]->query('START TRANSACTION');
-        $this->pdo[$id]->recv();
     }
 
     public function commit()
     {
         $id = CoroHelper::getId();
-        $this->pdo[$id]->setDefer();
         $this->pdo[$id]->query('COMMIT');
-        $this->pdo[$id]->recv();
     }
 
     public function rollBack()
     {
         $id = CoroHelper::getId();
-        $this->pdo[$id]->setDefer();
         $this->pdo[$id]->query('ROLLBACK');
-        $this->pdo[$id]->recv();
     }
 
     protected function createPdoInstance()
@@ -219,7 +221,7 @@ class Connection extends \yii\swoole\db\Connection implements ICoroutine
     {
         if (!Yii::$container->hasSingleton('mysqlclient')) {
             Yii::$container->setSingleton('mysqlclient', [
-                'class' => 'yii\swoole\pool\MysqlPool',
+                'class' => MysqlPool::class,
             ]);
             $uri = str_replace('mysql:', '', $this->dsn);
             $uri = str_replace('host=', '', $uri);
@@ -238,6 +240,8 @@ class Connection extends \yii\swoole\db\Connection implements ICoroutine
                     'user' => $this->username,
                     'password' => $this->password,
                     'charset' => $this->charset,
+                    'strict_type' => $this->strict_type,
+                    'fetch_more' => $this->fetch_more,
                     'timeout' => $this->timeout,
                     'pool_size' => $this->maxPoolSize,
                     'busy_size' => $this->busy_pool

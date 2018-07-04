@@ -4,15 +4,19 @@ namespace yii\swoole\mysql;
 
 use Yii;
 use yii\base\BaseObject;
+use yii\db\Exception;
 use yii\swoole\base\Output;
 use yii\web\ServerErrorHttpException;
 
 class Statement extends BaseObject
 {
+    /**
+     * @var Connection
+     */
     public $db;
     private $sql;
     private $pdo;
-    private $params;
+    private $params = [];
     private $mode;
     private $data;
 
@@ -35,27 +39,23 @@ class Statement extends BaseObject
     public function execute($timeout = 10)
     {
         try {
-//            if (empty($this->params)) {
-//                $this->data = $this->pdo->query($this->sql, $timeout);
-//            } else {
-//                $values = [];
-//                foreach ($this->params as $name => $value) {
-//                    $this->sql = preg_replace('/' . $name . '/', '?', $this->sql, 1);
-//                    $values[] = $value;
-//                }
-//                $statement = $this->pdo->prepare($this->sql);
-//                if (!$statement instanceof \Swoole\Coroutine\MySQL\Statement) {
-//                    throw new ServerErrorHttpException($this->pdo->connect_error);
-//                } else {
-//                    $this->data = $statement->execute($values);
-//                    if ($this->data === false) {
-//                        throw new ServerErrorHttpException($this->pdo->connect_error);
-//                    }
-//                }
+            $values = [];
+            foreach ($this->params as $name => $value) {
+                $this->sql = preg_replace('/' . $name . '/', '?', $this->sql, 1);
+                $values[] = $value;
+            }
 
-            $this->data = $this->pdo->query($this->sql, $timeout);
+            $statement = $this->pdo->prepare($this->sql);
+            if (!$statement instanceof \Swoole\Coroutine\MySQL\Statement) {
+                throw new Exception($this->pdo->error);
+            } else {
+                $this->data = $statement->execute($values, $timeout);
+                if ($this->data === false) {
+                    throw new Exception($this->pdo->error);
+                }
+            }
         } catch (\Exception $e) {
-            Yii::error($e->getMessage());
+            throw $e;
         } finally {
             $this->db->release();
         }
@@ -64,7 +64,7 @@ class Statement extends BaseObject
     public function fetch($fetch_style = null, $cursor_orientation = \PDO::FETCH_ORI_NEXT, $cursor_offset = 0)
     {
         if (!is_array($this->data)) {
-            return $this->data;
+            return [];
         }
         $result = [];
         switch ($fetch_style) {
@@ -80,7 +80,7 @@ class Statement extends BaseObject
     public function fetchColumn($column_number = 0)
     {
         if (!is_array($this->data)) {
-            return $this->data;
+            return [];
         }
         $val = array_shift($this->data);
         return $this->getColumn($val);
@@ -105,7 +105,7 @@ class Statement extends BaseObject
     public function fetchAll($fetch_style = null, $fetch_argument = null, array $ctor_args = array())
     {
         if (!is_array($this->data)) {
-            return $this->data;
+            return [];
         }
         $result = [];
         switch ($fetch_style) {

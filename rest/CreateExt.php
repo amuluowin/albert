@@ -3,6 +3,7 @@
 namespace yii\swoole\rest;
 
 use Yii;
+use yii\db\Exception;
 use yii\swoole\helpers\ArrayHelper;
 use yii\web\ServerErrorHttpException;
 
@@ -45,7 +46,7 @@ class CreateExt extends \yii\base\Object
             if ($transaction->getIsActive()) {
                 $transaction->commit();
             }
-        } catch (\Exception $ex) {
+        } catch (Exception $ex) {
             $transaction->rollBack();
             throw $ex;
         }
