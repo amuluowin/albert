@@ -63,8 +63,8 @@ class Statement extends BaseObject
 
     public function fetch($fetch_style = null, $cursor_orientation = \PDO::FETCH_ORI_NEXT, $cursor_offset = 0)
     {
-        if (!is_array($this->data)) {
-            return [];
+        if (!is_array($this->data) || !$this->data) {
+            return $this->data;
         }
         $result = [];
         switch ($fetch_style) {
@@ -79,8 +79,8 @@ class Statement extends BaseObject
 
     public function fetchColumn($column_number = 0)
     {
-        if (!is_array($this->data)) {
-            return [];
+        if (!is_array($this->data) || !$this->data) {
+            return $this->data;
         }
         $val = array_shift($this->data);
         return $this->getColumn($val);
@@ -104,8 +104,8 @@ class Statement extends BaseObject
 
     public function fetchAll($fetch_style = null, $fetch_argument = null, array $ctor_args = array())
     {
-        if (!is_array($this->data)) {
-            return [];
+        if (!is_array($this->data) || !$this->data) {
+            return $this->data;
         }
         $result = [];
         switch ($fetch_style) {
