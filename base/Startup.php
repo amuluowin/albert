@@ -9,9 +9,7 @@
 namespace yii\swoole\base;
 
 
-use yii\httpclient\Client;
 use yii\swoole\Application;
-use yii\swoole\configcenter\ConfigInterface;
 
 class Startup
 {

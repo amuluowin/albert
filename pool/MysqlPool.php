@@ -4,7 +4,6 @@ namespace yii\swoole\pool;
 
 use Yii;
 use yii\db\Exception;
-use yii\web\ServerErrorHttpException;
 
 class MysqlPool extends \yii\swoole\pool\IPool
 {

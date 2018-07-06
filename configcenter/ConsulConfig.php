@@ -10,10 +10,9 @@ namespace yii\swoole\configcenter;
 
 use Yii;
 use yii\base\Component;
-use yii\swoole\base\Output;
-use yii\swoole\consul\ConsulClient;
-use yii\swoole\consul\ConsulTrait;
 use yii\httpclient\Client;
+use yii\swoole\base\Output;
+use yii\swoole\consul\ConsulTrait;
 
 class ConsulConfig extends Component implements ConfigInterface
 {

@@ -9,7 +9,6 @@
 namespace yii\swoole\consul;
 
 use Yii;
-use yii\base\Component;
 
 trait ConsulTrait
 {

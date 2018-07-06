@@ -5,7 +5,6 @@ namespace yii\swoole\pool;
 use Yii;
 use yii\base\Exception;
 use yii\swoole\helpers\ArrayHelper;
-use yii\web\ServerErrorHttpException;
 
 class RedisPool extends \yii\swoole\pool\IPool
 {

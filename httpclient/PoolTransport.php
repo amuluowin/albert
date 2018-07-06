@@ -3,7 +3,6 @@
 namespace yii\swoole\httpclient;
 
 use Yii;
-use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\pool\HttpPool;
 
 class PoolTransport extends SwooleTransport

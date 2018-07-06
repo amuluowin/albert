@@ -8,14 +8,12 @@
 
 namespace yii\swoole\timertask;
 
-use Yii;
 use Swoole\Table as SwooleTable;
-use yii\base\BaseObject;
+use Yii;
 use yii\base\Component;
 use yii\swoole\base\BootInterface;
 use yii\swoole\memory\Table;
 use yii\swoole\server\Server;
-use yii\swoole\timertask\model\TaskModel;
 
 class TaskBoot extends Component implements BootInterface
 {

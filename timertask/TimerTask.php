@@ -11,8 +11,6 @@ namespace yii\swoole\timertask;
 use Yii;
 use yii\base\Component;
 use yii\base\ErrorException;
-use yii\base\Exception;
-use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\helpers\SerializeHelper;
 use yii\swoole\memory\Table;
 use yii\swoole\timertask\model\TaskModel;

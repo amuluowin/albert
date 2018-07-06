@@ -3,7 +3,6 @@
 namespace yii\swoole\web;
 
 use Yii;
-use yii\base\ErrorException;
 use yii\swoole\helpers\CoroHelper;
 
 trait HttpTrait
