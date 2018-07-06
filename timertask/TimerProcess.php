@@ -39,7 +39,7 @@ class TimerProcess extends BaseProcess
             foreach ($timerTask->getTasks() as $model) {
                 $model = new TaskModel($model);
                 $startTime = $model->startDate ? strtotime($model->startDate) : $model->startDate;
-                if ($model->taskId === 0 && $model->status === TaskModel::Task_READY && $startTime >= $now) {
+                if ($model->taskId === 0 && $model->status === TaskModel::Task_READY && (($startTime && $startTime >= $now) || !$startTime)) {
                     $timerTask->setTaskStatus($model, TaskModel::TASK_PROCESSING);
                     $model->taskId = $model->ticket ? \Swoole\Timer::tick($model->ticket * 1000, function (int $tick_id) use ($timerTask, $model) {
                         $timerTask->timerCallback($tick_id, $model);
@@ -47,7 +47,7 @@ class TimerProcess extends BaseProcess
                 }
 
                 $endTime = $model->endDate ? strtotime($model->endDate) : $model->endDate;
-                if ($model->taskId > 0 && $endTime <= $now) {
+                if ($model->taskId > 0 && ($endTime && $endTime <= $now)) {
                     $timerTask->setTaskStatus($model, TaskModel::TASK_FINISH);
                     $timerTask->clearTimer($model->taskId, $model);
                 }

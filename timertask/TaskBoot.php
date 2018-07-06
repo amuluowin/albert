@@ -30,7 +30,7 @@ class TaskBoot extends Component implements BootInterface
             'id' => [SwooleTable::TYPE_INT, '11'],
             'service' => [SwooleTable::TYPE_STRING, '32'],
             'route' => [SwooleTable::TYPE_STRING, '16'],
-            'method' => [SwooleTable::TYPE_STRING, '16'],
+            'method' => [SwooleTable::TYPE_STRING, '32'],
             'ticket' => [SwooleTable::TYPE_INT, '14'],
             'num' => [SwooleTable::TYPE_INT, '4'],
             'total' => [SwooleTable::TYPE_INT, '4'],

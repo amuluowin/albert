@@ -65,11 +65,16 @@ class TimerTask extends Component
         return Yii::$app->rpc->call($model->service, $model->route)->{$model->method}($model->params);
     }
 
+    private function createKey(TaskModel $model): string
+    {
+        return $this->keyPrefix . md5($model->service . $model->route . $model->method . $item['params']);
+    }
+
     private function saveTask(TaskModel $model, bool $isCheck = true)
     {
         $item = $model->toArray();
         $item['params'] = SerializeHelper::serialize($item['params']);
-        $key = $this->keyPrefix . md5($item['params']);
+        $key = $this->createKey($model);
         if ($isCheck) {
             $this->checkTask($key);
         }
@@ -80,7 +85,7 @@ class TimerTask extends Component
     {
         $item = $model->toArray();
         $item['params'] = SerializeHelper::serialize($item['params']);
-        $key = $this->keyPrefix . md5($item['params']);
+        $key = $this->createKey($model);
         $item = $this->table->get($key);
         $item['params'] = SerializeHelper::unserialize($item['params']);
         $model->load($item, '');
@@ -91,7 +96,7 @@ class TimerTask extends Component
     {
         $item = $model->toArray();
         $item['params'] = SerializeHelper::serialize($item['params']);
-        $key = $this->keyPrefix . md5($item['params']);
+        $key = $this->createKey($model);
         $this->table->del($key);
         return $model;
     }
@@ -114,7 +119,7 @@ class TimerTask extends Component
         return $model;
     }
 
-    public function timerCallback(int $id, TaskModel $model): array
+    public function timerCallback(int $id, TaskModel $model)
     {
         $model = $this->getTask($model);
         if ($model->status !== TaskModel::TASK_PAUSE) {
@@ -126,14 +131,17 @@ class TimerTask extends Component
                 return $id;
             }
             $result = Yii::$app->rpc->call($model->service, $model->route)->{$model->method}($model->params);
-            if ($result['status']) {
-                $model->succeceRun++;
+            if (is_array($result)) {
+                if ($result['status']) {
+                    $model->succeceRun++;
+                } else {
+                    $model->failRun++;
+                }
             } else {
                 $model->failRun++;
             }
             $this->saveTask($model, false);
         }
-        return $result;
     }
 
     public function clearTimer(int $id, TaskModel $model): TaskModel
