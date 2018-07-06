@@ -20,7 +20,7 @@ class TimerTask extends Component
     /**
      * @var Table
      */
-    private $table;
+    protected $table;
 
     /**
      * @var string
@@ -119,7 +119,7 @@ class TimerTask extends Component
         return $model;
     }
 
-    public function timerCallback(int $id, TaskModel $model)
+    public function timerCallback(int $id, TaskModel $model): TaskModel
     {
         $model = $this->getTask($model);
         if ($model->status !== TaskModel::TASK_PAUSE) {
@@ -142,6 +142,7 @@ class TimerTask extends Component
             }
             $this->saveTask($model, false);
         }
+        return $model;
     }
 
     public function clearTimer(int $id, TaskModel $model): TaskModel
