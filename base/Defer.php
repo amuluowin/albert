@@ -11,7 +11,7 @@ namespace yii\swoole\base;
 
 trait Defer
 {
-    protected $defer = false;
+    public $defer = false;
 
     public function defer()
     {
