@@ -4,10 +4,12 @@ namespace yii\swoole\rpc;
 
 use Yii;
 use yii\base\Component;
+use yii\swoole\base\Defer;
 use yii\swoole\helpers\CoroHelper;
 
 class RpcClient extends Component
 {
+    use Defer;
     /**
      * @var IRpcClient
      */
@@ -70,6 +72,10 @@ class RpcClient extends Component
         } else {
             $client = is_array($this->config_r) ? Yii::createObject($this->config_r) : clone $this->config_r;
         }
+        /**
+         * @var IRpcClient $client
+         */
+        $client->defer = $this->defer ?: $client->defer;
         return $client->$name(...$params);
     }
 }
