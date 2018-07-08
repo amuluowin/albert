@@ -84,13 +84,13 @@ class Connection extends \yii\swoole\db\Connection implements ICoroutine
 
     public function release($conn = null)
     {
+        $id = CoroHelper::getId();
+        $this->insertId[$id] = $this->pdo[$id]->insert_id;
         $transaction = $this->getTransaction();
         if (!empty($transaction) && $transaction->getIsActive()) {//事务里面不释放连接
             return;
         }
-        $id = CoroHelper::getId();
         if (Yii::$container->hasSingleton('mysqlclient') && isset($this->pdo[$id])) {
-            $this->insertId[$id] = $this->pdo[$id]->insert_id;
             Yii::$container->get('mysqlclient')->recycle($this->pdo[$id]);
             unset($this->pdo[$id]);
             unset($this->_master[$id]);
