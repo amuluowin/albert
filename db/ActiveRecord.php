@@ -17,7 +17,7 @@ class ActiveRecord extends \yii\db\ActiveRecord
 
     public $sceneList = [];
 
-    public static function addQuery(Query &$query, $alias)
+    public static function addQuery(&$query, $alias)
     {
     }
 
