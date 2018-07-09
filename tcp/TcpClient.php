@@ -93,7 +93,9 @@ class TcpClient extends BaseClient implements ICoroutine
         $data = $class->encode(...([$this->getData(), $params]));
         $this->getClient()->send($data);
         $this->trigger(self::EVENT_AFTER_SEND);
-        if ($this->defer) {
+        $id = CoroHelper::getId();
+        if ($this->IsDefer) {
+            $this->IsDefer = false;
             return $this;
         }
         return $this->recv();

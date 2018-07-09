@@ -75,7 +75,10 @@ class RpcClient extends Component
         /**
          * @var IRpcClient $client
          */
-        $client->defer = $this->defer ?: $client->defer;
+        if ($this->IsDefer) {
+            $client->IsDefer = $this->IsDefer;
+            return $this;
+        }
         return $client->$name(...$params);
     }
 }
