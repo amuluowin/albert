@@ -14,6 +14,7 @@ use yii\swoole\base\Defer;
 use yii\swoole\coroutine\BaseClient;
 use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\pool\HttpPool;
+use yii\web\ServerErrorHttpException;
 
 class WsClient extends Component implements ICoroutine
 {
@@ -67,13 +68,16 @@ class WsClient extends Component implements ICoroutine
         $this->client->setHeaders([
             'UserAgent' => 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.75 Safari/537.36'
         ]);
-        $this->client->upgrade($route);
-        $this->client->push(json_encode($data));
-        if ($this->IsDefer) {
-            $this->IsDefer = false;
-            return clone $this;
+        if ($this->client->upgrade($route)) {
+            if ($this->client->push(json_encode($data))) {
+                if ($this->IsDefer) {
+                    $this->IsDefer = false;
+                    return clone $this;
+                }
+                return $this->recv();
+            }
         }
-        return $this->recv();
+        throw new ServerErrorHttpException(sprintf('can not send data to %s', $key));
     }
 
     public function release()

@@ -9,8 +9,8 @@ use Yii;
 use yii\helpers\ArrayHelper;
 use yii\swoole\base\SingletonTrait;
 use yii\swoole\server\HttpServer;
-use yii\swoole\web\WsAuthInterface;
-use yii\swoole\web\WsSendInterface;
+use yii\swoole\websocket\WsAuthInterface;
+use yii\swoole\websocket\WsSendInterface;
 
 /**
  * WebSocket服务器
@@ -37,7 +37,7 @@ class WebsocketServer extends HttpServer
 
     function onOpen($server, $request)
     {
-        if (isset($this->config['wsAuth']) && !$this->wsAuth) {
+        if (isset($this->config['wsAuth']) && !$this->wsAuth instanceof WsAuthInterface) {
             $this->wsAuth = Yii::createObject($this->config['wsAuth']);
         } else {
             $server->close($request->fd);
@@ -49,7 +49,7 @@ class WebsocketServer extends HttpServer
             return;
         }
 
-        if (isset($this->config['wsSend']) && !$this->wsSend) {
+        if (isset($this->config['wsSend']) && !$this->wsSend instanceof WsSendInterface) {
             $this->wsSend = Yii::createObject($this->config['wsSend']);
         }
     }
@@ -72,21 +72,12 @@ class WebsocketServer extends HttpServer
 
             Yii::$app->beforeRun();
             try {
-                //判断转发RPC
-                $route = substr($cmd, 0, strrpos($cmd, '/'));
-                if (!in_array($route, Yii::$rpcList)
-                    || in_array($route, ArrayHelper::getValue(Yii::$app->rpc, 'remoteList', []))
-                ) {
-                    $response->data = Yii::$app->rpc->send([$cmd, [$query, $body]])->recv();
-                    $response->format = 'json';
-                } else {
-                    $request->setBodyParams($body);
-                    $request->setHostInfo(null);
-                    $request->setUrl($cmd);
-                    $request->setRawBody(json_encode($body));
-                    $request->setQueryParams($query);
-                    $response->data = Yii::$app->runAction($cmd, $query);
-                }
+                $request->setBodyParams($body);
+                $request->setHostInfo(null);
+                $request->setUrl($cmd);
+                $request->setRawBody(json_encode($body));
+                $request->setQueryParams($query);
+                $response->data = Yii::$app->runAction($cmd, $query);
             } catch (\Exception $e) {
                 Yii::error($e->getMessage());
             } finally {
