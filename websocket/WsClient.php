@@ -52,7 +52,6 @@ class WsClient extends Component implements ICoroutine
 
     public function recv()
     {
-        var_dump($this->getClient());
         $result = $this->getClient()->recv($this->timeout);
         $this->release();
         return $result;
@@ -84,6 +83,7 @@ class WsClient extends Component implements ICoroutine
         $conn->setHeaders([
             'UserAgent' => 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.75 Safari/537.36'
         ]);
+        $conn->upgrade($route);
         $this->setClient($conn);
         $this->getClient()->push(json_encode($data));
         if ($this->IsDefer) {

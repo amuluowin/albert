@@ -74,9 +74,8 @@ class TcpClient extends IRpcClient
         $data['fastCall'] = Yii::$app->rpc->fastCall;
         $data = Yii::$app->rpc->beforeSend($data);
         $this->client->send(TcpPack::encode($data, 'rpc'));
-        $id = CoroHelper::getId();
-        if (isset($this->defer[$id]) && $this->defer[$id]) {
-            $this->defer[$id] = false;
+        if ($this->IsDefer) {
+            $this->IsDefer = false;
             return $this;
         }
         return $this->recv();

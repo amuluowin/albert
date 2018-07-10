@@ -83,7 +83,6 @@ class SocketClient extends BaseClient implements ICoroutine
         $this->trigger(self::EVENT_BEFORE_SEND);
         $this->getClient()->send($data);
         $this->trigger(self::EVENT_AFTER_SEND);
-        $id = CoroHelper::getId();
         if ($this->IsDefer) {
             $this->IsDefer = false;
             return $this;
