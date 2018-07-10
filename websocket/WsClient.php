@@ -45,7 +45,7 @@ class WsClient extends Component implements ICoroutine
         return $result;
     }
 
-    public function send(string $uri, int $port, string $route, array $data)
+    public function send(string $uri, int $port, string $route, array $data, ?array $headers = [], ?array $option = [])
     {
         $key = sprintf('ws:%s:%d', $uri, $port);
         if (!Yii::$container->hasSingleton('wsclient')) {
@@ -65,9 +65,9 @@ class WsClient extends Component implements ICoroutine
                 ->fetch($key);
         }
 
-        $this->client->setHeaders([
-            'UserAgent' => 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.75 Safari/537.36'
-        ]);
+        $this->client->set($option);
+        $this->client->setHeaders($headers);
+
         if ($this->client->upgrade($route)) {
             if ($this->client->push(json_encode($data))) {
                 if ($this->IsDefer) {
