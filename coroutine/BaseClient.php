@@ -29,5 +29,5 @@ abstract class BaseClient extends \yii\base\Component
 
     abstract public function send($uri, $port, $data);
 
-    abstract public function recv();
+    abstract public function recv(float $timeout = 0);
 }

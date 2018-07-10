@@ -20,7 +20,7 @@ class TcpClient extends IRpcClient
     /**
      * @var Client
      */
-    public $client;
+    private $client;
 
     /**
      * @var float
@@ -34,7 +34,6 @@ class TcpClient extends IRpcClient
 
     public function recv()
     {
-        $this->defer = false;
         $result = TcpPack::decode($this->client->recv($this->timeout), 'rpc');
         Yii::$app->rpc->afterRecv($result);
         Yii::$container->get('tcpclient')->recycle($this->client);

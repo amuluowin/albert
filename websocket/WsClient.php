@@ -13,7 +13,6 @@ use yii\base\Component;
 use yii\swoole\base\Defer;
 use yii\swoole\coroutine\BaseClient;
 use yii\swoole\coroutine\ICoroutine;
-use yii\swoole\helpers\CoroHelper;
 use yii\swoole\pool\HttpPool;
 
 class WsClient extends Component implements ICoroutine
@@ -27,7 +26,7 @@ class WsClient extends Component implements ICoroutine
     /**
      * @var array
      */
-    private $client = [];
+    private $client;
 
     /**
      * @var int
@@ -38,21 +37,9 @@ class WsClient extends Component implements ICoroutine
      */
     public $busy_pool = 30;
 
-    public function getClient(): ?\Swoole\Coroutine\Http\Client
+    public function recv(float $timeout = 0)
     {
-        $id = CoroHelper::getId();
-        return isset($this->client[$id]) ? $this->client[$id] : null;
-    }
-
-    public function setClient($value)
-    {
-        $id = CoroHelper::getId();
-        $this->client[$id] = $value;
-    }
-
-    public function recv()
-    {
-        $result = $this->getClient()->recv($this->timeout);
+        $result = $this->client->recv($timeout ?: $this->timeout);
         $this->release();
         return $result;
     }
@@ -65,8 +52,8 @@ class WsClient extends Component implements ICoroutine
                 'class' => HttpPool::class
             ]);
         }
-        if (($conn = Yii::$container->get('wsclient')->fetch($key)) === null) {
-            $conn = Yii::$container->get('wsclient')->create($key,
+        if (($this->client = Yii::$container->get('wsclient')->fetch($key)) === null) {
+            $this->client = Yii::$container->get('wsclient')->create($key,
                 [
                     'hostname' => $uri,
                     'port' => $port,
@@ -77,29 +64,23 @@ class WsClient extends Component implements ICoroutine
                 ->fetch($key);
         }
 
-        $conn->set([
-            'websocket_mask' => true,
-        ]);
-        $conn->setHeaders([
+        $this->client->setHeaders([
             'UserAgent' => 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.75 Safari/537.36'
         ]);
-        $conn->upgrade($route);
-        $this->setClient($conn);
-        $this->getClient()->push(json_encode($data));
+        $this->client->upgrade($route);
+        $this->client->push(json_encode($data));
         if ($this->IsDefer) {
             $this->IsDefer = false;
-            return $this;
+            return clone $this;
         }
         return $this->recv();
     }
 
     public function release()
     {
-        $id = CoroHelper::getId();
-        if (Yii::$container->hasSingleton('wsclient') && isset($this->client[$id])) {
-            Yii::$container->get('wsclient')->recycle($this->client[$id]);
-            unset($this->client[$id]);
-            unset($this->defer[$id]);
+        if (Yii::$container->hasSingleton('wsclient') && $this->client) {
+            Yii::$container->get('wsclient')->recycle($this->client);
+            unset($this->client);
         }
     }
 }

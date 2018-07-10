@@ -68,9 +68,9 @@ class RpcClient extends Component
     {
         list($ser, $route) = $this->getService();
         if (!isset(Yii::$rpcList) || (key_exists($ser, Yii::$rpcList) && in_array($route, Yii::$rpcList[$ser]))) {
-            $client = is_array($this->config_n) ? Yii::createObject($this->config_n) : clone $this->config_n;
+            $client = is_array($this->config_n) ? clone Yii::createObject($this->config_n) : clone $this->config_n;
         } else {
-            $client = is_array($this->config_r) ? Yii::createObject($this->config_r) : clone $this->config_r;
+            $client = is_array($this->config_r) ? clone Yii::createObject($this->config_r) : clone $this->config_r;
         }
         /**
          * @var IRpcClient $client

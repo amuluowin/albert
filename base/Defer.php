@@ -8,29 +8,23 @@
 
 namespace yii\swoole\base;
 
-
-use yii\swoole\helpers\CoroHelper;
-
 trait Defer
 {
-    private $_isDefer = [];
+    private $_isDefer;
 
     public function getIsDefer()
     {
-        $id = CoroHelper::getId();
-        return $this->_isDefer[$id];
+        return $this->_isDefer;
     }
 
     public function setIsDefer(bool $defer)
     {
-        $id = CoroHelper::getId();
-        $this->_isDefer[$id] = $defer;
+        $this->_isDefer = $defer;
     }
 
     public function defer()
     {
-        $id = CoroHelper::getId();
-        $this->_isDefer[$id] = true;
+        $this->_isDefer = true;
         return $this;
     }
 }
