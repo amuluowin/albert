@@ -38,7 +38,7 @@ abstract class BaseProcess extends \yii\base\Component
             $this->start();
         } else {
             $p = new \swoole_process(function ($process) {
-                $process->name('swoole-' . $this->name);
+                $process->name((APP_NAME ?: 'swoole') . '-' . $this->name);
                 if ($this->isCo) {
                     go(function () {
                         $this->start();
