@@ -81,25 +81,26 @@ class Connection extends \yii\redis\Connection implements ICoroutine
                 $this->client->{$name}(...$params);
                 return clone $this;
             }
-            return $this->client->{$name}(...$params);
+            $result = $this->client->{$name}(...$params);
+            $this->release();
+            return $result;
         } catch (\Exception $e) {
             throw $e;
-        } finally {
-            $this->release();
         }
     }
 
     public function recv(float $timeout = 0)
     {
-        return $this->recv($timeout ?: $this->timeout);
+        $result = $this->recv($timeout ?: $this->timeout);
+        $this->release();
+        return $result;
     }
 
     public function release()
     {
-        $id = CoroHelper::getId();
         if (Yii::$container->hasSingleton('redisclient') && $this->client) {
             Yii::$container->get('redisclient')->recycle($this->client);
-            unset($this->client);
+            $this->client = null;
         }
     }
 }

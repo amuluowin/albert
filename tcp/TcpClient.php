@@ -71,10 +71,9 @@ class TcpClient extends BaseClient implements ICoroutine
 
     public function release()
     {
-        $id = CoroHelper::getId();
         if (Yii::$container->hasSingleton('tcpclient') && $this->client) {
             Yii::$container->get('tcpclient')->recycle($this->client);
-            unset($this->client);
+            $this->client = null;
         }
     }
 

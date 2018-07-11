@@ -96,7 +96,7 @@ class WsClient extends Component implements ICoroutine
     {
         if (Yii::$container->hasSingleton('wsclient') && $this->client) {
             Yii::$container->get('wsclient')->recycle($this->client);
-            unset($this->client);
+            $this->client = null;
         }
     }
 }

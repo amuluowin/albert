@@ -4,9 +4,11 @@ namespace yii\swoole\rpc;
 
 use Swoole\Coroutine\Client;
 use Yii;
+use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\pack\TcpPack;
+use yii\swoole\pool\TcpPool;
 
-class TcpClient extends IRpcClient
+class TcpClient extends IRpcClient implements ICoroutine
 {
     /**
      * @var int
@@ -36,7 +38,7 @@ class TcpClient extends IRpcClient
     {
         $result = TcpPack::decode($this->client->recv($this->timeout), 'rpc');
         Yii::$app->rpc->afterRecv($result);
-        Yii::$container->get('tcpclient')->recycle($this->client);
+        $this->release();
         if ($result instanceof \Exception) {
             throw $result;
         }
@@ -52,7 +54,7 @@ class TcpClient extends IRpcClient
         $key = sprintf('rpc:%s:%d', $server, $port);
         if (!Yii::$container->hasSingleton('tcpclient')) {
             Yii::$container->setSingleton('tcpclient', [
-                'class' => 'yii\swoole\pool\TcpPool'
+                'class' => TcpPool::class
             ]);
         }
         if (($this->client = Yii::$container->get('tcpclient')->fetch($key)) === null) {
@@ -78,5 +80,13 @@ class TcpClient extends IRpcClient
             return $this;
         }
         return $this->recv();
+    }
+
+    public function release()
+    {
+        if (Yii::$container->hasSingleton('tcpclient') && $this->client) {
+            Yii::$container->get('tcpclient')->recycle($this->client);
+            $this->client = null;
+        }
     }
 }
