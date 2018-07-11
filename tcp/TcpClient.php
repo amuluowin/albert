@@ -20,7 +20,7 @@ class TcpClient extends BaseClient implements ICoroutine
     /**
      * @var array
      */
-    private $client;
+    public $client;
 
     public function recv(float $timeout = 0)
     {

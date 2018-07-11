@@ -27,7 +27,7 @@ class WsClient extends Component implements ICoroutine
     /**
      * @var array
      */
-    private $client;
+    public $client;
 
     /**
      * @var int
@@ -38,6 +38,11 @@ class WsClient extends Component implements ICoroutine
      */
     public $busy_pool = 30;
 
+    public function getClient()
+    {
+        return $this->client;
+    }
+
     public function recv(float $timeout = 0)
     {
         $result = $this->client->recv($timeout ?: $this->timeout);
@@ -45,7 +50,7 @@ class WsClient extends Component implements ICoroutine
         return $result;
     }
 
-    public function send(string $uri, int $port, string $route, array $data, ?array $headers = [], ?array $option = [])
+    public function connect(string $uri, int $port)
     {
         $key = sprintf('ws:%s:%d', $uri, $port);
         if (!Yii::$container->hasSingleton('wsclient')) {
@@ -64,19 +69,26 @@ class WsClient extends Component implements ICoroutine
                 ])
                 ->fetch($key);
         }
+        return $this;
+    }
 
-        $this->client->set($option);
+    public function handShake(array $params)
+    {
+        $route = array_shift($headers);
         $this->client->setHeaders($headers);
+        return $this->client->upgrade($route);
+    }
 
-        if ($this->client->upgrade($route)) {
-            if ($this->client->push(json_encode($data))) {
-                if ($this->IsDefer) {
-                    $this->IsDefer = false;
-                    return clone $this;
-                }
-                return $this->recv();
+    public function send(string $data)
+    {
+        if ($this->client->push($data)) {
+            if ($this->IsDefer) {
+                $this->IsDefer = false;
+                return clone $this;
             }
+            return $this->recv();
         }
+
         throw new ServerErrorHttpException(sprintf('can not send data to %s', $key));
     }
 

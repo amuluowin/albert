@@ -20,7 +20,7 @@ class TcpClient extends IRpcClient
     /**
      * @var Client
      */
-    private $client;
+    public $client;
 
     /**
      * @var float

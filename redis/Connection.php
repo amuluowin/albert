@@ -18,7 +18,7 @@ class Connection extends \yii\redis\Connection implements ICoroutine
     //超时
     public $timeout = 0.5;
     //连接
-    private $client;
+    public $client;
     //key
     private $key;
 
