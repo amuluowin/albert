@@ -2,6 +2,7 @@
 namespace yii\swoole\controllers;
 
 use Yii;
+use yii\base\Controller;
 use yii\swoole\Application;
 
 trait CreateCtrlTrait
@@ -32,7 +33,7 @@ trait CreateCtrlTrait
             // 清空id和module的引用
             $controller->id = null;
             $controller->module = null;
-            self::$controllerIdCache[$id] = clone $controller;
+            self::$controllerIdCache[$id] = $controller;
         }
 
         /** @var Controller $controller */

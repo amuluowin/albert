@@ -38,10 +38,6 @@ class WsClient extends Component implements ICoroutine
      */
     public $busy_pool = 30;
 
-    public function getClient()
-    {
-        return $this->client;
-    }
 
     public function recv(float $timeout = 0)
     {
@@ -74,9 +70,10 @@ class WsClient extends Component implements ICoroutine
 
     public function handShake(array $params)
     {
-        $route = array_shift($headers);
-        $this->client->setHeaders($headers);
-        return $this->client->upgrade($route);
+        $route = array_shift($params);
+        $this->client->setHeaders($params);
+        $result = ($this->client->upgrade($route) && $this->client->statusCode === 101);
+        return $result;
     }
 
     public function send(string $data)
