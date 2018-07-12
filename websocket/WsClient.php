@@ -65,6 +65,9 @@ class WsClient extends Component implements ICoroutine
                 ])
                 ->fetch($key);
         }
+        $this->client->set([
+            'websocket_mask' => true
+        ]);
         return $this;
     }
 
