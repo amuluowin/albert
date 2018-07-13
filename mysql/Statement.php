@@ -13,7 +13,7 @@ class Statement extends BaseObject
      */
     public $db;
     private $sql;
-    private $pdo;
+    public $pdo;
     private $params = [];
     private $mode;
     private $data;
@@ -55,7 +55,7 @@ class Statement extends BaseObject
         } catch (\Exception $e) {
             throw $e;
         } finally {
-            $this->db->release();
+            $this->db->release($this->pdo);
         }
     }
 

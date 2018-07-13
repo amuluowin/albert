@@ -52,8 +52,8 @@ class Command extends \yii\db\Command
             $this->bindPendingParams();
         } catch (\Exception $e) {
             $message = $e->getMessage() . "\nFailed to prepare SQL: $sql";
-            $errorInfo = $e instanceof \PDOException ? $e->errorInfo : null;
-            $this->db->release();
+            $errorInfo = $pdo->error;
+            $this->db->release($pdo);
             throw new Exception($message, $errorInfo, (int)$e->getCode(), $e);
         }
     }
@@ -85,7 +85,7 @@ class Command extends \yii\db\Command
             return $n;
         } catch (\Exception $e) {
             $profile and Yii::endProfile($rawSql, __METHOD__);
-            $this->db->release();
+            $this->db->release($this->pdoStatement->pdo);
             throw $this->db->getSchema()->convertException($e, $rawSql ?: $this->getRawSql());
         }
     }
@@ -151,6 +151,7 @@ class Command extends \yii\db\Command
             $profile and Yii::endProfile($rawSql, 'yii\db\Command::query');
         } catch (Exception $e) {
             $profile and Yii::endProfile($rawSql, 'yii\db\Command::query');
+            $this->db->release($this->pdoStatement->pdo);
             throw $e;
         }
 
