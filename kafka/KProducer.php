@@ -12,9 +12,10 @@ use Kafka\ProducerConfig;
 use Psr\Log\LoggerInterface;
 use Yii;
 use yii\base\BaseObject;
+use yii\base\Component;
 use yii\swoole\kafka\Producer\CoroProducer;
 
-class KProducer extends BaseObject
+class KProducer extends Component
 {
     /**
      * @var CoroProducer

@@ -11,7 +11,7 @@ class TcpPool extends \yii\swoole\pool\IPool
     public function createConn(string $connName, $conn = null)
     {
         if (!$conn) {
-            $conn = new \Swoole\Coroutine\Client(SWOOLE_SOCK_TCP | SWOOLE_KEEP);
+            $conn = new \Swoole\Coroutine\Client(SWOOLE_SOCK_TCP);
             $this->saveConn($connName, $conn);
         }
         $this->reConnect($conn, $connName);

@@ -8,12 +8,11 @@
 
 namespace yii\swoole\kafka;
 
-use Kafka\Consumer;
-use Kafka\Producer;
 use Monolog\Handler\StdoutHandler;
 use Psr\Log\LoggerInterface;
 use Yii;
 use yii\base\Component;
+use yii\swoole\tcp\TcpClient;
 
 class Kafka extends Component
 {
@@ -27,25 +26,25 @@ class Kafka extends Component
      */
     public $producer;
     public $logger;
+
+    /**
+     * @var TcpClient
+     */
     public $socket;
 
     public function init()
     {
         parent::init();
 
-        if (is_array($this->consumer)) {
+        if (!$this->consumer instanceof KConsumer) {
             $this->consumer = Yii::createObject($this->consumer);
-        } else {
-            $this->consumer = new KConsumer();
         }
 
-        if (is_array($this->producer)) {
+        if (!$this->producer instanceof KProducer) {
             $this->producer = Yii::createObject($this->producer);
-        } else {
-            $this->producer = new KProducer();
         }
 
-        if (is_array($this->socket)) {
+        if (!$this->socket instanceof TcpClient) {
             $this->socket = Yii::createObject($this->socket);
         }
 

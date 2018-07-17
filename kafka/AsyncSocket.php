@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace yii\swoole\kafka;
 
 use Kafka\CommonSocket;
+use Kafka\Exception;
 use Kafka\Protocol\Protocol;
 use function fclose;
 use function feof;
@@ -19,17 +20,17 @@ class AsyncSocket extends CommonSocket
     /**
      * @var string
      */
-    private $readBuffer = '';
-
-    /**
-     * @var int
-     */
-    private $readNeedLength = 0;
+    private $writeData = [];
 
     /**
      * @var callable|null
      */
     private $onReadable;
+
+    /**
+     * @var int
+     */
+    private $sockStatus = 0;
 
     public function connect(): void
     {
@@ -39,18 +40,54 @@ class AsyncSocket extends CommonSocket
 
         $this->createStream();
 
-        stream_set_blocking($this->stream, false);
-        stream_set_read_buffer($this->stream, 0);
-
-        swoole_event_add($this->stream, function ($fd) {
-            $newData = @fread($this->stream, self::READ_MAX_LENGTH);
-
-            if ($newData) {
-                $this->read($newData);
-            }
-        }, function ($fd) {
+        $this->stream->on("connect", function ($cli) {
             $this->write();
         });
+
+        $this->stream->on("receive", function ($cli, $data) {
+            $this->read($data);
+        });
+
+        $this->stream->on("close", function ($cli) {
+            $this->sockStatus = 0;
+        });
+
+        $this->stream->on("error", function ($cli) {
+            $this->sockStatus = 0;
+            throw new Exception(
+                sprintf('Could not connect to %s:%d (%s [%d])', $this->host, $this->port, @socket_strerror($this->stream->errCode), $this->stream->errCode)
+            );
+        });
+
+        $this->sockStatus = 1;
+        swoole_async_dns_lookup($this->host, function ($host, $ip) {
+            $this->host = $ip;
+            $this->stream->connect($ip, $this->port, 1);
+        });
+    }
+
+    /**
+     * @throws Exception
+     */
+    protected function createStream(): void
+    {
+        if (trim($this->host) === '') {
+            throw new Exception('Cannot open null host.');
+        }
+
+        if ($this->port <= 0) {
+            throw new Exception('Cannot open without port.');
+        }
+
+        $this->stream = new \swoole_client(SWOOLE_TCP | SWOOLE_ASYNC);
+
+        $this->stream->set(array(
+            'open_length_check' => 1,
+            'package_length_type' => 'N',
+            'package_length_offset' => 0,       //第N个字节是包长度的值
+            'package_body_offset' => 4,       //第几个字节开始计算长度
+            'package_max_length' => 2000000,  //协议最大长度
+        ));
     }
 
     public function reconnect(): void
@@ -66,18 +103,12 @@ class AsyncSocket extends CommonSocket
 
     public function close(): void
     {
-        swoole_event_del($this->stream);
-        if (is_resource($this->stream)) {
-            fclose($this->stream);
-        }
-
-        $this->readBuffer = '';
-        $this->readNeedLength = 0;
+        $this->stream->close();
     }
 
     public function isResource(): bool
     {
-        return is_resource($this->stream);
+        return is_resource($this->stream->getSocket());
     }
 
     /**
@@ -90,30 +121,7 @@ class AsyncSocket extends CommonSocket
      */
     public function read($data): void
     {
-        $this->readBuffer .= (string)$data;
-
-        do {
-            if ($this->readNeedLength === 0) { // response start
-                if (strlen($this->readBuffer) < 4) {
-                    return;
-                }
-
-                $dataLen = Protocol::unpack(Protocol::BIT_B32, substr($this->readBuffer, 0, 4));
-                $this->readNeedLength = $dataLen;
-                $this->readBuffer = substr($this->readBuffer, 4);
-            }
-
-            if (strlen($this->readBuffer) < $this->readNeedLength) {
-                return;
-            }
-
-            $data = (string)substr($this->readBuffer, 0, $this->readNeedLength);
-
-            $this->readBuffer = substr($this->readBuffer, $this->readNeedLength);
-            $this->readNeedLength = 0;
-
-            ($this->onReadable)($data, (int)$this->stream);
-        } while (strlen($this->readBuffer));
+        ($this->onReadable)($data, (int)$this->stream->sock);
     }
 
     /**
@@ -122,8 +130,14 @@ class AsyncSocket extends CommonSocket
      */
     public function write(?string $data = null): void
     {
-        if ($data !== null) {
-            swoole_event_write($this->stream, $data);
+        if ($data && !$this->stream->isConnected()) {
+            $this->writeData[] = $data;
+        } elseif ($this->stream->isConnected()) {
+            $this->writeData[] = $data;
+            foreach ($this->writeData as $data) {
+                $this->stream->send($data);
+            }
+            $this->writeData = [];
         }
     }
 
@@ -132,6 +146,6 @@ class AsyncSocket extends CommonSocket
      */
     protected function isSocketDead(): bool
     {
-        return !is_resource($this->stream) || @feof($this->stream);
+        return !$this->stream || $this->sockStatus === 0;
     }
 }

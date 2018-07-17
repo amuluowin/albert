@@ -12,10 +12,11 @@ use Kafka\ConsumerConfig;
 use Psr\Log\LoggerInterface;
 use Yii;
 use yii\base\BaseObject;
+use yii\base\Component;
 use yii\swoole\kafka\Consumer\Consumer;
 use yii\swoole\kafka\Targets\Target;
 
-class KConsumer extends BaseObject implements IKafkaControl
+class KConsumer extends Component implements IKafkaControl
 {
     public $refreshInterval = 1000;
     public $brokerList = 'localhost:9092';
