@@ -63,7 +63,7 @@ class CoroSocket extends CommonSocket
         if ($buffer === null) {
             throw new Exception('You must inform some data to be written');
         }
-
-        return $this->stream->send($this->host, $this->port, $buffer)->client->errCode;
+        $this->stream->defer()->send($this->host, $this->port, $buffer);
+        return $this->stream->client->errCode;
     }
 }

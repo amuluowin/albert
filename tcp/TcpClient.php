@@ -6,6 +6,8 @@ use Yii;
 use yii\swoole\coroutine\BaseClient;
 use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\helpers\CoroHelper;
+use yii\swoole\pack\TcpPack;
+use yii\swoole\pool\TcpPool;
 
 class TcpClient extends BaseClient implements ICoroutine
 {
@@ -16,7 +18,7 @@ class TcpClient extends BaseClient implements ICoroutine
     /**
      * @var array
      */
-    public $pack = ['yii\swoole\pack\TcpPack', 'tcp'];
+    public $pack;
     /**
      * @var array
      */
@@ -26,9 +28,11 @@ class TcpClient extends BaseClient implements ICoroutine
     {
         $this->trigger(self::EVENT_BEFORE_RECV);
         $result = $this->client->recv($timeout ?: $this->timeout);
-        list($class, $params) = $this->pack;
-        $class = Yii::createObject($class);
-        $result = $class->decode(...[$result, $params]);
+        if ($this->pack) {
+            list($class, $params) = $this->pack;
+            $class = Yii::createObject($class);
+            $result = $class->decode(...[$result, $params]);
+        }
         $this->trigger(self::EVENT_AFTER_RECV);
         $this->release();
         return $result;
@@ -39,7 +43,7 @@ class TcpClient extends BaseClient implements ICoroutine
         $key = sprintf('tcp:%s%d', $uri, $port);
         if (!Yii::$container->hasSingleton('tcpclient')) {
             Yii::$container->setSingleton('tcpclient', [
-                'class' => 'yii\swoole\pool\TcpPool'
+                'class' => TcpPool::class
             ]);
 
         }
@@ -57,9 +61,11 @@ class TcpClient extends BaseClient implements ICoroutine
         }
 
         $this->trigger(self::EVENT_BEFORE_SEND);
-        list($class, $params) = $this->pack;
-        $class = Yii::createObject($class);
-        $data = $class->encode(...([$this->getData(), $params]));
+        if ($this->pack) {
+            list($class, $params) = $this->pack;
+            $class = Yii::createObject($class);
+            $data = $class->encode(...([$data, $params]));
+        }
         $this->client->send($data);
         $this->trigger(self::EVENT_AFTER_SEND);
         if ($this->IsDefer) {

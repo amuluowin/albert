@@ -14,6 +14,7 @@ use function stream_set_blocking;
 use function stream_set_read_buffer;
 use function strlen;
 use function substr;
+use yii\swoole\base\Output;
 
 class AsyncSocket extends CommonSocket
 {
@@ -32,6 +33,16 @@ class AsyncSocket extends CommonSocket
      */
     private $sockStatus = 0;
 
+    /**
+     * @var int
+     */
+    private $reConnect = 0;
+
+    /**
+     * @var int
+     */
+    private $total = 3;
+
     public function connect(): void
     {
         if (!$this->isSocketDead()) {
@@ -41,6 +52,7 @@ class AsyncSocket extends CommonSocket
         $this->createStream();
 
         $this->stream->on("connect", function ($cli) {
+            Output::writeln('connect to kafka success!', Output::LIGHT_GREEN);
             $this->write();
         });
 
@@ -54,9 +66,15 @@ class AsyncSocket extends CommonSocket
 
         $this->stream->on("error", function ($cli) {
             $this->sockStatus = 0;
-            throw new Exception(
-                sprintf('Could not connect to %s:%d (%s [%d])', $this->host, $this->port, @socket_strerror($this->stream->errCode), $this->stream->errCode)
-            );
+            $this->reConnect++;
+            if ($this->reConnect === $this->total) {
+                throw new Exception(
+                    sprintf('Could not connect to %s:%d (%s [%d])', $this->host, $this->port, @socket_strerror($this->stream->errCode), $this->stream->errCode)
+                );
+            } else {
+                \Co::sleep(1);
+                $this->reconnect();
+            }
         });
 
         $this->sockStatus = 1;
@@ -130,10 +148,10 @@ class AsyncSocket extends CommonSocket
      */
     public function write(?string $data = null): void
     {
-        if ($data && !$this->stream->isConnected()) {
+        if ($data) {
             $this->writeData[] = $data;
-        } elseif ($this->stream->isConnected()) {
-            $this->writeData[] = $data;
+        }
+        if ($this->stream->isConnected()) {
             foreach ($this->writeData as $data) {
                 $this->stream->send($data);
             }
