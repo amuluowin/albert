@@ -21,7 +21,7 @@ class NavClient extends IRpcClient
     {
         $this->method = $name;
         $this->data = $params;
-        if ($this->defer) {
+        if ($this->IsDefer) {
             return $this;
         }
         return $this->recv();

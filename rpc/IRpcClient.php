@@ -3,13 +3,12 @@
 namespace yii\swoole\rpc;
 
 use Yii;
+use yii\base\Component;
 use yii\swoole\base\Defer;
 
-abstract class IRpcClient
+abstract class IRpcClient extends Component
 {
     use Defer;
 
     abstract public function recv();
-
-    abstract public function __call($name, $arguments);
 }

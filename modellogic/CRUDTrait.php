@@ -9,6 +9,7 @@ use yii\swoole\rest\DeleteExt;
 use yii\swoole\rest\IndexExt;
 use yii\swoole\rest\ResponeModel;
 use yii\swoole\rest\UpdateExt;
+use yii\swoole\db\DBHelper;
 
 trait CRUDTrait
 {
@@ -59,7 +60,7 @@ trait CRUDTrait
 
     public static function Index($filter = null, $page = 0, $modelClass = null)
     {
-        $modelClass = ($modelClass ?  : static::$modelClass);
+        $modelClass = ($modelClass ?: static::$modelClass);
         $modelClass = new $modelClass();
         return IndexExt::actionDo($modelClass, $filter, $page);
     }
