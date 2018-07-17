@@ -79,19 +79,19 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
         }
     }
 
-    public function getServices(string $serviceName, ...$params)
+    public function getServices(string $serviceName, string $preFix)
     {
-        $nodes = $this->getServiceFromCache($serviceName);
+        $nodes = $this->getServiceFromCache($serviceName, $preFix);
         if ($nodes) {
             return $nodes;
         } else {
-            return $this->get($serviceName, $params);
+            return $this->get($serviceName, $preFix);
         }
     }
 
-    private function get(string $serviceName, ...$params)
+    private function get(string $serviceName, string $preFix)
     {
-        $url = $this->getDiscoveryUrl($serviceName);
+        $url = $this->getDiscoveryUrl($serviceName, $preFix);
         $services = Yii::$app->consul->httpClient->get($url)->send()->getData();
         if (is_array($services)) {
             // 数据格式化
@@ -170,9 +170,9 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
      *
      * @return string
      */
-    private function getDiscoveryUrl(string $serviceName): string
+    private function getDiscoveryUrl(string $serviceName, string $preFix): string
     {
-        $serviceName = $this->servicePrefix . $serviceName;
+        $serviceName = $preFix . $serviceName;
         $query = [
             'passing' => $this->discovery['passing'],
             'dc' => $this->discovery['dc'],
@@ -193,20 +193,27 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
     {
         if (!empty($this->services)) {
             foreach ($this->services as $service) {
-                $this->check($service);
+                $this->check($service, $this->servicePrefix);
+            }
+            foreach ($this->apis as $api) {
+                $this->check($api, $this->apiPrefix);
             }
         } else {
             $this->check($this->register['Name']);
         }
     }
 
-    private function check(string $service)
+    private function check(string $service, string $preFix)
     {
         if ($this->checkType === self::DNS) {
-            $dns = sprintf('%s.service.$s.consul', $service, $this->discovery['dc']);
+            $dns = sprintf('%s.service.$s.consul', $preFix . $service, $this->discovery['dc']);
             $node[$service] = \Co::getaddrinfo($dns);
         } else {
-            $node[$service] = $this->get($service);
+            if ($preFix === $this->servicePrefix) {
+                $node[$service] = $this->get($service, $preFix);
+            } else {
+                $node['/' . $service] = $this->get($service, $preFix);
+            }
         }
         $this->setServiceToCache($node);
     }

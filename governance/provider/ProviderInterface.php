@@ -13,5 +13,5 @@ interface ProviderInterface
 {
     public function registerService(...$params);
 
-    public function getServices(string $serviceName, ...$params);
+    public function getServices(string $serviceName, string $preFix);
 }

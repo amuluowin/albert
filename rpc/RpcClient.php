@@ -21,6 +21,11 @@ class RpcClient extends Component
     public $config_n;
 
     /**
+     * @var IRpcClient
+     */
+    public $config_h;
+
+    /**
      * @var array
      */
     private $service = [];
@@ -69,6 +74,8 @@ class RpcClient extends Component
         list($ser, $route) = $this->getService();
         if (!isset(Yii::$rpcList) || (key_exists($ser, Yii::$rpcList) && in_array($route, Yii::$rpcList[$ser]))) {
             $client = is_array($this->config_n) ? clone Yii::createObject($this->config_n) : clone $this->config_n;
+        } elseif (strpos($ser, '/') === 0) {
+            $client = is_array($this->config_h) ? clone Yii::createObject($this->config_h) : clone $this->config_h;
         } else {
             $client = is_array($this->config_r) ? clone Yii::createObject($this->config_r) : clone $this->config_r;
         }

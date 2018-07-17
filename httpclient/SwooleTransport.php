@@ -12,7 +12,10 @@ class SwooleTransport extends \yii\httpclient\Transport
     protected $curconnect = 0;
 
     /**
-     * @inheritdoc
+     * Performs given request.
+     * @param Request $request request to be sent.
+     * @return Response response instance.
+     * @throws Exception on failure.
      */
     public function send($request)
     {

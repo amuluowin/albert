@@ -19,8 +19,8 @@ class HttpPool extends \yii\swoole\pool\IPool
 
     protected function reConnect(&$conn, string $connName)
     {
-        $config = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['hostname', 'port', 'timeout', 'scheme'],
-            ['localhost', 80, 0.5, 'http']);
+        $config = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['hostname', 'port', 'timeout', 'scheme', 'setting'],
+            ['localhost', 80, 0.5, 'http', []]);
         $conn = new \Swoole\Coroutine\Http\Client($config['hostname'], $config['port'], $config['scheme'] === 'https' ? true : false);
         if ($conn->errCode !== 0) {
             if ($this->reconnect <= $this->curconnect) {
@@ -34,5 +34,8 @@ class HttpPool extends \yii\swoole\pool\IPool
             }
         }
         $this->saveConn($connName, $conn);
+        if (isset($config['setting'])) {
+            $conn->set($config['setting']);
+        }
     }
 }
