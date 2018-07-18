@@ -17,20 +17,15 @@ use yii\swoole\tcp\TcpClient;
 class Kafka extends Component
 {
     /**
-     * @var Consumer
+     * @var KConsumer
      */
     public $consumer;
 
     /**
-     * @var Producer
+     * @var KProducer
      */
     public $producer;
     public $logger;
-
-    /**
-     * @var TcpClient
-     */
-    public $socket;
 
     public function init()
     {
@@ -43,11 +38,6 @@ class Kafka extends Component
         if (!$this->producer instanceof KProducer) {
             $this->producer = Yii::createObject($this->producer);
         }
-
-        if (!$this->socket instanceof TcpClient) {
-            $this->socket = Yii::createObject($this->socket);
-        }
-
     }
 
     public function startProducer(LoggerInterface $logger = null)
@@ -59,6 +49,11 @@ class Kafka extends Component
 //            $this->logger->pushHandler(new StdoutHandler());
 //        }
         $this->producer->start($this->logger);
+    }
+
+    public function send(array $data)
+    {
+        $this->producer->send($data);
     }
 
     public function startConsumer(LoggerInterface $logger = null)

@@ -10,9 +10,9 @@ namespace yii\swoole\configcenter;
 
 use Yii;
 use yii\base\Component;
-use yii\httpclient\Client;
 use yii\swoole\base\Output;
 use yii\swoole\consul\ConsulTrait;
+use yii\swoole\httpclient\Client;
 
 class ConsulConfig extends Component implements ConfigInterface
 {
@@ -44,15 +44,15 @@ class ConsulConfig extends Component implements ConfigInterface
          * @var Client
          */
         if ($client === null) {
-            $client = Yii::$app->consul->httpClient;
+            $client = Yii::$app->httpclient;
         }
         for ($i = 0; $i < $this->retry; $i++) {
             $respones = $client->put($this->getPath($key), $config)->setFormat(Client::FORMAT_JSON)->send();
-            if ($respones->getStatusCode() != 200) {
-                Output::writeln(sprintf('can not put config to consul %s:%d', $this->client->address, $this->client->port), Output::LIGHT_RED);
+            if (!$respones->getIsOk()) {
+                Output::writeln(sprintf('can not put config %s to consul %s:%d', $key, $this->client->address, $this->client->port), Output::LIGHT_RED);
                 \Co::sleep($this->sleep);
             } else {
-                Output::writeln(sprintf('put config to consul %s:%d success', $this->client->address, $this->client->port), Output::LIGHT_GREEN);
+                Output::writeln(sprintf('put config %s to consul %s:%d success', $key, $this->client->address, $this->client->port), Output::LIGHT_GREEN);
                 break;
             }
         }
@@ -64,7 +64,7 @@ class ConsulConfig extends Component implements ConfigInterface
          * @var Client
          */
         if ($client === null) {
-            $client = Yii::$app->consul->httpClient;
+            $client = Yii::$app->httpclient;
         }
         $respones = $client->get($this->getPath($key))->setFormat(Client::FORMAT_JSON)->send();
         if ($respones->getStatusCode() == 404) {

@@ -11,6 +11,7 @@ namespace yii\swoole\log;
 use Yii;
 use yii\log\Target;
 use yii\swoole\Application;
+use yii\swoole\kafka\Kafka;
 
 class KafkaTarget extends Target
 {
@@ -38,9 +39,12 @@ class KafkaTarget extends Target
      */
     public function export()
     {
+        /**
+         * @var Kafka $kafka
+         */
         if (($kafka = Yii::$app->get('kafka', false)) !== null
             && isset($kafka->producer)) {
-            $kafka->producer->send([
+            $kafka->send([
                 [
                     'topic' => 'test',
                     'value' => implode("\n", array_map([$this, 'formatMessage'], $this->messages)) . "\n",

@@ -21,7 +21,6 @@ abstract class BaseProcess extends \yii\base\Component
     public $num = 1;
     public $inout = 0;
     public $pipe = 0;
-    public $isCo = true;
 
     public function init()
     {
@@ -39,13 +38,9 @@ abstract class BaseProcess extends \yii\base\Component
         } else {
             $p = new \swoole_process(function ($process) {
                 $process->name((APP_NAME ?: 'swoole') . '-' . $this->name);
-                if ($this->isCo) {
-                    go(function () {
-                        $this->start();
-                    });
-                } else {
+                go(function () {
                     $this->start();
-                }
+                });
             }, $this->inout, $this->pipe);
             $this->saveProcess($p);
         }

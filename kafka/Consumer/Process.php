@@ -64,28 +64,28 @@ class Process
         }
         $this->state->setCallback(
             [
-                State::REQUEST_METADATA      => function (): void {
+                State::REQUEST_METADATA => function (): void {
                     $this->syncMeta();
                 },
-                State::REQUEST_GETGROUP      => function (): void {
+                State::REQUEST_GETGROUP => function (): void {
                     $this->getGroupBrokerId();
                 },
-                State::REQUEST_JOINGROUP     => function (): void {
+                State::REQUEST_JOINGROUP => function (): void {
                     $this->joinGroup();
                 },
-                State::REQUEST_SYNCGROUP     => function (): void {
+                State::REQUEST_SYNCGROUP => function (): void {
                     $this->syncGroup();
                 },
-                State::REQUEST_HEARTGROUP    => function (): void {
+                State::REQUEST_HEARTGROUP => function (): void {
                     $this->heartbeat();
                 },
-                State::REQUEST_OFFSET        => function (): array {
+                State::REQUEST_OFFSET => function (): array {
                     return $this->offset();
                 },
-                State::REQUEST_FETCH_OFFSET  => function (): void {
+                State::REQUEST_FETCH_OFFSET => function (): void {
                     $this->fetchOffset();
                 },
-                State::REQUEST_FETCH         => function (): array {
+                State::REQUEST_FETCH => function (): array {
                     return $this->fetch();
                 },
                 State::REQUEST_COMMIT_OFFSET => function (): void {
@@ -115,19 +115,18 @@ class Process
     protected function processRequest(string $data, int $fd): void
     {
         $correlationId = ProtocolTool::unpack(ProtocolTool::BIT_B32, substr($data, 0, 4));
-
         switch ($correlationId) {
             case Protocol::METADATA_REQUEST:
                 $result = Protocol::decode(Protocol::METADATA_REQUEST, substr($data, 4));
 
-                if (! isset($result['brokers'], $result['topics'])) {
+                if (!isset($result['brokers'], $result['topics'])) {
                     $this->error('Get metadata is fail, brokers or topics is null.');
                     $this->state->failRun(State::REQUEST_METADATA);
                     break;
                 }
 
                 /** @var Broker $broker */
-                $broker   = $this->getBroker();
+                $broker = $this->getBroker();
                 $isChange = $broker->setData($result['topics'], $result['brokers']);
                 $this->state->succRun(State::REQUEST_METADATA, $isChange);
 
@@ -135,7 +134,7 @@ class Process
             case Protocol::GROUP_COORDINATOR_REQUEST:
                 $result = Protocol::decode(Protocol::GROUP_COORDINATOR_REQUEST, substr($data, 4));
 
-                if (! isset($result['errorCode'], $result['coordinatorId']) || $result['errorCode'] !== Protocol::NO_ERROR) {
+                if (!isset($result['errorCode'], $result['coordinatorId']) || $result['errorCode'] !== Protocol::NO_ERROR) {
                     $this->state->failRun(State::REQUEST_GETGROUP);
                     break;
                 }
@@ -239,7 +238,7 @@ class Process
 
     protected function getGroupBrokerId(): void
     {
-        $broker  = $this->getBroker();
+        $broker = $this->getBroker();
         $connect = $broker->getRandConnect();
 
         if ($connect === null) {
@@ -258,27 +257,27 @@ class Process
         $broker = $this->getBroker();
 
         $groupBrokerId = $broker->getGroupBrokerId();
-        $connect       = $broker->getMetaConnect((string) $groupBrokerId);
+        $connect = $broker->getMetaConnect((string)$groupBrokerId);
 
         if ($connect === null) {
             return;
         }
 
-        $topics   = $this->getConfig()->getTopics();
-        $assign   = $this->getAssignment();
+        $topics = $this->getConfig()->getTopics();
+        $assign = $this->getAssignment();
         $memberId = $assign->getMemberId();
 
         $params = [
-            'group_id'          => $this->getConfig()->getGroupId(),
-            'session_timeout'   => $this->getConfig()->getSessionTimeout(),
+            'group_id' => $this->getConfig()->getGroupId(),
+            'session_timeout' => $this->getConfig()->getSessionTimeout(),
             'rebalance_timeout' => $this->getConfig()->getRebalanceTimeout(),
-            'member_id'         => $memberId ?? '',
-            'data'              => [
+            'member_id' => $memberId ?? '',
+            'data' => [
                 [
                     'protocol_name' => 'range',
-                    'version'       => 0,
-                    'subscription'  => $topics,
-                    'user_data'     => '',
+                    'version' => 0,
+                    'subscription' => $topics,
+                    'user_data' => '',
                 ],
             ],
         ];
@@ -290,7 +289,7 @@ class Process
 
     public function failJoinGroup(int $errorCode): void
     {
-        $assign   = $this->getAssignment();
+        $assign = $this->getAssignment();
         $memberId = $assign->getMemberId();
 
         $this->error(sprintf('Join group fail, need rejoin, errorCode %d, memberId: %s', $errorCode, $memberId));
@@ -316,23 +315,23 @@ class Process
 
     public function syncGroup(): void
     {
-        $broker        = $this->getBroker();
+        $broker = $this->getBroker();
         $groupBrokerId = $broker->getGroupBrokerId();
-        $connect       = $broker->getMetaConnect((string) $groupBrokerId);
+        $connect = $broker->getMetaConnect((string)$groupBrokerId);
 
         if ($connect === null) {
             return;
         }
 
-        $assign       = $this->getAssignment();
-        $memberId     = $assign->getMemberId();
+        $assign = $this->getAssignment();
+        $memberId = $assign->getMemberId();
         $generationId = $assign->getGenerationId();
 
         $params = [
-            'group_id'      => $this->getConfig()->getGroupId(),
+            'group_id' => $this->getConfig()->getGroupId(),
             'generation_id' => $generationId ?? null,
-            'member_id'     => $memberId,
-            'data'          => $assign->getAssignments(),
+            'member_id' => $memberId,
+            'data' => $assign->getAssignments(),
         ];
 
         $requestData = Protocol::encode(Protocol::SYNC_GROUP_REQUEST, $params);
@@ -369,7 +368,7 @@ class Process
 
                 $topicInfo['topic_name'] = $topic['topicName'];
 
-                $topicInfo['partitions']   = $topicInfo['partitions'] ?? [];
+                $topicInfo['partitions'] = $topicInfo['partitions'] ?? [];
                 $topicInfo['partitions'][] = $partId;
 
                 $brokerToTopics[$brokerId][$topic['topicName']] = $topicInfo;
@@ -382,15 +381,15 @@ class Process
 
     protected function heartbeat(): void
     {
-        $broker        = $this->getBroker();
+        $broker = $this->getBroker();
         $groupBrokerId = $broker->getGroupBrokerId();
-        $connect       = $broker->getMetaConnect((string) $groupBrokerId);
+        $connect = $broker->getMetaConnect((string)$groupBrokerId);
 
         if ($connect === null) {
             return;
         }
 
-        $assign   = $this->getAssignment();
+        $assign = $this->getAssignment();
         $memberId = $assign->getMemberId();
 
         if (trim($memberId) === '') {
@@ -400,9 +399,9 @@ class Process
         $generationId = $assign->getGenerationId();
 
         $params = [
-            'group_id'      => $this->getConfig()->getGroupId(),
+            'group_id' => $this->getConfig()->getGroupId(),
             'generation_id' => $generationId,
-            'member_id'     => $memberId,
+            'member_id' => $memberId,
         ];
 
         $requestData = Protocol::encode(Protocol::HEART_BEAT_REQUEST, $params);
@@ -421,11 +420,11 @@ class Process
     protected function offset(): array
     {
         $context = [];
-        $broker  = $this->getBroker();
-        $topics  = $this->getAssignment()->getTopics();
+        $broker = $this->getBroker();
+        $topics = $this->getAssignment()->getTopics();
 
         foreach ($topics as $brokerId => $topicList) {
-            $connect = $broker->getMetaConnect((string) $brokerId);
+            $connect = $broker->getMetaConnect((string)$brokerId);
 
             if ($connect === null) {
                 return [];
@@ -442,22 +441,22 @@ class Process
                     $item['partitions'][] = [
                         'partition_id' => $partId,
                         'offset' => 1,
-                        'time' =>  -1,
+                        'time' => -1,
                     ];
-                    $data[]               = $item;
+                    $data[] = $item;
                 }
             }
 
             $params = [
                 'replica_id' => -1,
-                'data'       => $data,
+                'data' => $data,
             ];
 
-            $stream      = $connect->getSocket();
+            $stream = $connect->getSocket();
             $requestData = Protocol::encode(Protocol::OFFSET_REQUEST, $params);
 
             $connect->write($requestData);
-            $context[] = (int) $stream;
+            $context[] = (int)$stream;
         }
 
         return $context;
@@ -468,7 +467,7 @@ class Process
      */
     public function succOffset(array $result, int $fd): void
     {
-        $offsets     = $this->getAssignment()->getOffsets();
+        $offsets = $this->getAssignment()->getOffsets();
         $lastOffsets = $this->getAssignment()->getLastOffsets();
 
         foreach ($result as $topic) {
@@ -478,7 +477,7 @@ class Process
                     break 2;
                 }
 
-                $offsets[$topic['topicName']][$part['partition']]     = end($part['offsets']);
+                $offsets[$topic['topicName']][$part['partition']] = end($part['offsets']);
                 $lastOffsets[$topic['topicName']][$part['partition']] = $part['offsets'][0];
             }
         }
@@ -490,16 +489,16 @@ class Process
 
     protected function fetchOffset(): void
     {
-        $broker        = $this->getBroker();
+        $broker = $this->getBroker();
         $groupBrokerId = $broker->getGroupBrokerId();
-        $connect       = $broker->getMetaConnect((string) $groupBrokerId);
+        $connect = $broker->getMetaConnect((string)$groupBrokerId);
 
         if ($connect === null) {
             return;
         }
 
         $topics = $this->getAssignment()->getTopics();
-        $data   = [];
+        $data = [];
 
         foreach ($topics as $brokerId => $topicList) {
             foreach ($topicList as $topic) {
@@ -520,7 +519,7 @@ class Process
 
         $params = [
             'group_id' => $this->getConfig()->getGroupId(),
-            'data'     => $data,
+            'data' => $data,
         ];
 
         $requestData = Protocol::encode(Protocol::OFFSET_FETCH_REQUEST, $params);
@@ -535,7 +534,7 @@ class Process
         $msg = sprintf('Get current fetch offset sucess, result: %s', json_encode($result));
         $this->debug($msg);
 
-        $assign  = $this->getAssignment();
+        $assign = $this->getAssignment();
         $offsets = $assign->getFetchOffsets();
 
         foreach ($result as $topic) {
@@ -552,7 +551,7 @@ class Process
         $assign->setFetchOffsets($offsets);
 
         $consumerOffsets = $assign->getConsumerOffsets();
-        $lastOffsets     = $assign->getLastOffsets();
+        $lastOffsets = $assign->getLastOffsets();
 
         if (empty($consumerOffsets)) {
             $consumerOffsets = $assign->getFetchOffsets();
@@ -577,14 +576,14 @@ class Process
      */
     protected function fetch(): array
     {
-        $this->messages  = [];
-        $context         = [];
-        $broker          = $this->getBroker();
-        $topics          = $this->getAssignment()->getTopics();
+        $this->messages = [];
+        $context = [];
+        $broker = $this->getBroker();
+        $topics = $this->getAssignment()->getTopics();
         $consumerOffsets = $this->getAssignment()->getConsumerOffsets();
 
         foreach ($topics as $brokerId => $topicList) {
-            $connect = $broker->getDataConnect((string) $brokerId);
+            $connect = $broker->getDataConnect((string)$brokerId);
 
             if ($connect === null) {
                 return [];
@@ -619,7 +618,7 @@ class Process
             $this->debug('Fetch message start, params:' . json_encode($params));
             $requestData = Protocol::encode(Protocol::FETCH_REQUEST, $params);
             $connect->write($requestData);
-            $context[] = (int) $connect->getSocket();
+            $context[] = (int)$connect->getSocket();
         }
 
         return $context;
@@ -689,16 +688,16 @@ class Process
             $this->consumeMessage();
         }
 
-        $broker        = $this->getBroker();
+        $broker = $this->getBroker();
         $groupBrokerId = $broker->getGroupBrokerId();
-        $connect       = $broker->getMetaConnect((string) $groupBrokerId);
+        $connect = $broker->getMetaConnect((string)$groupBrokerId);
 
         if ($connect === null) {
             return;
         }
 
         $commitOffsets = $this->getAssignment()->getCommitOffsets();
-        $topics        = $this->getAssignment()->getTopics();
+        $topics = $this->getAssignment()->getTopics();
         $this->getAssignment()->setPreCommitOffsets($commitOffsets);
         $data = [];
 
@@ -716,7 +715,7 @@ class Process
                     }
 
                     $partitions[$partId]['partition'] = $partId;
-                    $partitions[$partId]['offset']    = $commitOffsets[$topic['topic_name']][$partId];
+                    $partitions[$partId]['offset'] = $commitOffsets[$topic['topic_name']][$partId];
                 }
 
                 $data[$topic['topic_name']]['partitions'] = $partitions;
@@ -804,12 +803,12 @@ class Process
 
         if ($errorCode === Protocol::OFFSET_OUT_OF_RANGE) {
             $resetOffset = $this->getConfig()->getOffsetReset();
-            $offsets     = $resetOffset === 'latest' ? $assign->getLastOffsets() : $assign->getOffsets();
+            $offsets = $resetOffset === 'latest' ? $assign->getLastOffsets() : $assign->getOffsets();
 
             [$topic, $partId] = $context;
 
             if (isset($offsets[$topic][$partId])) {
-                $assign->setConsumerOffset($topic, (int) $partId, $offsets[$topic][$partId]);
+                $assign->setConsumerOffset($topic, (int)$partId, $offsets[$topic][$partId]);
             }
         }
 

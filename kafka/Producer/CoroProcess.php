@@ -18,6 +18,7 @@ use function shuffle;
 use function sprintf;
 use function substr;
 use function trim;
+use yii\swoole\kafka\CoroSocket;
 
 class CoroProcess
 {
@@ -26,6 +27,15 @@ class CoroProcess
 
     /** @var RecordValidator */
     private $recordValidator;
+
+    /**
+     * @var int
+     */
+    private $retry = 0;
+    /**
+     * @var int
+     */
+    private $total = 10;
 
     public function __construct(?RecordValidator $recordValidator = null)
     {
@@ -100,6 +110,30 @@ class CoroProcess
         return $result;
     }
 
+    private function reSyncMeta(CoroSocket $socket, string $requestData): array
+    {
+        $socket->write($requestData);
+        $data = $socket->read(60);
+        $dataLen = substr($data, 0, 4);
+        $dataLen = Protocol::unpack(Protocol::BIT_B32, $dataLen);
+        $correlationId = Protocol::unpack(Protocol::BIT_B32, substr($data, 4, 4));
+        $result = \Kafka\Protocol::decode(\Kafka\Protocol::METADATA_REQUEST, substr($data, 8));
+
+        if (!isset($result['brokers'], $result['topics'])) {
+            throw new Exception('Get metadata is fail, brokers or topics is null.');
+        }
+        if (count($result['topics']) === 0) {
+            $this->retry++;
+            if ($this->retry === $this->total) {
+                throw new Exception('Get metadata is fail, brokers or topics is null.');
+            } else {
+                \Co::sleep(2);
+                $result = $this->reSyncMeta($socket, $requestData);
+            }
+        }
+        return $result;
+    }
+
     public function syncMeta(): void
     {
         $this->debug('Start sync metadata request');
@@ -130,17 +164,7 @@ class CoroProcess
             $params = [];
             $this->debug('Start sync metadata request params:' . json_encode($params));
             $requestData = \Kafka\Protocol::encode(\Kafka\Protocol::METADATA_REQUEST, $params);
-            $socket->write($requestData);
-            $data = $socket->read(0);
-            $dataLen = substr($data, 0, 4);
-            $dataLen = Protocol::unpack(Protocol::BIT_B32, $dataLen);
-            $correlationId = Protocol::unpack(Protocol::BIT_B32, substr($data, 4, 4));
-            $result = \Kafka\Protocol::decode(\Kafka\Protocol::METADATA_REQUEST, substr($data, 8));
-
-            if (!isset($result['brokers'], $result['topics'])) {
-                throw new Exception('Get metadata is fail, brokers or topics is null.');
-            }
-
+            $result = $this->reSyncMeta($socket, $requestData);
             $broker = $this->getBroker();
             $broker->setData($result['topics'], $result['brokers']);
 

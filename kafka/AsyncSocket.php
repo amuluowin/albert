@@ -16,97 +16,23 @@ use function strlen;
 use function substr;
 use yii\swoole\base\Output;
 
-class AsyncSocket extends CommonSocket
+class AsyncSocket extends CoroSocket
 {
-    /**
-     * @var string
-     */
-    private $writeData = [];
-
     /**
      * @var callable|null
      */
     private $onReadable;
 
     /**
-     * @var int
+     * @var string
      */
-    private $sockStatus = 0;
+    private $readBuffer = '';
 
     /**
      * @var int
      */
-    private $reConnect = 0;
+    private $readNeedLength = 0;
 
-    /**
-     * @var int
-     */
-    private $total = 3;
-
-    public function connect(): void
-    {
-        if (!$this->isSocketDead()) {
-            return;
-        }
-
-        $this->createStream();
-
-        $this->stream->on("connect", function ($cli) {
-            Output::writeln('connect to kafka success!', Output::LIGHT_GREEN);
-            $this->write();
-        });
-
-        $this->stream->on("receive", function ($cli, $data) {
-            $this->read($data);
-        });
-
-        $this->stream->on("close", function ($cli) {
-            $this->sockStatus = 0;
-        });
-
-        $this->stream->on("error", function ($cli) {
-            $this->sockStatus = 0;
-            $this->reConnect++;
-            if ($this->reConnect === $this->total) {
-                throw new Exception(
-                    sprintf('Could not connect to %s:%d (%s [%d])', $this->host, $this->port, @socket_strerror($this->stream->errCode), $this->stream->errCode)
-                );
-            } else {
-                \Co::sleep(1);
-                $this->reconnect();
-            }
-        });
-
-        $this->sockStatus = 1;
-        swoole_async_dns_lookup($this->host, function ($host, $ip) {
-            $this->host = $ip;
-            $this->stream->connect($ip, $this->port, 1);
-        });
-    }
-
-    /**
-     * @throws Exception
-     */
-    protected function createStream(): void
-    {
-        if (trim($this->host) === '') {
-            throw new Exception('Cannot open null host.');
-        }
-
-        if ($this->port <= 0) {
-            throw new Exception('Cannot open without port.');
-        }
-
-        $this->stream = new \swoole_client(SWOOLE_TCP | SWOOLE_ASYNC);
-
-        $this->stream->set(array(
-            'open_length_check' => 1,
-            'package_length_type' => 'N',
-            'package_length_offset' => 0,       //第N个字节是包长度的值
-            'package_body_offset' => 4,       //第几个字节开始计算长度
-            'package_max_length' => 2000000,  //协议最大长度
-        ));
-    }
 
     public function reconnect(): void
     {
@@ -117,11 +43,6 @@ class AsyncSocket extends CommonSocket
     public function setOnReadable(callable $read): void
     {
         $this->onReadable = $read;
-    }
-
-    public function close(): void
-    {
-        $this->stream->close();
     }
 
     public function isResource(): bool
@@ -139,23 +60,39 @@ class AsyncSocket extends CommonSocket
      */
     public function read($data): void
     {
-        ($this->onReadable)($data, (int)$this->stream->sock);
+        $this->readBuffer .= (string)$data;
+
+        do {
+            if ($this->readNeedLength === 0) { // response start
+                if (strlen($this->readBuffer) < 4) {
+                    return;
+                }
+
+                $dataLen = Protocol::unpack(Protocol::BIT_B32, substr($this->readBuffer, 0, 4));
+                $this->readNeedLength = $dataLen;
+                $this->readBuffer = substr($this->readBuffer, 4);
+            }
+
+            if (strlen($this->readBuffer) < $this->readNeedLength) {
+                return;
+            }
+
+            $data = (string)substr($this->readBuffer, 0, $this->readNeedLength);
+
+            $this->readBuffer = substr($this->readBuffer, $this->readNeedLength);
+            $this->readNeedLength = 0;
+            ($this->onReadable)($data, (int)$this->stream->client->sock);
+        } while (strlen($this->readBuffer));
     }
 
     /**
      * Write to the socket.
      *
      */
-    public function write(?string $data = null): void
+    public function write(?string $buffer = null): void
     {
-        if ($data) {
-            $this->writeData[] = $data;
-        }
-        if ($this->stream->isConnected()) {
-            foreach ($this->writeData as $data) {
-                $this->stream->send($data);
-            }
-            $this->writeData = [];
+        if ($buffer !== null) {
+            $this->read($this->stream->send($this->host, $this->port, $buffer));
         }
     }
 

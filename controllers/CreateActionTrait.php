@@ -37,7 +37,6 @@ trait CreateActionTrait
 
         $key = get_class($this) . '::' . $id;
 
-        //echo $key . "\n";
         if (!isset(self::$actionMapInstances[$key])) {
             $action = false;
             $actionMap = $this->actions();
@@ -67,7 +66,6 @@ trait CreateActionTrait
         $action = clone self::$actionMapInstances[$key];
         $action->id = $id;
         $action->controller = $this;
-        //echo spl_object_hash($action) . "\n";
         return $action;
     }
 

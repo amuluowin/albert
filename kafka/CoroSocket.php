@@ -24,7 +24,8 @@ class CoroSocket extends CommonSocket
             throw new Exception('Cannot open without port.');
         }
 
-        $this->stream = Yii::$app->kafka->socket;
+        $this->stream = Yii::createObject(['class' => \yii\swoole\tcp\TcpClient::class,
+            'timeout' => 30]);
 
         if ($this->saslProvider !== null) {
             $this->saslProvider->authenticate($this);
@@ -33,7 +34,7 @@ class CoroSocket extends CommonSocket
 
     public function connect(): void
     {
-        if ($this->stream && $this->stream && $this->stream->client->isConnected()) {
+        if ($this->stream  && $this->stream->client->connected) {
             return;
         }
 
@@ -50,15 +51,15 @@ class CoroSocket extends CommonSocket
      *
      * @return String|int
      */
-    public function read($data): ?string
+    public function read($data)
     {
-        return $this->stream->recv();
+        return $this->stream->recv($data);
     }
 
     /**
      * @throws Exception
      */
-    public function write(?string $buffer = null): int
+    public function write(?string $buffer = null)
     {
         if ($buffer === null) {
             throw new Exception('You must inform some data to be written');

@@ -516,9 +516,7 @@ class MqttClient
         }
 
         if (!$this->socket->isConnected()) {
-            swoole_async_dns_lookup($this->host, function ($host, $ip) use ($port) {
-                $this->socket->connect($ip, $port);
-            });
+            $this->socket->connect($this->host, $port);
         }
 
     }

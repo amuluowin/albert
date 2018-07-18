@@ -92,7 +92,7 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
     private function get(string $serviceName, string $preFix)
     {
         $url = $this->getDiscoveryUrl($serviceName, $preFix);
-        $services = Yii::$app->consul->httpClient->get($url)->send()->getData();
+        $services = Yii::$app->httpclient->get($url)->send()->getData();
         if (is_array($services)) {
             // 数据格式化
             $nodes = [];
@@ -154,7 +154,7 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
 
     private function putService(string $url): bool
     {
-        $response = Yii::$app->consul->httpClient->put($url, $this->register)->setFormat(Client::FORMAT_JSON)->send();
+        $response = Yii::$app->httpclient->put($url, $this->register)->setFormat(Client::FORMAT_JSON)->send();
         $output = 'RPC register service %s %s by consul tcp=%s:%d';
         if (empty($result) && $response->getStatusCode() == 200) {
             Output::writeln(sprintf($output, $this->register['Name'], 'success', $this->register['Address'], $this->register['Port']), Output::LIGHT_GREEN);

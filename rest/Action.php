@@ -69,6 +69,9 @@ class Action extends \yii\base\Action
     public function init()
     {
         if ($this->modelClass === null) {
+            $this->modelClass = $this->controller->hasProperty('modelClass') ? $this->controller->modelClass : null;
+        }
+        if ($this->modelClass === null) {
             throw new InvalidConfigException(get_class($this) . '::$modelClass must be set.');
         }
     }

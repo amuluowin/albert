@@ -32,6 +32,7 @@ class TcpPool extends \yii\swoole\pool\IPool
                 throw new Exception(sprintf("Can not connect to tcp %s:%d error:%s", $config['hostname'], $config['port'], $conn->errCode));
             } else {
                 $this->curconnect++;
+                \Co::sleep(1);
                 $this->reConnect($conn, $connName);
             }
         }

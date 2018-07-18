@@ -23,16 +23,4 @@ class ConsulClient extends Component
      * @var int
      */
     public $port = 8500;
-
-    /**
-     * @var Client
-     */
-    public $httpClient;
-
-    public function init()
-    {
-        if (!$this->httpClient instanceof Client) {
-            $this->httpClient = Yii::$app->httpclient;
-        }
-    }
 }

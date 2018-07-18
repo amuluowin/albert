@@ -14,7 +14,7 @@ abstract class BaseClient extends \yii\base\Component
     /**
      * @var int
      */
-    public $busy_pool = 30;
+    public $busy_pool = 25;
 
     /**
      * @var array

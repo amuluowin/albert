@@ -86,6 +86,12 @@ class State
 
             $interval = $option['interval'] ?? 200;
 
+            if ($this->checkRun($request) && $option['func'] !== null) {
+                $this->processing($request, $option['func']());
+            }
+
+            $this->requests[$request]['watcher'] = $watcherId;
+
             swoole_timer_tick(
                 (int)$interval,
                 function (int $watcherId) use ($request, $option): void {

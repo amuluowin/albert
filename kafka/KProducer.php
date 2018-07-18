@@ -47,11 +47,6 @@ class KProducer extends Component
      */
     public $produceInterval = 500;
 
-    /**
-     * @var bool
-     */
-    private $started = false;
-
     public function start(LoggerInterface $logger = null)
     {
         $config = ProducerConfig::getInstance();
@@ -83,10 +78,6 @@ class KProducer extends Component
     public function send($data)
     {
         if ($this->producer) {
-            if (!$this->started) {
-                $this->started = true;
-            }
-            print_r($data);
             $this->producer->send($data);
         }
     }

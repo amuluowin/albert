@@ -45,7 +45,6 @@ class TcpClient extends BaseClient implements ICoroutine
             Yii::$container->setSingleton('tcpclient', [
                 'class' => TcpPool::class
             ]);
-
         }
         if (($this->client = Yii::$container->get('tcpclient')->fetch($key)) === null) {
             $this->client = Yii::$container->get('tcpclient')->create($key,

@@ -9,7 +9,7 @@
 namespace yii\swoole\configcenter;
 
 
-use yii\httpclient\Client;
+use yii\swoole\httpclient\Client;
 
 interface ConfigInterface
 {

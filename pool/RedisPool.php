@@ -32,6 +32,7 @@ class RedisPool extends \yii\swoole\pool\IPool
                 throw new Exception(sprintf('connect to redis %s:%p error %s:', $config['hostname'], $confi['port'], $conn->error));
             } else {
                 $this->curconnect++;
+                \Co::sleep(1);
                 $this->reConnect($conn, $connName);
             }
         }

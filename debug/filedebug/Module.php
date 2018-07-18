@@ -58,7 +58,6 @@ class Module extends \yii\debug\Module implements Refreshable
             $app->getView()->on(View::EVENT_END_BODY, [$this, 'renderToolbar']);
         });
 
-        //var_dump(count($app->getUrlManager()->rules));
         // TODO urlManager组件优化
         $app->getUrlManager()->addRules([
             [

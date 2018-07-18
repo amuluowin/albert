@@ -17,8 +17,11 @@ class BootWorker implements BootInterface
 
     public function handle(Server $server = null)
     {
+        /**
+         * @var Kafka $kafka
+         */
         if (($kafka = Yii::$app->get('kafka', false)) !== null && !$server->server->taskworker) {
-            $kafka->producer->start();
+            $kafka->startProducer();
         }
     }
 }

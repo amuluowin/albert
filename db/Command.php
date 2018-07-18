@@ -154,7 +154,6 @@ class Command extends \yii\db\Command
                 throw $this->db->getSchema()->convertException($e, $rawSql ?: $this->getRawSql());
             }
             $isConnectionError = $this->isConnectionError($e);
-            //var_dump($isConnectionError);
             if ($isConnectionError) {
                 $this->cancel();
                 $this->db->close();

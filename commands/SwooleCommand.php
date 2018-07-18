@@ -3,6 +3,7 @@
 namespace yii\swoole\commands;
 
 use Yii;
+use yii\swoole\process\BaseProcess;
 use yii\swoole\server\HttpServer;
 use yii\swoole\server\ProcessServer;
 use yii\swoole\server\RpcServer;
@@ -139,13 +140,17 @@ class SwooleCommand
         if (!isset($app) || !isset($work)) {
             exit("No argv.\n");
         } else {
-            $work = $work && isset(Yii::$app->process[$work]) ? Yii::createObject(Yii::$app->process[$work]) : new $work();
+            /**
+             * @var BaseProcess $work
+             */
+            $worker = $work && isset(Yii::$app->process[$work]) ? Yii::createObject(Yii::$app->process[$work]) : new $work();
+            $worker->name = $work;
             switch ($app) {
                 case 'start':
-                    ProcessServer::getInstance()->start($work);
+                    ProcessServer::getInstance()->start($worker);
                     break;
                 case 'stop':
-                    ProcessServer::getInstance()->stop($work);
+                    ProcessServer::getInstance()->stop($worker);
                     break;
                 case 'restart':
                     break;
