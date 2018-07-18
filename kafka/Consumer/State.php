@@ -86,22 +86,16 @@ class State
 
             $interval = $option['interval'] ?? 200;
 
-            if ($this->checkRun($request) && $option['func'] !== null) {
-                $this->processing($request, $option['func']());
-            }
-
-            $this->requests[$request]['watcher'] = $watcherId;
-
-            swoole_timer_tick(
-                (int)$interval,
-                function (int $watcherId) use ($request, $option): void {
+            go(function () use ($interval, $request, $option) {
+                $this->requests[$request]['watcher'] = true;
+                while ($this->requests[$request]['watcher']) {
                     if ($this->checkRun($request) && $option['func'] !== null) {
                         $this->processing($request, $option['func']());
                     }
-
-                    $this->requests[$request]['watcher'] = $watcherId;
+                    $sleep = floatval((float)$interval / (float)1000.0);
+                    \Co::sleep($sleep);
                 }
-            );
+            });
         }
         // start sync metadata
         if (isset($request, $this->requests[self::REQUEST_METADATA]['func'])) {
@@ -123,7 +117,7 @@ class State
                 return;
             }
 
-            swoole_timer_clear($this->requests[$request]['watcher']);
+            $this->requests[$request]['watcher'] = false;
         }
     }
 
@@ -368,16 +362,16 @@ class State
             case self::REQUEST_HEARTGROUP:
             case self::REQUEST_FETCH_OFFSET:
             case self::REQUEST_COMMIT_OFFSET:
-                $this->callStatus[$key]['status'] |= self::STATUS_PROCESS;
+                $this->callStatus[$key]['status'] |= self::STATUS_LOOP;
                 break;
             case self::REQUEST_OFFSET:
             case self::REQUEST_FETCH:
-                $this->callStatus[$key]['status'] |= self::STATUS_PROCESS;
+                $this->callStatus[$key]['status'] |= self::STATUS_LOOP;
 
                 $contextStatus = [];
 
                 foreach ($context as $fd) {
-                    $contextStatus[$fd] = self::STATUS_PROCESS;
+                    $contextStatus[$fd] = self::STATUS_LOOP;
                 }
                 $this->callStatus[$key]['context'] = $contextStatus;
                 break;

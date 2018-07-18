@@ -170,16 +170,16 @@ class Broker extends \Kafka\Broker
 
     public function getConnect(string $key, string $type, bool $modeSync = false): ?CommonSocket
     {
-        if (isset($this->{$type}[$key])) {
-            return $this->{$type}[$key];
-        }
-
-        if (isset($this->brokers[$key])) {
-            $hostname = $this->brokers[$key];
-            if (isset($this->{$type}[$hostname])) {
-                return $this->{$type}[$hostname];
-            }
-        }
+//        if (isset($this->{$type}[$key])) {
+//            return $this->{$type}[$key];
+//        }
+//
+//        if (isset($this->brokers[$key])) {
+//            $hostname = $this->brokers[$key];
+//            if (isset($this->{$type}[$hostname])) {
+//                return $this->{$type}[$hostname];
+//            }
+//        }
 
         $host = null;
         $port = null;
@@ -206,7 +206,7 @@ class Broker extends \Kafka\Broker
             }
 
             $socket->connect();
-            $this->{$type}[$key] = $socket;
+//            $this->{$type}[$key] = $socket;
 
             return $socket;
         } catch (\Throwable $e) {

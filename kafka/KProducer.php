@@ -75,10 +75,11 @@ class KProducer extends Component
         }
     }
 
-    public function send($data)
+    public function send($data): ?array
     {
         if ($this->producer) {
-            $this->producer->send($data);
+            return $this->producer->send($data);
+
         }
     }
 }

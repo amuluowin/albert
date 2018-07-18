@@ -6,6 +6,7 @@ namespace yii\swoole\kafka;
 use Kafka\CommonSocket;
 use Yii;
 use yii\base\Exception;
+use yii\swoole\tcp\TcpClient;
 
 class CoroSocket extends CommonSocket
 {
@@ -24,8 +25,7 @@ class CoroSocket extends CommonSocket
             throw new Exception('Cannot open without port.');
         }
 
-        $this->stream = Yii::createObject(['class' => \yii\swoole\tcp\TcpClient::class,
-            'timeout' => 30]);
+        $this->stream = new TcpClient(['timeout' => 30]);
 
         if ($this->saslProvider !== null) {
             $this->saslProvider->authenticate($this);
@@ -34,7 +34,7 @@ class CoroSocket extends CommonSocket
 
     public function connect(): void
     {
-        if ($this->stream  && $this->stream->client->connected) {
+        if ($this->stream && $this->stream->client && $this->stream->client->connected) {
             return;
         }
 

@@ -3,18 +3,9 @@ declare(strict_types=1);
 
 namespace yii\swoole\kafka;
 
-use Kafka\CommonSocket;
-use Kafka\Exception;
 use Kafka\Protocol\Protocol;
-use function fclose;
-use function feof;
-use function fread;
-use function is_resource;
-use function stream_set_blocking;
-use function stream_set_read_buffer;
 use function strlen;
 use function substr;
-use yii\swoole\base\Output;
 
 class AsyncSocket extends CoroSocket
 {
@@ -33,6 +24,11 @@ class AsyncSocket extends CoroSocket
      */
     private $readNeedLength = 0;
 
+    /**
+     * @var int
+     */
+    private $resource = 0;
+
 
     public function reconnect(): void
     {
@@ -47,7 +43,7 @@ class AsyncSocket extends CoroSocket
 
     public function isResource(): bool
     {
-        return is_resource($this->stream->getSocket());
+        return (bool)$this->resource;
     }
 
     /**
@@ -92,15 +88,15 @@ class AsyncSocket extends CoroSocket
     public function write(?string $buffer = null): void
     {
         if ($buffer !== null) {
-            $this->read($this->stream->send($this->host, $this->port, $buffer));
+            $this->connect();
+            $this->stream->defer()->send($this->host, $this->port, $buffer);
+            $this->resource = $this->stream->client->sock;
+            $this->read($this->stream->recv(3));
         }
     }
 
-    /**
-     * check the stream is close
-     */
-    protected function isSocketDead(): bool
+    public function getSocket()
     {
-        return !$this->stream || $this->sockStatus === 0;
+        return $this->resource;
     }
 }
