@@ -25,7 +25,7 @@ class CoroSocket extends CommonSocket
             throw new Exception('Cannot open without port.');
         }
 
-        $this->stream = new TcpClient(['timeout' => 30, 'setting' => array(
+        $this->stream = Yii::createObject(['class' => TcpClient::class, 'timeout' => 30, 'setting' => array(
             'open_length_check' => 1,
             'package_length_type' => 'N',
             'package_length_offset' => 0,       //第N个字节是包长度的值
