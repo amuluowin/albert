@@ -56,29 +56,10 @@ class AsyncSocket extends CoroSocket
      */
     public function read($data): void
     {
-        $this->readBuffer .= (string)$data;
-
-        do {
-            if ($this->readNeedLength === 0) { // response start
-                if (strlen($this->readBuffer) < 4) {
-                    return;
-                }
-
-                $dataLen = Protocol::unpack(Protocol::BIT_B32, substr($this->readBuffer, 0, 4));
-                $this->readNeedLength = $dataLen;
-                $this->readBuffer = substr($this->readBuffer, 4);
-            }
-
-            if (strlen($this->readBuffer) < $this->readNeedLength) {
-                return;
-            }
-
-            $data = (string)substr($this->readBuffer, 0, $this->readNeedLength);
-
-            $this->readBuffer = substr($this->readBuffer, $this->readNeedLength);
-            $this->readNeedLength = 0;
-            ($this->onReadable)($data, (int)$this->stream->client->sock);
-        } while (strlen($this->readBuffer));
+        $this->readBuffer = (string)$data;
+        $dataLen = Protocol::unpack(Protocol::BIT_B32, substr($this->readBuffer, 0, 4));
+        $this->readBuffer = substr($this->readBuffer, 4);
+        ($this->onReadable)($this->readBuffer, (int)$this->resource);
     }
 
     /**

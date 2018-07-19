@@ -79,14 +79,14 @@ class Process
                 State::REQUEST_HEARTGROUP => function (): void {
                     $this->heartbeat();
                 },
-                State::REQUEST_OFFSET => function (): array {
-                    return $this->offset();
+                State::REQUEST_OFFSET => function (): void {
+                    $this->offset();
                 },
                 State::REQUEST_FETCH_OFFSET => function (): void {
                     $this->fetchOffset();
                 },
-                State::REQUEST_FETCH => function (): array {
-                    return $this->fetch();
+                State::REQUEST_FETCH => function (): void {
+                    $this->fetch();
                 },
                 State::REQUEST_COMMIT_OFFSET => function (): void {
                     $this->commit();
@@ -452,11 +452,10 @@ class Process
                 'data' => $data,
             ];
 
-            $stream = $connect->getSocket();
             $requestData = Protocol::encode(Protocol::OFFSET_REQUEST, $params);
 
             $connect->write($requestData);
-            $context[] = (int)$stream;
+            $context[] = (int)$connect->getSocket();
         }
 
         return $context;
@@ -576,7 +575,6 @@ class Process
      */
     protected function fetch(): array
     {
-        $this->messages = [];
         $context = [];
         $broker = $this->getBroker();
         $topics = $this->getAssignment()->getTopics();

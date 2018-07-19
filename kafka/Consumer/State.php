@@ -148,27 +148,11 @@ class State
                 $this->callStatus[$key]['status'] = (self::STATUS_LOOP | self::STATUS_FINISH);
                 break;
             case self::REQUEST_OFFSET:
-                if (!isset($this->callStatus[$key]['context'])) {
-                    $this->callStatus[$key]['status'] = (self::STATUS_LOOP | self::STATUS_FINISH);
-                    break;
-                }
-                unset($this->callStatus[$key]['context'][$context]);
-                $contextStatus = $this->callStatus[$key]['context'];
-                if (empty($contextStatus)) {
-                    $this->callStatus[$key]['status'] = (self::STATUS_LOOP | self::STATUS_FINISH);
-                }
+                $this->callStatus[$key]['status'] = (self::STATUS_LOOP | self::STATUS_FINISH);
                 break;
             case self::REQUEST_FETCH:
-                if (!isset($this->callStatus[$key]['context'])) {
-                    $this->callStatus[$key]['status'] = (self::STATUS_LOOP | self::STATUS_FINISH);
-                    break;
-                }
-                unset($this->callStatus[$key]['context'][$context]);
-                $contextStatus = $this->callStatus[$key]['context'];
-                if (empty($contextStatus)) {
-                    $this->callStatus[$key]['status'] = (self::STATUS_LOOP | self::STATUS_FINISH);
-                    $this->requests[self::REQUEST_COMMIT_OFFSET]['func']();
-                }
+                $this->callStatus[$key]['status'] = (self::STATUS_LOOP | self::STATUS_FINISH);
+                $this->requests[self::REQUEST_COMMIT_OFFSET]['func']();
                 break;
         }
     }
@@ -367,13 +351,6 @@ class State
             case self::REQUEST_OFFSET:
             case self::REQUEST_FETCH:
                 $this->callStatus[$key]['status'] |= self::STATUS_LOOP;
-
-                $contextStatus = [];
-
-                foreach ($context as $fd) {
-                    $contextStatus[$fd] = self::STATUS_LOOP;
-                }
-                $this->callStatus[$key]['context'] = $contextStatus;
                 break;
         }
     }

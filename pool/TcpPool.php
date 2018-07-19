@@ -25,7 +25,7 @@ class TcpPool extends \yii\swoole\pool\IPool
         if ($config['setting'] && empty($conn->setting)) {
             $conn->set($config['setting']);
         }
-        if (!$conn->connected && $conn->connect(\Co::gethostbyname($config['hostname']), $config['port'], $config['timeout']) == false
+        if (!$conn->connected && $conn->connect($config['hostname'], $config['port'], $config['timeout']) == false
         ) {
             if ($this->reconnect <= $this->curconnect) {
                 $this->curconnect = 0;
