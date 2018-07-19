@@ -8,12 +8,10 @@
 
 namespace yii\swoole\rpc;
 
-
+use Yii;
 use yii\httpclient\Response;
-use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\governance\provider\ProviderInterface;
 use yii\swoole\httpclient\Client;
-use yii\swoole\pool\HttpPool;
 
 class HttpClient extends IRpcClient
 {
@@ -41,19 +39,11 @@ class HttpClient extends IRpcClient
      */
     public $setting = [];
 
-    /**
-     * @var string
-     */
-    private $method = 'POST';
-
     public function recv()
     {
         $result = $this->client->getData();
         Yii::$app->rpc->afterRecv($result);
         $this->release();
-        if ($result instanceof \Exception) {
-            throw $result;
-        }
         return $result;
     }
 
@@ -71,7 +61,10 @@ class HttpClient extends IRpcClient
         $data['method'] = $name;
         $data['params'] = array_shift($params);
         $data['fastCall'] = Yii::$app->rpc->fastCall;
-        $this->client = (new Client())->createRequest()->setMethod($data['method'])
+        $header = [
+            'Authorization' => Yii::$app->request->getHeaders()->get('Authorization'),
+        ];
+        $this->client = (new Client())->createRequest()->setHeaders(array_filter($header))->setMethod($data['method'])
             ->setUrl($url)->setData($data['params'])->send();
         $data = Yii::$app->rpc->beforeSend($data);
         if ($this->IsDefer) {
