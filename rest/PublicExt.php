@@ -2,9 +2,9 @@
 namespace yii\swoole\rest;
 
 use Yii;
+use yii\base\InvalidArgumentException;
 use yii\swoole\db\DBHelper;
 use yii\swoole\helpers\ArrayHelper;
-use yii\swoole\web\NoParamsException;
 
 class PublicExt
 {
@@ -19,7 +19,7 @@ class PublicExt
                 $handle = $filter["handle"];
                 unset($filter["handle"]);
             } else {
-                throw new NoParamsException('缺少参数!');
+                throw new InvalidArgumentException('缺少参数!');
             }
             $alias = ArrayHelper::remove($filter, 'alias', '');
             $key = key($handle);

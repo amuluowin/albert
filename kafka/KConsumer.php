@@ -8,8 +8,6 @@
 
 namespace yii\swoole\kafka;
 
-use Kafka\ConsumerConfig;
-use Psr\Log\LoggerInterface;
 use Yii;
 use yii\base\BaseObject;
 use yii\base\Component;
@@ -37,7 +35,7 @@ class KConsumer extends Component implements IKafkaControl
         }
     }
 
-    public function start(LoggerInterface $logger = null)
+    public function start()
     {
         $config = ConsumerConfig::getInstance();
         $config->setMetadataRefreshIntervalMs($this->refreshInterval);
@@ -47,9 +45,6 @@ class KConsumer extends Component implements IKafkaControl
         $config->setTopics($this->topics);
         $config->setOffsetReset($this->offsetReset);
         $consumer = new Consumer();
-        if ($logger) {
-            $consumer->setLogger($logger);
-        }
         $consumer->start(function ($topic, $part, $message): void {
             foreach ($this->targets as $target) {
                 $target->export($topic, $part, $message);

@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace yii\swoole\kafka\Consumer;
 
-use Kafka\ConsumerConfig;
-use Kafka\SingletonTrait;
+use yii\swoole\base\SingletonTrait;
+use yii\swoole\kafka\ConsumerConfig;
 use function microtime;
 
 class State

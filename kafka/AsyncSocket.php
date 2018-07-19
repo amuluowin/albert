@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace yii\swoole\kafka;
 
-use Kafka\Protocol\Protocol;
+use yii\swoole\kafka\Protocol\Protocol;
 use function strlen;
 use function substr;
 

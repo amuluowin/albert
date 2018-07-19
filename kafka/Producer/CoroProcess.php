@@ -3,12 +3,11 @@ declare(strict_types=1);
 
 namespace yii\swoole\kafka\Producer;
 
-use Kafka\Exception;
-use Kafka\LoggerTrait;
-use Kafka\Producer\RecordValidator;
-use Kafka\ProducerConfig;
-use Kafka\Protocol\Protocol;
-use Psr\Log\LoggerAwareTrait;
+use yii\swoole\kafka\Exception;
+use yii\swoole\kafka\LoggerTrait;
+use yii\swoole\kafka\Producer\RecordValidator;
+use yii\swoole\kafka\ProducerConfig;
+use yii\swoole\kafka\Protocol\Protocol;
 use yii\swoole\kafka\Broker;
 use function array_keys;
 use function count;
@@ -22,9 +21,7 @@ use yii\swoole\kafka\CoroSocket;
 
 class CoroProcess
 {
-    use LoggerAwareTrait;
     use LoggerTrait;
-
     /** @var RecordValidator */
     private $recordValidator;
 
@@ -42,7 +39,7 @@ class CoroProcess
         $this->recordValidator = $recordValidator ?? new RecordValidator();
 
         $config = $this->getConfig();
-        \Kafka\Protocol::init($config->getBrokerVersion(), $this->logger);
+        \yii\swoole\kafka\Protocol::init($config->getBrokerVersion(), $this->logger);
 
         $broker = $this->getBroker();
         $broker->setConfig($config);
@@ -55,7 +52,7 @@ class CoroProcess
      *
      * @return mixed[]
      *
-     * @throws \Kafka\Exception
+     * @throws \yii\swoole\kafka\Exception
      */
     public function send(array $recordSet): array
     {
@@ -93,7 +90,7 @@ class CoroProcess
             ];
 
             $this->debug('Send message start, params:' . json_encode($params));
-            $requestData = \Kafka\Protocol::encode(\Kafka\Protocol::PRODUCE_REQUEST, $params);
+            $requestData = \yii\swoole\kafka\Protocol::encode(\yii\swoole\kafka\Protocol::PRODUCE_REQUEST, $params);
             $connect->write($requestData);
 
             if ($requiredAck !== 0) { // If it is 0 the server will not send any response
@@ -101,7 +98,7 @@ class CoroProcess
                 $dataLen = substr($data, 0, 4);
                 $dataLen = Protocol::unpack(Protocol::BIT_B32, $dataLen);
                 $correlationId = Protocol::unpack(Protocol::BIT_B32, substr($data, 4, 4));
-                $ret = \Kafka\Protocol::decode(\Kafka\Protocol::PRODUCE_REQUEST, substr($data, 8));
+                $ret = \yii\swoole\kafka\Protocol::decode(\yii\swoole\kafka\Protocol::PRODUCE_REQUEST, substr($data, 8));
 
                 $result[] = $ret;
             }
@@ -117,7 +114,7 @@ class CoroProcess
         $dataLen = substr($data, 0, 4);
         $dataLen = Protocol::unpack(Protocol::BIT_B32, $dataLen);
         $correlationId = Protocol::unpack(Protocol::BIT_B32, substr($data, 4, 4));
-        $result = \Kafka\Protocol::decode(\Kafka\Protocol::METADATA_REQUEST, substr($data, 8));
+        $result = \yii\swoole\kafka\Protocol::decode(\yii\swoole\kafka\Protocol::METADATA_REQUEST, substr($data, 8));
 
         if (!isset($result['brokers'], $result['topics'])) {
             throw new Exception('Get metadata is fail, brokers or topics is null.');
@@ -163,7 +160,7 @@ class CoroProcess
 
             $params = [];
             $this->debug('Start sync metadata request params:' . json_encode($params));
-            $requestData = \Kafka\Protocol::encode(\Kafka\Protocol::METADATA_REQUEST, $params);
+            $requestData = \yii\swoole\kafka\Protocol::encode(\yii\swoole\kafka\Protocol::METADATA_REQUEST, $params);
             $result = $this->reSyncMeta($socket, $requestData);
             $broker = $this->getBroker();
             $broker->setData($result['topics'], $result['brokers']);

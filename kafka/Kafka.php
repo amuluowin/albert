@@ -8,8 +8,6 @@
 
 namespace yii\swoole\kafka;
 
-use Monolog\Handler\StdoutHandler;
-use Psr\Log\LoggerInterface;
 use Yii;
 use yii\base\Component;
 use yii\swoole\tcp\TcpClient;
@@ -40,14 +38,8 @@ class Kafka extends Component
         }
     }
 
-    public function startProducer(LoggerInterface $logger = null)
+    public function startProducer()
     {
-//        if ($logger) {
-//            $this->logger = $logger;
-//        }
-//        if ($this->logger) {
-//            $this->logger->pushHandler(new StdoutHandler());
-//        }
         $this->producer->start($this->logger);
     }
 
@@ -56,14 +48,8 @@ class Kafka extends Component
         $this->producer->send($data);
     }
 
-    public function startConsumer(LoggerInterface $logger = null)
+    public function startConsumer()
     {
-//        if ($logger) {
-//            $this->logger = $logger;
-//        }
-//        if ($this->logger) {
-//            $this->logger->pushHandler(new StdoutHandler());
-//        }
         $this->consumer->start($this->logger);
     }
 }

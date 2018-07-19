@@ -8,9 +8,9 @@
 
 namespace yii\swoole\kafka;
 
-use Kafka\Protocol;
-use Kafka\Sasl\Scram;
-use Kafka\SocketSync;
+use yii\swoole\kafka\Protocol;
+use yii\swoole\kafka\Sasl\Scram;
+use yii\swoole\kafka\SocketSync;
 use yii\base\BaseObject;
 
 class SaslSocket extends BaseObject
@@ -19,8 +19,8 @@ class SaslSocket extends BaseObject
     {
         parent::init();
         Protocol::init('1.0.0');
-        //$provider = new \Kafka\Sasl\Plain('nmred', '123456');
-        //$provider = new \Kafka\Sasl\Gssapi('/etc/security/keytabs/kafkaclient.keytab', 'kafka/node1@NMREDKAFKA.COM');
+        //$provider = new \yii\swoole\kafka\Sasl\Plain('nmred', '123456');
+        //$provider = new \yii\swoole\kafka\Sasl\Gssapi('/etc/security/keytabs/kafkaclient.keytab', 'kafka/node1@NMREDKAFKA.COM');
         $provider = new Scram('alice', 'alice-secret', Scram::SCRAM_SHA_256);
         $socket = new SocketSync('127.0.0.1', '9092', null, $provider);
         $socket->connect();
@@ -44,9 +44,9 @@ class SaslSocket extends BaseObject
         ];
         $requestData = Protocol::encode(Protocol::PRODUCE_REQUEST, $data);
         $socket->write($requestData);
-        $dataLen = \Kafka\Protocol\Protocol::unpack(\Kafka\Protocol\Protocol::BIT_B32, $socket->readBlocking(4));
+        $dataLen = \yii\swoole\kafka\Protocol\Protocol::unpack(\yii\swoole\kafka\Protocol\Protocol::BIT_B32, $socket->readBlocking(4));
         $data = $socket->readBlocking($dataLen);
-        $correlationId = \Kafka\Protocol\Protocol::unpack(\Kafka\Protocol\Protocol::BIT_B32, substr($data, 0, 4));
+        $correlationId = \yii\swoole\kafka\Protocol\Protocol::unpack(\yii\swoole\kafka\Protocol\Protocol::BIT_B32, substr($data, 0, 4));
         $result = Protocol::decode(Protocol::PRODUCE_REQUEST, substr($data, 4));
         var_dump($result);
     }

@@ -8,10 +8,7 @@
 
 namespace yii\swoole\kafka;
 
-use Kafka\ProducerConfig;
-use Psr\Log\LoggerInterface;
 use Yii;
-use yii\base\BaseObject;
 use yii\base\Component;
 use yii\swoole\kafka\Producer\CoroProducer;
 
@@ -47,7 +44,7 @@ class KProducer extends Component
      */
     public $produceInterval = 500;
 
-    public function start(LoggerInterface $logger = null)
+    public function start()
     {
         $config = ProducerConfig::getInstance();
         $config->setMetadataRefreshIntervalMs($this->refreshInterval);
@@ -70,16 +67,12 @@ class KProducer extends Component
 //        $config->setSslPassphrase('123456');
 //        $config->setSslPeerName('nmred');
         $this->producer = new CoroProducer();
-        if ($logger) {
-            $this->producer->setLogger($logger);
-        }
     }
 
     public function send($data): ?array
     {
         if ($this->producer) {
             return $this->producer->send($data);
-
         }
     }
 }

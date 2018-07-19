@@ -8,10 +8,7 @@
 
 namespace yii\swoole\kafka;
 
-
-use Psr\Log\LoggerInterface;
-
 interface IKafkaControl
 {
-    public function start(LoggerInterface $logger = null);
+    public function start();
 }

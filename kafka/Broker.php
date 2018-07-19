@@ -8,16 +8,17 @@
 
 namespace yii\swoole\kafka;
 
-use Kafka\CommonSocket;
-use Kafka\Config;
-use Kafka\Protocol;
-use Kafka\Sasl\Gssapi;
-use Kafka\Sasl\Plain;
-use Kafka\Sasl\Scram;
-use Kafka\SaslMechanism;
-use Kafka\SingletonTrait;
+use yii\swoole\kafka\CommonSocket;
+use yii\swoole\kafka\Config;
+use yii\swoole\kafka\Protocol;
+use yii\swoole\kafka\Sasl\Gssapi;
+use yii\swoole\kafka\Sasl\Plain;
+use yii\swoole\kafka\Sasl\Scram;
+use yii\swoole\kafka\SaslMechanism;
+
 use Yii;
 use yii\base\Exception;
+use yii\swoole\base\SingletonTrait;
 use yii\swoole\helpers\SerializeHelper;
 use function array_keys;
 use function explode;
@@ -26,10 +27,10 @@ use function shuffle;
 use function sprintf;
 use function strpos;
 
-class Broker extends \Kafka\Broker
+class Broker
 {
     use SingletonTrait;
-
+    use LoggerTrait;
     /**
      * @var int
      */
@@ -227,7 +228,7 @@ class Broker extends \Kafka\Broker
     }
 
     /**
-     * @throws \Kafka\Exception
+     * @throws \yii\swoole\kafka\Exception
      */
     public function getSocket(string $host, int $port, bool $modeSync): CommonSocket
     {
@@ -239,7 +240,7 @@ class Broker extends \Kafka\Broker
     }
 
     /**
-     * @throws \Kafka\Exception
+     * @throws \yii\swoole\kafka\Exception
      */
     private function judgeConnectionConfig(): ?SaslMechanism
     {
@@ -269,7 +270,7 @@ class Broker extends \Kafka\Broker
     }
 
     /**
-     * @throws \Kafka\Exception
+     * @throws \yii\swoole\kafka\Exception
      */
     private function getSaslMechanismProvider(Config $config): SaslMechanism
     {

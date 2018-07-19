@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace yii\swoole\kafka\Consumer;
 
-use Kafka\Consumer\StopStrategy;
-use Kafka\LoggerTrait;
+use yii\swoole\kafka\Consumer\StopStrategy;
+use yii\swoole\kafka\LoggerTrait;
 use Psr\Log\LoggerAwareTrait;
 
 class Consumer
