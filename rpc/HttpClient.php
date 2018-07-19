@@ -11,6 +11,7 @@ namespace yii\swoole\rpc;
 
 use yii\httpclient\Response;
 use yii\swoole\coroutine\ICoroutine;
+use yii\swoole\governance\provider\ProviderInterface;
 use yii\swoole\httpclient\Client;
 use yii\swoole\pool\HttpPool;
 
@@ -60,7 +61,11 @@ class HttpClient extends IRpcClient
     {
         $data = [];
         list($data['service'], $data['route']) = Yii::$app->rpc->getService();
-        $server = Yii::$app->gr->provider->getServices($data['service']);
+        /**
+         * @var ProviderInterface $provider
+         */
+        $provider = Yii::$app->gr->provider;
+        $server = $provider->getServices($data['service'], $provider->apiPrefix);
         list($server, $port) = Yii::$app->gr->balance->select($data['service'])->getCurrentService($server);
         $url = 'http://' . $server . ':' . $port . $data['service'] . $data['route'];
         $data['method'] = $name;
