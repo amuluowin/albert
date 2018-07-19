@@ -48,7 +48,7 @@ class KafkaTarget extends Target
                 [
                     'topic' => 'test',
                     'value' => implode("\n", array_map([$this, 'formatMessage'], $this->messages)) . "\n",
-                    'key' => Yii::$app->request->getTraceId(),
+                    'key' => APP_NAME,
                 ],
             ]);
         }
