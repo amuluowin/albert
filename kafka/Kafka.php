@@ -23,7 +23,6 @@ class Kafka extends Component
      * @var KProducer
      */
     public $producer;
-    public $logger;
 
     public function init()
     {
@@ -40,7 +39,7 @@ class Kafka extends Component
 
     public function startProducer()
     {
-        $this->producer->start($this->logger);
+        $this->producer->start();
     }
 
     public function send(array $data)
@@ -50,6 +49,6 @@ class Kafka extends Component
 
     public function startConsumer()
     {
-        $this->consumer->start($this->logger);
+        $this->consumer->start();
     }
 }
