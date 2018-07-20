@@ -31,7 +31,7 @@ class Tracer extends Component implements ICoroutine, TraceInterface
      */
     public $exporter;
 
-    public function getCollect(string $traceId, array $collect):?array
+    public function getCollect(string $traceId, array $collect): ?array
     {
         if (isset($this->collect[$traceId])) {
             $this->collect[$traceId]['parentId'] = $this->collect[$traceId]['spanId'];
@@ -53,8 +53,15 @@ class Tracer extends Component implements ICoroutine, TraceInterface
         $this->collect[$traceId] = ArrayHelper::merge($this->collect[$traceId], $collect);
     }
 
+    public function flushCollect(string $traceId)
+    {
+        $this->exporter->export($this->collect[$traceId]);
+    }
+
     public function release($traceId = null)
     {
-        unset($this->collect[$traceId]);
+        if ($traceId) {
+            unset($this->collect[$traceId]);
+        }
     }
 }

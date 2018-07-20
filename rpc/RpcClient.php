@@ -5,6 +5,7 @@ namespace yii\swoole\rpc;
 use Yii;
 use yii\base\Component;
 use yii\swoole\base\Defer;
+use yii\swoole\governance\Governance;
 use yii\swoole\helpers\CoroHelper;
 
 class RpcClient extends Component
@@ -31,11 +32,6 @@ class RpcClient extends Component
     private $service = [];
 
     /**
-     * @var string
-     */
-    private $traceId;
-
-    /**
      * @var bool
      */
     public $fastCall = false;
@@ -53,19 +49,27 @@ class RpcClient extends Component
 
     public function beforeSend(array $data): array
     {
-        if (Yii::$app->gr->tracer && Yii::$app->gr->tracer->isTrace) {
-            $this->traceId = Yii::$app->request->getTraceId();
-            $data = Yii::$app->gr->tracer->getCollect($this->traceId, $data);
+        /**
+         * @var Governance $gc
+         */
+        $gc = Yii::$app->gr;
+        if ($gc->tracer && $gc->tracer->isTrace) {
+            $data = $gc->tracer->getCollect(Yii::$app->request->getTraceId(), $data);
         }
         return $data;
     }
 
     public function afterRecv($result)
     {
-        if (Yii::$app->gr->tracer && Yii::$app->gr->tracer->isTrace) {
+        /**
+         * @var Governance $gc
+         */
+        $gc = Yii::$app->gr;
+        if ($gc->tracer && $gc->tracer->isTrace) {
             $data = [];
             $data['result'] = $result;
-            Yii::$app->gr->tracer->addCollect($this->traceId, $data);
+            $gc->tracer->addCollect(Yii::$app->request->getTraceId(), $data);
+            $gc->tracer->flushCollect(Yii::$app->request->getTraceId());
         }
     }
 

@@ -14,4 +14,6 @@ interface TraceInterface
     public function getCollect(string $traceId,array $collect):?array;
 
     public function addCollect(string $traceId, array $collect);
+
+    public function flushCollect(string $traceId);
 }

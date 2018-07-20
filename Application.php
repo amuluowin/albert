@@ -50,7 +50,7 @@ class Application extends Module implements ICoroutine
     /**
      * @var array
      */
-    public $workerStart=[];
+    public $workerStart = [];
 
     /**
      * @event Event an event raised before the application starts to handle a request.
@@ -177,9 +177,7 @@ class Application extends Module implements ICoroutine
 
     public function release()
     {
-        //清理request,response
         $id = CoroHelper::getId();
-        unset(Yii::$server->currentSwooleRequest[$id]);
         //清理属性
         $this->clearProperty();
         //回收组件
@@ -189,7 +187,8 @@ class Application extends Module implements ICoroutine
         unset($_POST[$id]);
         unset($_FILES[$id]);
         unset($_COOKIE[$id]);
-
+        //清理request,response
+        unset(Yii::$server->currentSwooleRequest[$id]);
     }
 
     public function clearProperty()
@@ -207,6 +206,9 @@ class Application extends Module implements ICoroutine
         Yii::$app->getUser()->release();
         Yii::$app->getRequest()->release();
         Yii::$app->getResponse()->release();
+        if (($gc = Yii::$app->get('gc', false)) !== null && $gc->tracer) {
+            $gc->tracer->release(Yii::$app->getRequest()->getTraceId());
+        }
     }
 
     public function __construct($config = [])

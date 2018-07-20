@@ -74,5 +74,6 @@ class KProducer extends Component
         if ($this->producer) {
             return $this->producer->send($data);
         }
+        return null;
     }
 }
