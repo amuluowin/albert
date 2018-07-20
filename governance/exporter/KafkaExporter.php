@@ -9,9 +9,11 @@
 namespace yii\swoole\governance\exporter;
 
 use Yii;
+use yii\base\Component;
 use yii\helpers\VarDumper;
+use yii\swoole\kafka\Kafka;
 
-class KafkaExporter implements ExportInterface
+class KafkaExporter extends Component implements ExportInterface
 {
     /**
      * @var string
@@ -20,13 +22,15 @@ class KafkaExporter implements ExportInterface
 
     public function export($data, string $key = null)
     {
-        if (($kafka = Yii::$app->get('kafka', false)) !== null
-            && isset($kafka->producer)) {
-            $kafka->producer->send([
+        /**
+         * @var Kafka $kafka
+         */
+        if (($kafka = Yii::$app->get('kafka', false)) !== null) {
+            $kafka->send([
                 [
-                    'topic' => 'trace',
+                    'topic' => $this->topic,
                     'value' => VarDumper::export($data),
-                    'key' => $key,
+                    'key' => APP_NAME,
                 ],
             ]);
         }

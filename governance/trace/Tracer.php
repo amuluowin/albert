@@ -31,6 +31,13 @@ class Tracer extends Component implements ICoroutine, TraceInterface
      */
     public $exporter;
 
+    public function init()
+    {
+        if (is_array($this->exporter)) {
+            $this->exporter = Yii::createObject($this->exporter);
+        }
+    }
+
     public function getCollect(string $traceId, array $collect): ?array
     {
         if (isset($this->collect[$traceId])) {
@@ -55,7 +62,9 @@ class Tracer extends Component implements ICoroutine, TraceInterface
 
     public function flushCollect(string $traceId)
     {
-        $this->exporter->export($this->collect[$traceId]);
+        if ($this->exporter instanceof ExportInterface) {
+            $this->exporter->export($this->collect[$traceId]);
+        }
     }
 
     public function release($traceId = null)

@@ -5,11 +5,9 @@ namespace yii\swoole\kafka\Consumer;
 
 use yii\swoole\kafka\Consumer\StopStrategy;
 use yii\swoole\kafka\LoggerTrait;
-use Psr\Log\LoggerAwareTrait;
 
 class Consumer
 {
-    use LoggerAwareTrait;
     use LoggerTrait;
 
     /**

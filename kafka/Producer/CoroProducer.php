@@ -5,13 +5,11 @@ namespace yii\swoole\kafka\Producer;
 
 use yii\swoole\kafka\LoggerTrait;
 use yii\swoole\kafka\Producer\SyncProcess;
-use Psr\Log\LoggerAwareTrait;
 use yii\base\Exception;
 use function is_array;
 
 class CoroProducer
 {
-    use LoggerAwareTrait;
     use LoggerTrait;
 
     /**

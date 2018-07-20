@@ -18,7 +18,7 @@ class FileTarget extends Target
     public function init()
     {
         if ($this->logFile === null) {
-            $this->logFile = Yii::$app->getRuntimePath() . '/logs/app.log';
+            $this->logFile = Yii::$app->getRuntimePath() . '/logs';
         } else {
             $this->logFile = Yii::getAlias($this->logFile);
         }
@@ -26,8 +26,8 @@ class FileTarget extends Target
 
     public function export($topic, $part, $message)
     {
-        go(function () use ($message) {
-            FileIO::write($this->logFile, 'System:' . $message['message']['key'] . ' ' . $message['message']['value'] . PHP_EOL, FILE_APPEND);
+        go(function () use ($topic, $message) {
+            FileIO::write($this->logFile . '/' . $topic . '.log', 'System:' . $message['message']['key'] . ' ' . $message['message']['value'] . PHP_EOL, FILE_APPEND);
         });
     }
 }

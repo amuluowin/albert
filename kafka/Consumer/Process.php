@@ -9,7 +9,6 @@ use yii\swoole\kafka\Exception;
 use yii\swoole\kafka\LoggerTrait;
 use yii\swoole\kafka\Protocol;
 use yii\swoole\kafka\Protocol\Protocol as ProtocolTool;
-use Psr\Log\LoggerAwareTrait;
 use yii\swoole\kafka\Broker;
 use function count;
 use function end;
@@ -23,7 +22,6 @@ use function trim;
 
 class Process
 {
-    use LoggerAwareTrait;
     use LoggerTrait;
 
     /**

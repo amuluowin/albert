@@ -6,7 +6,6 @@ namespace yii\swoole\kafka\Protocol;
 use yii\swoole\kafka\Exception\NotSupported;
 use yii\swoole\kafka\Exception\Protocol as ProtocolException;
 use yii\swoole\kafka\LoggerTrait;
-use Psr\Log\LoggerAwareTrait;
 use function array_map;
 use function array_shift;
 use function array_values;
@@ -25,7 +24,6 @@ use function version_compare;
 
 abstract class Protocol
 {
-    use LoggerAwareTrait;
     use LoggerTrait;
 
     /**

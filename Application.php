@@ -7,8 +7,10 @@ use yii\base\BootstrapInterface;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\base\InvalidRouteException;
+use yii\swoole\base\EndInterface;
 use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\helpers\CoroHelper;
+use yii\swoole\process\BaseProcess;
 use yii\swoole\server\ProcessServer;
 use yii\swoole\web\Request;
 use yii\swoole\web\Response;
@@ -36,6 +38,11 @@ class Application extends Module implements ICoroutine
      * @var array
      */
     public $process = [];
+
+    /**
+     * @var array
+     */
+    public $clean = [];
 
     /**
      * @var array
@@ -179,21 +186,31 @@ class Application extends Module implements ICoroutine
     {
         $id = CoroHelper::getId();
         //清理属性
-        $this->clearProperty();
-        //回收组件
-        $this->clearComponents();
+        $this->clearProperty($id);
+        //清理组件
+        $this->clearComponent();
         //清理环境变量
         unset($_GET[$id]);
         unset($_POST[$id]);
         unset($_FILES[$id]);
         unset($_COOKIE[$id]);
-        //清理request,response
+        //清理request
         unset(Yii::$server->currentSwooleRequest[$id]);
+
+        //自定义清理
+        if (is_array($this->clean)) {
+            foreach ($this->clean as $name => $obj) {
+                if (!$clean instanceof EndInterface) {
+                    $clean = Yii::createObject($obj);
+                    $this->clean[$name] = $clean;
+                }
+                $clean->clean();
+            }
+        }
     }
 
-    public function clearProperty()
+    private function clearProperty(int $id)
     {
-        $id = CoroHelper::getId();
         unset($this->_requestedRoute[$id]);
         unset($this->_requestedParams[$id]);
         unset($this->_requestedAction[$id]);
@@ -201,14 +218,11 @@ class Application extends Module implements ICoroutine
         unset($this->_language[$id]);
     }
 
-    public function clearComponents()
+    private function clearComponent()
     {
         Yii::$app->getUser()->release();
         Yii::$app->getRequest()->release();
         Yii::$app->getResponse()->release();
-        if (($gc = Yii::$app->get('gc', false)) !== null && $gc->tracer) {
-            $gc->tracer->release(Yii::$app->getRequest()->getTraceId());
-        }
     }
 
     public function __construct($config = [])
@@ -232,8 +246,10 @@ class Application extends Module implements ICoroutine
                 if (isset($obj['boot']) && $obj['boot'] === true) {
                     $obj['name'] = $name;
                     $process = Yii::createObject($obj);
-                    $this->process[$name] = $process;
-                    ProcessServer::getInstance()->start($process);
+                    if ($process instanceof BaseProcess) {
+                        $this->process[$name] = $process;
+                        ProcessServer::getInstance()->start($process);
+                    }
                 }
             }
         }
