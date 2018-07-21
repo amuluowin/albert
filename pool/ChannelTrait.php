@@ -1,4 +1,10 @@
 <?php
+/**
+ * Created by PhpStorm.
+ * User: Administrator
+ * Date: 2018/7/21
+ * Time: 10:34
+ */
 
 namespace yii\swoole\pool;
 
@@ -9,13 +15,12 @@ use yii\helpers\VarDumper;
 use yii\swoole\base\Output;
 use yii\swoole\configcenter\ConfigInterface;
 use yii\web\ServerErrorHttpException;
+use Swoole\Coroutine\Channel;
 
-trait PoolTrait
+trait ChannelTrait
 {
     protected $spareConns = [];
     protected $busyConns = [];
-    protected $pendingFetchCount = [];
-    protected $resumeFetchCount = [];
     protected $connsConfig = [];
     protected $connsNameMap = [];
 
@@ -25,14 +30,12 @@ trait PoolTrait
 
     public function create(string $connName, array $config)
     {
-        $this->connsConfig[$connName] = $config;
-        $this->spareConns[$connName] = new \SplQueue();
-        $this->busyConns[$connName] = [];
-        $this->pendingFetchCount[$connName] = 0;
-        $this->resumeFetchCount[$connName] = 0;
         if ($config['pool_size'] <= 0 || $config['busy_size'] <= 0) {
             throw new InvalidArgumentException("Invalid maxSpareConns or maxConns in {$connName}");
         }
+        $this->connsConfig[$connName] = $config;
+        $this->spareConns[$connName] = new Channel($config['pool_size']);
+        $this->busyConns[$connName] = [];
         /**
          * @var ConfigInterface $center
          */
@@ -65,15 +68,10 @@ trait PoolTrait
             if ((($conn instanceof \Swoole\Coroutine\MySQL) && $conn->errno === 0) ||
                 (!($conn instanceof \Swoole\Coroutine\MySQL) && $conn->errCode === 0)
             ) {
-                if ($this->spareConns[$connName]->count() >= $this->connsConfig[$connName]['busy_size']) {
+                if ($this->spareConns[$connName]->length() >= $this->connsConfig[$connName]['busy_size']) {
                     $conn->close();
                 } else {
                     $this->spareConns[$connName]->push($conn);
-                    if ($this->pendingFetchCount[$connName] > 0) {
-                        $this->resumeFetchCount[$connName]++;
-                        $this->pendingFetchCount[$connName]--;
-                        \Swoole\Coroutine::resume($connName);
-                    }
                     return;
                 }
             }
@@ -102,27 +100,9 @@ trait PoolTrait
 
     protected function getConn(string $connName)
     {
-        if (!empty($this->spareConns[$connName]) && $this->spareConns[$connName]->count() > $this->resumeFetchCount[$connName]) {
-            $conn = $this->spareConns[$connName]->shift();
-            $this->busyConns[$connName][spl_object_hash($conn)] = $conn;
-            return $conn;
-        }
-
-        if (count($this->busyConns[$connName]) + $this->spareConns[$connName]->count() == $this->connsConfig[$connName]['pool_size']) {
-            $this->pendingFetchCount[$connName]++;
-            if (\Swoole\Coroutine::suspend($connName) == false) {
-                $this->pendingFetchCount[$connName]--;
-                throw new Exception('Reach max connections! Can not pending fetch!');
-            }
-            $this->resumeFetchCount[$connName]--;
-            if (!empty($this->spareConns[$connName])) {
-                $conn = $this->spareConns[$connName]->shift();
-                $this->busyConns[$connName][spl_object_hash($conn)] = $conn;
-                return $conn;
-            } else {
-                return false;//should not happen
-            }
-        }
+        $conn = $this->spareConns[$connName]->pop();
+        $this->busyConns[$connName][spl_object_hash($conn)] = $conn;
+        return $conn;
     }
 
     protected function saveConn($connName, $conn)
