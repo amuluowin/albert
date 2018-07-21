@@ -9,6 +9,7 @@ use yii\helpers\VarDumper;
 use yii\swoole\base\Output;
 use yii\swoole\configcenter\ConfigInterface;
 use yii\web\ServerErrorHttpException;
+use yii\swoole\helpers\ArrayHelper;
 
 trait PoolTrait
 {
@@ -25,19 +26,20 @@ trait PoolTrait
 
     public function create(string $connName, array $config)
     {
+        if ($config['pool_size'] <= 0 || $config['busy_size'] <= 0) {
+            throw new InvalidArgumentException("Invalid maxSpareConns or maxConns in {$connName}");
+        }
         $this->connsConfig[$connName] = $config;
         $this->spareConns[$connName] = new \SplQueue();
         $this->busyConns[$connName] = [];
         $this->pendingFetchCount[$connName] = 0;
         $this->resumeFetchCount[$connName] = 0;
-        if ($config['pool_size'] <= 0 || $config['busy_size'] <= 0) {
-            throw new InvalidArgumentException("Invalid maxSpareConns or maxConns in {$connName}");
-        }
         /**
          * @var ConfigInterface $center
          */
         if (($center = Yii::$app->get('csconf', false)) !== null) {
-            $center->putConfig($connName, $config);
+            $data = ArrayHelper::getValueByArray($config, ['pool_size', 'busy_size']);
+            $center->putConfig($connName, $data);
             Yii::$confKeys[$connName] = [$this, 'setConfig'];
         }
         return $this;
@@ -45,8 +47,9 @@ trait PoolTrait
 
     public function setConfig(string $connName, array $config)
     {
-        if ($config && $this->connsConfig[$connName] !== $config) {
-            $this->connsConfig[$connName] = $config;
+        $data = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['pool_size', 'busy_size']);
+        if ($config && $data !== $config) {
+            $this->connsConfig[$connName] = ArrayHelper::merge($this->connsConfig[$connName], $config);
             Output::writeln(sprintf('%s config changed to %s', $connName, VarDumper::export($config)));
         }
     }

@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace yii\swoole\kafka;
 
-class Exception extends \RuntimeException
+use yii\base\UserException;
+
+class Exception extends UserException
 {
 }

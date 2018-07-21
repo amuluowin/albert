@@ -11,12 +11,11 @@ class RedisPool extends \yii\swoole\pool\IPool
 
     public function createConn(string $connName, $conn = null)
     {
-        if (!$conn) {
-            $cons = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['password', 'database', 'timeout'], [null, 0, 0.5]);
-            $conn = new \Swoole\Coroutine\Redis($cons);
-            $this->saveConn($connName, $conn);
+        if ($conn && $conn->errCode === 0 && $conn->connected) {
+            return $conn;
         }
         $this->reConnect($conn, $connName);
+        $this->saveConn($connName, $conn);
         return $conn;
     }
 
@@ -24,7 +23,9 @@ class RedisPool extends \yii\swoole\pool\IPool
     {
         $config = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['hostname', 'port', 'serialize'],
             ['localhost', 6379, true]);
-        if (!$conn->connected && $conn->connect(\Co::gethostbyname($config['hostname']), $config['port'], false) == false
+        $cons = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['password', 'database', 'timeout'], [null, 0, 0.5]);
+        $conn = new \Swoole\Coroutine\Redis(array_filter($cons));
+        if ($conn->connect(\Co::gethostbyname($config['hostname']), $config['port'], false) == false
         ) {
             if ($this->reconnect <= $this->curconnect) {
                 $this->curconnect = 0;
@@ -33,6 +34,7 @@ class RedisPool extends \yii\swoole\pool\IPool
             } else {
                 $this->curconnect++;
                 \Co::sleep(1);
+                $conn = null;
                 $this->reConnect($conn, $connName);
             }
         }

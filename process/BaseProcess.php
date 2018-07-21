@@ -121,10 +121,7 @@ abstract class BaseProcess extends \yii\base\Component
 
     public function release()
     {
-        if (!$this->server) {
-            Yii::getLogger()->flush(true);
-            Yii::$app->clearComponents();
-        }
+        Yii::getLogger()->flush(true);
+        Yii::$app->release();
     }
-
 }

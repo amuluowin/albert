@@ -14,6 +14,7 @@ class HttpPool extends \yii\swoole\pool\IPool
             return $conn;
         }
         $this->reConnect($conn, $connName);
+        $this->saveConn($connName, $conn);
         return $conn;
     }
 
@@ -33,7 +34,6 @@ class HttpPool extends \yii\swoole\pool\IPool
                 $this->reConnect($conn, $connName);
             }
         }
-        $this->saveConn($connName, $conn);
         if (isset($config['setting'])) {
             $conn->set($config['setting']);
         }
