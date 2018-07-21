@@ -13,21 +13,24 @@ use yii\swoole\files\FileIO;
 
 class FileTarget extends Target
 {
-    public $logFile;
-
-    public function init()
-    {
-        if ($this->logFile === null) {
-            $this->logFile = Yii::$app->getRuntimePath() . '/logs';
-        } else {
-            $this->logFile = Yii::getAlias($this->logFile);
-        }
-    }
+    /**
+     * @var array
+     */
+    public $target;
 
     public function export($topic, $part, $message)
     {
-        go(function () use ($topic, $message) {
-            FileIO::write($this->logFile . '/' . $topic . '.log', 'System:' . $message['message']['key'] . ' ' . $message['message']['value'] . PHP_EOL, FILE_APPEND);
+        /**
+         * @var \yii\swoole\files\FileTarget $target
+         */
+        if (!$this->target instanceof \yii\swoole\files\FileTarget) {
+            $target = clone Yii::createObject($this->target);
+        } else {
+            $target = clone $this->target;
+        }
+        $target->logFile = sprintf($target->logFile, $topic, $part);
+        go(function () use ($target, $message) {
+            $target->export($message['message']['key'] . ':' . $message['message']['value']);
         });
     }
 }

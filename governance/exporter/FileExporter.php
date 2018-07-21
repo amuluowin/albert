@@ -8,9 +8,10 @@
 
 namespace yii\swoole\governance\exporter;
 
-
+use Yii;
 use yii\base\Component;
 use yii\helpers\VarDumper;
+use yii\swoole\files\FileTarget;
 
 class FileExporter extends Component implements ExportInterface
 {
@@ -21,19 +22,22 @@ class FileExporter extends Component implements ExportInterface
 
     public $logFile;
 
+    /**
+     * @var FileTarget $target
+     */
+    public $target;
+
     public function init()
     {
-        if ($this->logFile === null) {
-            $this->logFile = Yii::$app->getRuntimePath() . '/logs';
-        } else {
-            $this->logFile = Yii::getAlias($this->logFile);
+        if (!$this->target instanceof FileTarget) {
+            $this->target = Yii::createObject($this->target);
         }
     }
 
     public function export($data, string $key = null)
     {
         go(function () use ($data) {
-            FileIO::write($this->logFile . '/' . $this->topic . '.log', 'System:' . APP_NAME . ' ' . VarDumper::export($data) . PHP_EOL, FILE_APPEND);
+            $this->target->export(APP_NAME . ':' . VarDumper::export($data));
         });
     }
 }

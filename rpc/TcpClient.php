@@ -55,6 +55,7 @@ class TcpClient extends IRpcClient implements ICoroutine
         $provider = Yii::$app->gr->provider;
         $server = $provider->getServices($data['service'], $provider->servicePrefix);
         list($server, $port) = Yii::$app->gr->balance->select($data['service'])->getCurrentService($server);
+        $data['toHost'] = $server . ':' . $port;
         $key = sprintf('rpc:%s:%d', $server, $port);
         if (!Yii::$container->hasSingleton('tcpclient')) {
             Yii::$container->setSingleton('tcpclient', [

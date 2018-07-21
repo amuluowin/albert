@@ -6,7 +6,7 @@
  * Time: 下午4:26
  */
 
-namespace yii\swoole\log;
+namespace yii\swoole\kafka;
 
 use Yii;
 use yii\log\Target;
@@ -16,14 +16,15 @@ use yii\swoole\kafka\Kafka;
 class KafkaTarget extends Target
 {
     /**
+     * @var string
+     */
+    public $topic = APP_NAME;
+
+    /**
      * @inheritdoc
      */
     protected function getContextMessage()
     {
-        if (!Application::$workerApp) {
-            return parent::getContextMessage();
-        }
-        // 原来的上下文格式化函数, VarDumper太耗时了, 改成直接print_r, 虽然样式丢失不了, 但是效率提升不少
         $result = [];
         foreach ($this->logVars as $key) {
             if (isset($GLOBALS[$key])) {
@@ -46,9 +47,9 @@ class KafkaTarget extends Target
             && isset($kafka->producer)) {
             $kafka->send([
                 [
-                    'topic' => 'test',
+                    'topic' => $this->topic,
                     'value' => implode("\n", array_map([$this, 'formatMessage'], $this->messages)) . "\n",
-                    'key' => APP_NAME,
+                    'key' => 'SystemLog',
                 ],
             ]);
         }

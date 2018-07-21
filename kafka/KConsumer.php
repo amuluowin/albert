@@ -22,6 +22,9 @@ class KConsumer extends Component implements IKafkaControl
     public $topics = ['test'];
     public $offsetReset = 'earliest';
 
+    /**
+     * @var array
+     */
     public $targets = [];
 
     public function init()
@@ -46,6 +49,9 @@ class KConsumer extends Component implements IKafkaControl
         $consumer = new Consumer();
         $consumer->start(function ($topic, $part, $message): void {
             foreach ($this->targets as $target) {
+                /**
+                 * @var Target $target
+                 */
                 $target->export($topic, $part, $message);
             }
         });

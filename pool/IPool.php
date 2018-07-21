@@ -7,7 +7,7 @@ use yii\swoole\configcenter\SetConfig;
 
 abstract class IPool extends \yii\base\Component implements SetConfig
 {
-    use ChannelTrait;
+    use PoolTrait;
 
     abstract public function createConn(string $connName, $conn = null);
 
