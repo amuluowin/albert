@@ -9,25 +9,27 @@ class MysqlPool extends \yii\swoole\pool\IPool
 {
     public function createConn(string $connName, $conn = null)
     {
-        if (!$conn) {
-            $conn = new \Swoole\Coroutine\MySQL();
-            $this->saveConn($connName, $conn);
+        if ($conn && $conn->errCode === 0 && $conn->connected) {
+            return $conn;
         }
         $this->reconnect($conn, $connName);
+        $this->saveConn($connName, $conn);
         return $conn;
     }
 
     protected function reConnect(&$conn, string $connName)
     {
+        $conn = new \Swoole\Coroutine\MySQL();
         $config = $this->connsConfig[$connName];
-        if (!$conn->connected && $conn->connect([
+        $timeout = isset($config['timeout']) ? $config['timeout'] : 1;
+        if ($conn->connect([
                 'host' => \Co::gethostbyname($config['host']),
                 'port' => $config['port'],
                 'user' => $config['user'],
                 'password' => $config['password'],
                 'database' => $config['database'],
                 'charset' => isset($config['charset']) ? $config['charset'] : 'utf-8',
-                'timeout' => isset($config['timeout']) ? $config['timeout'] : 1,
+                'timeout' => $timeout,
                 'strict_type' => $config['strict_type'],
                 'fetch_more' => $config['fetch_more']
             ]) == false
@@ -38,7 +40,8 @@ class MysqlPool extends \yii\swoole\pool\IPool
                 throw new Exception(sprintf('connect to mysql hsot=%s:%d error:%s', $config['host'], $config['port'], $conn->error));
             } else {
                 $this->curconnect++;
-                \Co::sleep(1);
+                \Co::sleep($timeout);
+                $conn = null;
                 $this->reConnect($conn, $connName);
             }
         }

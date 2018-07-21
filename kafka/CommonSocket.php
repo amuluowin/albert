@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace yii\swoole\kafka;
 
-use const STREAM_CLIENT_CONNECT;
 use function feof;
 use function fread;
 use function fwrite;
@@ -16,6 +15,7 @@ use function stream_socket_client;
 use function strlen;
 use function substr;
 use function trim;
+use const STREAM_CLIENT_CONNECT;
 
 abstract class CommonSocket
 {

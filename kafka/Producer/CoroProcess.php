@@ -3,12 +3,12 @@ declare(strict_types=1);
 
 namespace yii\swoole\kafka\Producer;
 
+use yii\swoole\kafka\Broker;
+use yii\swoole\kafka\CoroSocket;
 use yii\swoole\kafka\Exception;
 use yii\swoole\kafka\LoggerTrait;
-use yii\swoole\kafka\Producer\RecordValidator;
 use yii\swoole\kafka\ProducerConfig;
 use yii\swoole\kafka\Protocol\Protocol;
-use yii\swoole\kafka\Broker;
 use function array_keys;
 use function count;
 use function explode;
@@ -17,7 +17,6 @@ use function shuffle;
 use function sprintf;
 use function substr;
 use function trim;
-use yii\swoole\kafka\CoroSocket;
 
 class CoroProcess
 {

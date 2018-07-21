@@ -4,7 +4,6 @@ namespace yii\swoole\server;
 
 use Yii;
 use yii\swoole\Application;
-use yii\swoole\base\BootInterface;
 use yii\swoole\Container;
 use yii\swoole\helpers\ArrayHelper;
 
@@ -49,15 +48,8 @@ trait WorkTrait
             Yii::$app->get($id);
         }
 
-        foreach ($config['workerStart'] as $handle) {
-            if (!$handle instanceof BootInterface) {
-                $handle = Yii::createObject($handle);
-            }
-            $handle->handle($this);
-        }
-
         Yii::$app->setRootPath($this->root);
 
-        Yii::$app->prepare();
+        Yii::$app->prepare($this);
     }
 }

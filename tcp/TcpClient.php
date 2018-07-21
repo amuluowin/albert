@@ -5,8 +5,6 @@ namespace yii\swoole\tcp;
 use Yii;
 use yii\swoole\coroutine\BaseClient;
 use yii\swoole\coroutine\ICoroutine;
-use yii\swoole\helpers\CoroHelper;
-use yii\swoole\pack\TcpPack;
 use yii\swoole\pool\TcpPool;
 
 class TcpClient extends BaseClient implements ICoroutine

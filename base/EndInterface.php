@@ -9,8 +9,6 @@
 namespace yii\swoole\base;
 
 
-use yii\swoole\Application;
-
 interface EndInterface
 {
     public function clean();

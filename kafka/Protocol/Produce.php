@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 namespace yii\swoole\kafka\Protocol;
 
-use yii\swoole\kafka\Exception\NotSupported;
-use yii\swoole\kafka\Exception\Protocol as ProtocolException;
 use yii\swoole\base\clock\Clock;
 use yii\swoole\base\clock\SystemClock;
+use yii\swoole\kafka\Exception\NotSupported;
+use yii\swoole\kafka\Exception\Protocol as ProtocolException;
 use function crc32;
 use function is_array;
 use function substr;

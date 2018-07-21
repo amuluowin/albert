@@ -9,8 +9,6 @@ use Yii;
 use yii\helpers\ArrayHelper;
 use yii\swoole\base\SingletonTrait;
 use yii\swoole\server\HttpServer;
-use yii\swoole\websocket\WsAuthInterface;
-use yii\swoole\websocket\WsSendInterface;
 
 /**
  * WebSocket服务器

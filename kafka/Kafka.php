@@ -10,7 +10,6 @@ namespace yii\swoole\kafka;
 
 use Yii;
 use yii\base\Component;
-use yii\swoole\tcp\TcpClient;
 
 class Kafka extends Component
 {

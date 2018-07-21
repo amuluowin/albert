@@ -11,7 +11,6 @@ namespace yii\swoole\websocket;
 use Yii;
 use yii\base\Component;
 use yii\swoole\base\Defer;
-use yii\swoole\coroutine\BaseClient;
 use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\pool\HttpPool;
 use yii\web\ServerErrorHttpException;

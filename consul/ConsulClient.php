@@ -10,7 +10,6 @@ namespace yii\swoole\consul;
 
 use Yii;
 use yii\base\Component;
-use yii\swoole\httpclient\Client;
 
 class ConsulClient extends Component
 {

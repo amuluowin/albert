@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace yii\swoole\kafka;
 
-use yii\swoole\kafka\CommonSocket;
 use Yii;
 use yii\base\Exception;
 use yii\swoole\tcp\TcpClient;

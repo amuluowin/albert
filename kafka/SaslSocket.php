@@ -8,10 +8,9 @@
 
 namespace yii\swoole\kafka;
 
-use yii\swoole\kafka\Protocol;
+use yii\base\BaseObject;
 use yii\swoole\kafka\Sasl\Scram;
 use yii\swoole\kafka\SocketSync;
-use yii\base\BaseObject;
 
 class SaslSocket extends BaseObject
 {

@@ -9,7 +9,6 @@
 namespace yii\swoole\kafka;
 
 use Yii;
-use yii\base\BaseObject;
 use yii\base\Component;
 use yii\swoole\kafka\Consumer\Consumer;
 use yii\swoole\kafka\Targets\Target;

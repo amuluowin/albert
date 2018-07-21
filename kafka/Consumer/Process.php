@@ -3,13 +3,12 @@ declare(strict_types=1);
 
 namespace yii\swoole\kafka\Consumer;
 
-use yii\swoole\kafka\Consumer\Assignment;
+use yii\swoole\kafka\Broker;
 use yii\swoole\kafka\ConsumerConfig;
 use yii\swoole\kafka\Exception;
 use yii\swoole\kafka\LoggerTrait;
 use yii\swoole\kafka\Protocol;
 use yii\swoole\kafka\Protocol\Protocol as ProtocolTool;
-use yii\swoole\kafka\Broker;
 use function count;
 use function end;
 use function explode;

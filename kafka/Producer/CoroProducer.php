@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace yii\swoole\kafka\Producer;
 
+use yii\base\Exception;
 use yii\swoole\kafka\LoggerTrait;
 use yii\swoole\kafka\Producer\SyncProcess;
-use yii\base\Exception;
 use function is_array;
 
 class CoroProducer

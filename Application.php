@@ -7,15 +7,18 @@ use yii\base\BootstrapInterface;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\base\InvalidRouteException;
+use yii\swoole\base\BootInterface;
 use yii\swoole\base\EndInterface;
 use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\helpers\CoroHelper;
 use yii\swoole\process\BaseProcess;
 use yii\swoole\server\ProcessServer;
+use yii\swoole\server\Server;
 use yii\swoole\web\Request;
 use yii\swoole\web\Response;
 use yii\swoole\web\Session;
 use yii\web\NotFoundHttpException;
+use yii\web\ResponseFormatterInterface;
 use yii\web\UrlNormalizerRedirectException;
 
 class Application extends Module implements ICoroutine
@@ -198,12 +201,8 @@ class Application extends Module implements ICoroutine
         unset(Yii::$server->currentSwooleRequest[$id]);
 
         //自定义清理
-        if (is_array($this->clean)) {
-            foreach ($this->clean as $name => $obj) {
-                if (!$clean instanceof EndInterface) {
-                    $clean = Yii::createObject($obj);
-                    $this->clean[$name] = $clean;
-                }
+        foreach ($this->clean as $name => $clean) {
+            if ($clean instanceof EndInterface) {
                 $clean->clean();
             }
         }
@@ -251,6 +250,31 @@ class Application extends Module implements ICoroutine
                         ProcessServer::getInstance()->start($process);
                     }
                 }
+            }
+        }
+    }
+
+    private function initClean()
+    {
+        //自定义清理
+        if (is_array($this->clean)) {
+            foreach ($this->clean as $name => $obj) {
+                if (!$clean instanceof EndInterface) {
+                    $clean = Yii::createObject($obj);
+                    $this->clean[$name] = $clean;
+                }
+            }
+        }
+    }
+
+    private function initBoot(Server $server)
+    {
+        if (is_array($this->workerStart)) {
+            foreach ($this->workerStart as $handle) {
+                if (!$handle instanceof BootInterface) {
+                    $handle = Yii::createObject($handle);
+                }
+                $handle->handle($server);
             }
         }
     }
@@ -640,13 +664,18 @@ class Application extends Module implements ICoroutine
 
     /**
      * 预热一些可以浅复制的对象
-     *
-     * @throws \yii\base\InvalidConfigException
      */
-    public function prepare()
+    public function prepare(Server $server)
     {
+        //Create Boot
+        $this->initBoot($server);
+        //Create Clean
+        $this->initClean();
+
         foreach ($this->getResponse()->formatters as $type => $class) {
-            $this->getResponse()->formatters[$type] = Yii::createObject($class);
+            if (!$class instanceof ResponseFormatterInterface) {
+                $this->getResponse()->formatters[$type] = Yii::createObject($class);
+            }
         }
     }
 

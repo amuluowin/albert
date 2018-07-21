@@ -10,11 +10,11 @@ class TcpPool extends \yii\swoole\pool\IPool
 {
     public function createConn(string $connName, $conn = null)
     {
-        if (!$conn) {
-            $conn = new \Swoole\Coroutine\Client(SWOOLE_SOCK_TCP);
-            $this->saveConn($connName, $conn);
+        if ($conn && $conn->errCode === 0 && $conn->connected) {
+            return $conn;
         }
         $this->reConnect($conn, $connName);
+        $this->saveConn($connName, $conn);
         return $conn;
     }
 
@@ -22,17 +22,19 @@ class TcpPool extends \yii\swoole\pool\IPool
     {
         $config = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['hostname', 'port', 'timeout', 'setting'],
             ['localhost', 0, 0.5, []]);
+        $conn = new \Swoole\Coroutine\Client(SWOOLE_SOCK_TCP);
         if ($config['setting'] && empty($conn->setting)) {
             $conn->set($config['setting']);
         }
-        if (!$conn->connected && $conn->connect($config['hostname'], $config['port'], $config['timeout']) == false
+        if ($conn->connect($config['hostname'], $config['port'], $config['timeout']) == false
         ) {
             if ($this->reconnect <= $this->curconnect) {
                 $this->curconnect = 0;
                 throw new Exception(sprintf("Can not connect to tcp %s:%d error:%s", $config['hostname'], $config['port'], $conn->errCode));
             } else {
                 $this->curconnect++;
-                \Co::sleep(1);
+                \Co::sleep($config['timeout']);
+                $conn = null;
                 $this->reConnect($conn, $connName);
             }
         }

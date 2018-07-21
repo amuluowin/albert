@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace yii\swoole\kafka;
 
+use yii\swoole\base\SingletonTrait;
 use function in_array;
 use function trim;
-use yii\swoole\base\SingletonTrait;
 
 /**
  * @method string|false ietGroupId()

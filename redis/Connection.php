@@ -3,11 +3,9 @@
 namespace yii\swoole\redis;
 
 use Yii;
-use yii\helpers\Inflector;
 use yii\swoole\base\Defer;
 use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\helpers\CallHelper;
-use yii\swoole\helpers\CoroHelper;
 use yii\swoole\pool\RedisPool;
 
 class Connection extends \yii\redis\Connection implements ICoroutine

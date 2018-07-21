@@ -4,15 +4,15 @@ declare(strict_types=1);
 namespace yii\swoole\kafka\Sasl;
 
 use GSSAPIContext;
+use KRB5CCache;
 use yii\swoole\kafka\CommonSocket;
 use yii\swoole\kafka\Exception;
 use yii\swoole\kafka\Protocol\Protocol as ProtocolTool;
-use KRB5CCache;
-use const GSS_C_INITIATE;
 use function extension_loaded;
 use function file_exists;
 use function is_file;
 use function is_readable;
+use const GSS_C_INITIATE;
 
 class Gssapi extends Mechanism
 {

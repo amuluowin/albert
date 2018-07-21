@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace yii\swoole\kafka;
 
 use yii\swoole\kafka\Protocol\Protocol;
-use function strlen;
 use function substr;
 
 class AsyncSocket extends CoroSocket
@@ -56,10 +55,12 @@ class AsyncSocket extends CoroSocket
      */
     public function read($data): void
     {
-        $this->readBuffer = (string)$data;
-        $dataLen = Protocol::unpack(Protocol::BIT_B32, substr($this->readBuffer, 0, 4));
-        $this->readBuffer = substr($this->readBuffer, 4);
-        ($this->onReadable)($this->readBuffer, (int)$this->resource);
+        if (!empty($data)) {
+            $this->readBuffer = (string)$data;
+            $dataLen = Protocol::unpack(Protocol::BIT_B32, substr($this->readBuffer, 0, 4));
+            $this->readBuffer = substr($this->readBuffer, 4);
+            ($this->onReadable)($this->readBuffer, (int)$this->resource);
+        }
     }
 
     /**
@@ -72,7 +73,7 @@ class AsyncSocket extends CoroSocket
             $this->connect();
             $this->stream->defer()->send($this->host, $this->port, $buffer);
             $this->resource = $this->stream->client->sock;
-            $this->read($this->stream->recv(3));
+            $this->read($this->stream->recv());
         }
     }
 

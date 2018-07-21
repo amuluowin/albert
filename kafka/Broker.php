@@ -8,18 +8,13 @@
 
 namespace yii\swoole\kafka;
 
-use yii\swoole\kafka\CommonSocket;
-use yii\swoole\kafka\Config;
-use yii\swoole\kafka\Protocol;
-use yii\swoole\kafka\Sasl\Gssapi;
-use yii\swoole\kafka\Sasl\Plain;
-use yii\swoole\kafka\Sasl\Scram;
-use yii\swoole\kafka\SaslMechanism;
-
 use Yii;
 use yii\base\Exception;
 use yii\swoole\base\SingletonTrait;
 use yii\swoole\helpers\SerializeHelper;
+use yii\swoole\kafka\Sasl\Gssapi;
+use yii\swoole\kafka\Sasl\Plain;
+use yii\swoole\kafka\Sasl\Scram;
 use function array_keys;
 use function explode;
 use function in_array;

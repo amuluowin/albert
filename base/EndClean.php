@@ -9,7 +9,6 @@
 namespace yii\swoole\base;
 
 use Yii;
-use yii\swoole\helpers\CoroHelper;
 
 class EndClean implements EndInterface
 {

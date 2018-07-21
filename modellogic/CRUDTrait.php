@@ -3,13 +3,13 @@
 namespace yii\swoole\modellogic;
 
 use yii;
+use yii\swoole\db\DBHelper;
 use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\rest\CreateExt;
 use yii\swoole\rest\DeleteExt;
 use yii\swoole\rest\IndexExt;
 use yii\swoole\rest\ResponeModel;
 use yii\swoole\rest\UpdateExt;
-use yii\swoole\db\DBHelper;
 
 trait CRUDTrait
 {

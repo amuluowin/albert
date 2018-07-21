@@ -10,7 +10,6 @@ namespace yii\swoole\governance;
 
 use yii\base\Component;
 use yii\swoole\governance\balancer\BalancerInterface;
-use yii\swoole\governance\balancer\BalancerSelectInterface;
 use yii\swoole\governance\provider\ProviderInterface;
 use yii\swoole\governance\trace\TraceInterface;
 
