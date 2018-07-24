@@ -20,6 +20,8 @@ class KafkaTarget extends Target
      */
     public $topic = APP_NAME;
 
+    public $key = 'SystemLog';
+
     /**
      * @inheritdoc
      */
@@ -49,7 +51,7 @@ class KafkaTarget extends Target
                 [
                     'topic' => $this->topic,
                     'value' => implode("\n", array_map([$this, 'formatMessage'], $this->messages)) . "\n",
-                    'key' => 'SystemLog',
+                    'key' => $this->key,
                 ],
             ]);
         }
