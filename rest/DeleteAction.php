@@ -31,7 +31,7 @@ class DeleteAction extends Action
         $body = Yii::$app->getRequest()->getBodyParams();
         if (is_array($this->modelClass)) {
             list($service, $route) = $this->modelClass;
-            return Yii::$app->rpc->call($service, $route)->Delte($body, $id);
+            return Yii::$app->rpc->call($service, $route)->Delete($body, $id);
         }
         if ($id) {
             $model = $this->findModel($id);
