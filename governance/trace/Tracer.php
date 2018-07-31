@@ -50,7 +50,7 @@ class Tracer extends Component implements ICoroutine, TraceInterface
             ];
         }
         $this->collect[$traceId]['sendTime'] = time();
-        $this->collect[$traceId]['sendIp'] = current(swoole_get_local_ip());
+        $this->collect[$traceId]['sendIp'] = LocalIP;
         $this->collect[$traceId] = ArrayHelper::merge($this->collect[$traceId], $collect);
         return $this->collect[$traceId];
     }
