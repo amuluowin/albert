@@ -26,6 +26,8 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
      */
     const DISCOVERY_PATH = '/v1/health/service/';
 
+    const DEREGISTER_PATH = '/v1/agent/service/deregister/';
+
     /**
      * @var array
      */
@@ -85,7 +87,9 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
         if ($nodes) {
             return $nodes;
         } else {
-            return $this->get($serviceName, $preFix);
+            $nodes = $this->get($serviceName, $preFix);
+            $this->setServiceToCache([$serviceName => $nodes]);
+            return $nodes;
         }
     }
 
@@ -106,9 +110,20 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
                     Yii::warning("consul[Address] Or consul[Port] 服务健康节点集合，数据格式不不正确，Data=" . VarDumper::export($services));
                     continue;
                 }
-                $address = $serviceInfo['Address'];
-                $port = $serviceInfo['Port'];
-                $nodes[] = [$address, $port];
+                if (isset($service['Checks'])) {
+                    foreach ($service['Checks'] as $check) {
+                        if ($check['Name'] === $serviceName) {
+                            if ($check['status'] === 'passing') {
+                                $address = $serviceInfo['Address'];
+                                $port = $serviceInfo['Port'];
+                                $nodes[] = [$address, $port];
+                            } else {
+                                $url = sprintf('%s:%d%s%s', $this->client->address, $this->client->port, self::DEREGISTER_PATH, $serviceInfo['id']);
+                                $this->deRegisterService($url);
+                            }
+                        }
+                    }
+                }
             }
 
             return $nodes;
@@ -130,21 +145,24 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
         $result = true;
         foreach ($this->services as $service) {
             $service = $this->servicePrefix . $service;
-            $id = sprintf('service-%s-%s', $this->register['Check']['tcp'], $service);
+            $id = sprintf('%s-%s', APP_NAME, $service);
             $this->register['ID'] = $id;
             $this->register['Name'] = $service;
+            $this->register['Port'] = Yii::$app->params['swoole']['rpc']['port'];
             $this->register['Check']['id'] = $id;
+            $this->register['Check']['tcp'] = sprintf('%s:%d', LocalIP, Yii::$app->params['swoole']['rpc']['port']);
             $this->register['Check']['name'] = $service;
             $result &= $this->putService($url);
         }
 
         foreach ($this->apis as $api) {
             $api = $this->apiPrefix . $api;
-            $id = sprintf('api-%s-%s', $this->register['Check']['tcp'], $api);
+            $id = sprintf('%s-%s', APP_NAME, $api);
             $this->register['ID'] = $id;
             $this->register['Name'] = $api;
-            $this->register['Port'] = 80;
+            $this->register['Port'] = Yii::$app->params['swoole']['web']['port'];
             $this->register['Check']['id'] = $id;
+            $this->register['Check']['tcp'] = sprintf('%s:%d', LocalIP, Yii::$app->params['swoole']['rpc']['port']);
             $this->register['Check']['name'] = $api;
             $result &= $this->putService($url);
         }
@@ -165,6 +183,19 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
         }
     }
 
+    private function deRegisterService(string $url): bool
+    {
+        $response = Yii::$app->httpclient->put($url)->setFormat(Client::FORMAT_JSON)->send();
+        $output = 'RPC deregister service %s %s by consul tcp=%s:%d';
+        if (empty($result) && $response->getStatusCode() == 200) {
+            Output::writeln(sprintf($output, $this->register['Name'], 'success', $this->register['Address'], $this->register['Port']), Output::LIGHT_GREEN);
+            return true;
+        } else {
+            Output::writeln(sprintf($output, $this->register['Name'], 'failed', $this->register['Address'], $this->register['Port']), Output::LIGHT_RED);
+            return false;
+        }
+    }
+
     /**
      * @param string $serviceName
      *
@@ -173,11 +204,11 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
     private function getDiscoveryUrl(string $serviceName, string $preFix): string
     {
         $serviceName = $preFix . $serviceName;
-        $query = [
+        $query = array_filter([
             'passing' => $this->discovery['passing'],
             'dc' => $this->discovery['dc'],
             'near' => $this->discovery['near'],
-        ];
+        ]);
 
         if (!empty($this->register['Tags'])) {
             $query['tag'] = $this->register['Tags'];
