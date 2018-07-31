@@ -13,6 +13,7 @@ use yii\helpers\VarDumper;
 use yii\httpclient\Client;
 use yii\swoole\base\Output;
 use yii\swoole\consul\ConsulClient;
+use yii\swoole\web\Response;
 
 class ConsulProvider extends BaseProvider implements ProviderInterface
 {
@@ -148,7 +149,7 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
             $id = sprintf('%s-%s', APP_NAME, $service);
             $this->register['ID'] = $id;
             $this->register['Name'] = $service;
-            $this->register['Port'] = Yii::$app->params['swoole']['rpc']['port'];
+            $this->register['Port'] = intval(Yii::$app->params['swoole']['rpc']['port']);
             $this->register['Check']['id'] = $id;
             $this->register['Check']['tcp'] = sprintf('%s:%d', LocalIP, Yii::$app->params['swoole']['rpc']['port']);
             $this->register['Check']['name'] = $service;
@@ -160,7 +161,7 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
             $id = sprintf('%s-%s', APP_NAME, $api);
             $this->register['ID'] = $id;
             $this->register['Name'] = $api;
-            $this->register['Port'] = Yii::$app->params['swoole']['web']['port'];
+            $this->register['Port'] = intval(Yii::$app->params['swoole']['web']['port']);
             $this->register['Check']['id'] = $id;
             $this->register['Check']['tcp'] = sprintf('%s:%d', LocalIP, Yii::$app->params['swoole']['rpc']['port']);
             $this->register['Check']['name'] = $api;
@@ -172,26 +173,32 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
 
     private function putService(string $url): bool
     {
+        /**
+         * @var Response $response
+         */
         $response = Yii::$app->httpclient->put($url, $this->register)->setFormat(Client::FORMAT_JSON)->send();
-        $output = 'RPC register service %s %s by consul tcp=%s:%d';
-        if (empty($result) && $response->getStatusCode() == 200) {
+        $output = 'RPC register service %s %s by consul tcp=%s:%d.';
+        if ($response->getIsOk()) {
             Output::writeln(sprintf($output, $this->register['Name'], 'success', $this->register['Address'], $this->register['Port']), Output::LIGHT_GREEN);
             return true;
         } else {
-            Output::writeln(sprintf($output, $this->register['Name'], 'failed', $this->register['Address'], $this->register['Port']), Output::LIGHT_RED);
+            Output::writeln(sprintf($output . 'error=%s', $this->register['Name'], 'failed', $this->register['Address'], $this->register['Port'], $response->getContent()), Output::LIGHT_RED);
             return false;
         }
     }
 
     private function deRegisterService(string $url): bool
     {
+        /**
+         * @var Response $response
+         */
         $response = Yii::$app->httpclient->put($url)->setFormat(Client::FORMAT_JSON)->send();
-        $output = 'RPC deregister service %s %s by consul tcp=%s:%d';
-        if (empty($result) && $response->getStatusCode() == 200) {
+        $output = 'RPC deregister service %s %s by consul tcp=%s:%d.';
+        if ($response->getIsOk()) {
             Output::writeln(sprintf($output, $this->register['Name'], 'success', $this->register['Address'], $this->register['Port']), Output::LIGHT_GREEN);
             return true;
         } else {
-            Output::writeln(sprintf($output, $this->register['Name'], 'failed', $this->register['Address'], $this->register['Port']), Output::LIGHT_RED);
+            Output::writeln(sprintf($output . 'error=%s', $this->register['Name'], 'failed', $this->register['Address'], $this->register['Port'], $response->getContent()), Output::LIGHT_RED);
             return false;
         }
     }
