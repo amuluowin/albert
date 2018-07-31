@@ -18,21 +18,18 @@ class ProviderProcess extends BaseProcess
      */
     public $ticket = 60;
 
-    public $regTimes = 3;
-
     public function start()
     {
-        $i = 0;
-        while (!Yii::$app->gr->provider->registerService()) {
-            $i++;
-            \Co::sleep(3);
-            if ($i === $this->regTimes) {
-                break;
-            }
-        }
-
+        $this->register();
         swoole_timer_tick($this->ticket * 1000, function () {
             Yii::$app->gr->provider->dnsCheck();
         });
+    }
+
+    public function register()
+    {
+        if (!Yii::$app->gr->provider->registerService()) {
+            swoole_timer_after(1000, [$this, 'register']);
+        }
     }
 }
