@@ -201,6 +201,7 @@ class Application extends Module implements ICoroutine
         unset(Yii::$server->currentSwooleRequest[$id]);
 
         //自定义清理
+        $this->initClean();
         foreach ($this->clean as $name => $clean) {
             if ($clean instanceof EndInterface) {
                 $clean->clean();
@@ -259,7 +260,7 @@ class Application extends Module implements ICoroutine
         //自定义清理
         if (is_array($this->clean)) {
             foreach ($this->clean as $name => $obj) {
-                if (!$clean instanceof EndInterface) {
+                if (!$obj instanceof EndInterface) {
                     $clean = Yii::createObject($obj);
                     $this->clean[$name] = $clean;
                 }
