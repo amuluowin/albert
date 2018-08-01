@@ -94,7 +94,7 @@ class FileTarget extends Component
         $logPath = dirname($this->logFile);
         FileHelper::createDirectory($logPath, $this->dirMode, true);
         
-        if (($fp = @fopen($this->logFile, 'a')) === false) {
+        if (($fp = @fopen($this->logFile, 'a+')) === false) {
             throw new InvalidConfigException("Unable to append to log file: {$this->logFile}");
         }
         @flock($fp, LOCK_EX);

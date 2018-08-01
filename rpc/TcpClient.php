@@ -4,9 +4,12 @@ namespace yii\swoole\rpc;
 
 use Swoole\Coroutine\Client;
 use Yii;
+use yii\base\Exception;
 use yii\swoole\coroutine\ICoroutine;
+use yii\swoole\governance\provider\ProviderInterface;
 use yii\swoole\pack\TcpPack;
 use yii\swoole\pool\TcpPool;
+use yii\web\NotFoundHttpException;
 
 class TcpClient extends IRpcClient implements ICoroutine
 {
@@ -54,6 +57,10 @@ class TcpClient extends IRpcClient implements ICoroutine
          */
         $provider = Yii::$app->gr->provider;
         $server = $provider->getServices($data['service'], $provider->servicePrefix);
+        if (empty($server)) {
+            $provider->delService($data['service']);
+            throw new NotFoundHttpException(sprintf('No service %s alive.', $data['service']));
+        }
         list($server, $port) = Yii::$app->gr->balance->select($data['service'])->getCurrentService($server);
         $data['toHost'] = $server . ':' . $port;
         $key = sprintf('rpc:%s:%d', $server, $port);
@@ -62,29 +69,34 @@ class TcpClient extends IRpcClient implements ICoroutine
                 'class' => TcpPool::class
             ]);
         }
-        if (($this->client = Yii::$container->get('tcpclient')->fetch($key)) === null) {
-            $this->client = Yii::$container->get('tcpclient')->create($key,
-                [
-                    'hostname' => $server,
-                    'port' => $port,
-                    'timeout' => $this->timeout,
-                    'setting' => $this->setting,
-                    'pool_size' => $this->maxPoolSize,
-                    'busy_size' => $this->busy_pool
-                ])
-                ->fetch($key);
-        }
+        try {
+            if (($this->client = Yii::$container->get('tcpclient')->fetch($key)) === null) {
+                $this->client = Yii::$container->get('tcpclient')->create($key,
+                    [
+                        'hostname' => $server,
+                        'port' => $port,
+                        'timeout' => $this->timeout,
+                        'setting' => $this->setting,
+                        'pool_size' => $this->maxPoolSize,
+                        'busy_size' => $this->busy_pool
+                    ])
+                    ->fetch($key);
+            }
 
-        $data['method'] = $name;
-        $data['params'] = array_shift($params);
-        $data['fastCall'] = Yii::$app->rpc->fastCall;
-        $data = Yii::$app->rpc->beforeSend($data);
-        $this->client->send(TcpPack::encode($data, 'rpc'));
-        if ($this->IsDefer) {
-            $this->IsDefer = false;
-            return $this;
+            $data['method'] = $name;
+            $data['params'] = array_shift($params);
+            $data['fastCall'] = Yii::$app->rpc->fastCall;
+            $data = Yii::$app->rpc->beforeSend($data);
+            $this->client->send(TcpPack::encode($data, 'rpc'));
+            if ($this->IsDefer) {
+                $this->IsDefer = false;
+                return $this;
+            }
+            return $this->recv();
+        } catch (Exception $e) {
+            $provider->delService($data['service']);
+            throw $e;
         }
-        return $this->recv();
     }
 
     public function release()

@@ -84,7 +84,7 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
 
     public function getServices(string $serviceName, string $preFix)
     {
-        $nodes = $this->getServiceFromCache($serviceName, $preFix);
+        $nodes = $this->getServiceFromCache($serviceName);
         if ($nodes) {
             return $nodes;
         } else {
@@ -98,9 +98,9 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
     {
         $url = $this->getDiscoveryUrl($serviceName, $preFix);
         $services = Yii::$app->httpclient->get($url)->send()->getData();
+        $nodes = [];
         if (is_array($services)) {
             // 数据格式化
-            $nodes = [];
             foreach ($services as $service) {
                 if (!isset($service['Service'])) {
                     Yii::warning("consul[Service] 服务健康节点集合，数据格式不不正确，Data=" . VarDumper::export($services));
@@ -113,24 +113,23 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
                 }
                 if (isset($service['Checks'])) {
                     foreach ($service['Checks'] as $check) {
-                        if ($check['Name'] === $serviceName) {
-                            if ($check['status'] === 'passing') {
+                        if ($check['ServiceName'] === $preFix . $serviceName) {
+                            if ($check['Status'] === 'passing') {
                                 $address = $serviceInfo['Address'];
                                 $port = $serviceInfo['Port'];
                                 $nodes[] = [$address, $port];
                             } else {
-                                $url = sprintf('%s:%d%s%s', $this->client->address, $this->client->port, self::DEREGISTER_PATH, $serviceInfo['id']);
+                                $url = sprintf('%s:%d%s%s', $this->client->address, $this->client->port, self::DEREGISTER_PATH, $check['ServiceID']);
                                 $this->deRegisterService($url);
                             }
                         }
                     }
                 }
             }
-
-            return $nodes;
         } else {
             Output::writeln(sprintf("can not find service %s from consul:%s:%d", $serviceName, $this->client->address, $this->client->port), Output::LIGHT_RED);
         }
+        return $nodes;
     }
 
     /**

@@ -27,4 +27,9 @@ class BaseProvider extends Component
             }
         }
     }
+
+    public function delService(string $service): bool
+    {
+        return Yii::$app->cache->delete($service);
+    }
 }
