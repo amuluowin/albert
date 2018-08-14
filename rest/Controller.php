@@ -63,7 +63,7 @@ class Controller extends \yii\web\Controller
                 'class' => VerbFilter::className(),
                 'actions' => $this->verbs(),
             ],
-            [
+            'corsFilter' => [
                 'class' => Cors::className()
             ],
             'authenticator' => [
