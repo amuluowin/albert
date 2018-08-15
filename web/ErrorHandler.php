@@ -199,7 +199,9 @@ class ErrorHandler extends \yii\web\ErrorHandler
                 Yii::$server->currentSwooleResponse[$id]->end($html);
             }
         } else {
-            Output::writeln($this->convertExceptionToArray($exception), Output::LIGHT_RED);
+            $message = $this->convertExceptionToArray($exception);
+            Output::writeln($message, Output::LIGHT_RED);
+            return $message;
         }
     }
 

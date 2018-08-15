@@ -34,8 +34,8 @@ class SwooleCommand
                     Yii::$app->params['swoole']['web']['server']['daemonize'] = $d;
                     HttpServer::getInstance('web', Yii::$app->params['swoole'])->stop();
                     break;
-                case 'restart':
-                    break;
+                case 'reload':
+                    Yii::$server->reload();
                 default:
                     exit("Not support this argv.\n");
                     break;
@@ -57,8 +57,8 @@ class SwooleCommand
                     Yii::$app->params['swoole']['web']['server']['daemonize'] = $d;
                     WebsocketServer::getInstance('web', Yii::$app->params['swoole'])->stop();
                     break;
-                case 'restart':
-                    break;
+                case 'reload':
+                    Yii::$server->reload();
                 default:
                     exit("Not support this argv.\n");
                     break;
@@ -80,8 +80,8 @@ class SwooleCommand
                     Yii::$app->params['swoole']['rpc']['server']['daemonize'] = $d;
                     RpcServer::getInstance('rpc', Yii::$app->params['swoole'])->stop();
                     break;
-                case 'restart':
-                    break;
+                case 'reload':
+                    Yii::$server->reload();
                 default:
                     exit("Not support this argv.\n");
                     break;
@@ -103,8 +103,8 @@ class SwooleCommand
                     Yii::$app->params['swoole']['udp']['server']['daemonize'] = $d;
                     UdpServer::getInstance('udp', Yii::$app->params['swoole'])->stop();
                     break;
-                case 'restart':
-                    break;
+                case 'reload':
+                    Yii::$server->reload();
                 default:
                     exit("Not support this argv.\n");
                     break;
@@ -126,8 +126,8 @@ class SwooleCommand
                     Yii::$app->params['swoole']['task']['server']['daemonize'] = $d;
                     TaskServer::getInstance('task', Yii::$app->params['swoole'])->stop();
                     break;
-                case 'restart':
-                    break;
+                case 'reload':
+                    Yii::$server->reload();
                 default:
                     exit("Not support this argv.\n");
                     break;

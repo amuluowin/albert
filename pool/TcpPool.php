@@ -10,7 +10,7 @@ class TcpPool extends \yii\swoole\pool\IPool
 {
     public function createConn(string $connName, $conn = null)
     {
-        if ($conn && $conn->errCode === 0 && $conn->connected) {
+        if ($conn && $conn->errCode === 0 && $conn->isConnected()) {
             return $conn;
         }
         $this->reConnect($conn, $connName);
