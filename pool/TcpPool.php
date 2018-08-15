@@ -30,7 +30,7 @@ class TcpPool extends \yii\swoole\pool\IPool
         ) {
             if ($this->reconnect <= $this->curconnect) {
                 $this->curconnect = 0;
-                throw new Exception(sprintf("Can not connect to tcp %s:%d error:%s", $config['hostname'], $config['port'], $conn->errCode));
+                throw new Exception(sprintf("Can not connect to tcp %s:%d error:%s", $config['hostname'], $config['port'], socket_strerror($conn->errCode)));
             } else {
                 $this->curconnect++;
                 \Co::sleep($config['timeout']);
