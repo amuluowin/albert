@@ -58,6 +58,26 @@ class ConsulConfig extends Component implements ConfigInterface
         }
     }
 
+    public function delConfig(string $key, Client $client = null)
+    {
+        /**
+         * @var Client
+         */
+        if ($client === null) {
+            $client = Yii::$app->httpclient;
+        }
+        for ($i = 0; $i < $this->retry; $i++) {
+            $respones = $client->delete($this->getPath($key))->setFormat(Client::FORMAT_JSON)->send();
+            if (!$respones->getIsOk()) {
+                Output::writeln(sprintf('can not delete config %s to consul %s:%d', $key, $this->client->address, $this->client->port), Output::LIGHT_RED);
+                \Co::sleep($this->sleep);
+            } else {
+                Output::writeln(sprintf('delete config %s to consul %s:%d success', $key, $this->client->address, $this->client->port), Output::LIGHT_GREEN);
+                break;
+            }
+        }
+    }
+
     public function getConfig(string $key, Client $client = null)
     {
         /**

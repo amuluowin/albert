@@ -10,7 +10,7 @@ class TcpPool extends \yii\swoole\pool\IPool
 {
     public function createConn(string $connName, $conn = null)
     {
-        if ($conn && $conn->errCode === 0 && $conn->isConnected()) {
+        if ($conn && $conn->errCode === 0 && $conn->connected) {
             return $conn;
         }
         $this->reConnect($conn, $connName);
@@ -26,14 +26,14 @@ class TcpPool extends \yii\swoole\pool\IPool
         if ($config['setting'] && empty($conn->setting)) {
             $conn->set($config['setting']);
         }
-        if ($conn->connect($config['hostname'], $config['port'], $config['timeout']) == false
+        if ($conn->connect($config['hostname'], $config['port'], 1) == false
         ) {
             if ($this->reconnect <= $this->curconnect) {
                 $this->curconnect = 0;
                 throw new Exception(sprintf("Can not connect to tcp %s:%d error:%s", $config['hostname'], $config['port'], socket_strerror($conn->errCode)));
             } else {
                 $this->curconnect++;
-                \Co::sleep($config['timeout']);
+                \Co::sleep(1);
                 $conn = null;
                 $this->reConnect($conn, $connName);
             }

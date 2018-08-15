@@ -15,5 +15,7 @@ interface ConfigInterface
 {
     public function putConfig(string $key, array $config, Client $client = null);
 
+    public function delConfig(String $key, Client $client = null);
+
     public function getConfig(string $key, Client $client = null);
 }

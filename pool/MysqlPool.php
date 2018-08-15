@@ -40,7 +40,7 @@ class MysqlPool extends \yii\swoole\pool\IPool
                 throw new Exception(sprintf('connect to mysql hsot=%s:%d error:%s', $config['host'], $config['port'], $conn->error));
             } else {
                 $this->curconnect++;
-                \Co::sleep($timeout);
+                \Co::sleep(1);
                 $conn = null;
                 $this->reConnect($conn, $connName);
             }

@@ -56,7 +56,7 @@ trait RpcTrait
                         $obj = Yii::$app->get($comp)->$obj;
                         $result = $obj->{$method}(...$data['params']);
                     } else {
-                        $result = new InvalidArgumentException('Error send data!');
+                        $result = Yii::$app->getErrorHandler()->converter(new InvalidArgumentException('Error send data!'), 'convertExceptionToArray');
                     }
                 } elseif ($pnum === 2) {
                     list($obj, $method) = $function;
@@ -67,13 +67,13 @@ trait RpcTrait
                         $result = call_user_func_array($function, [$data['params']]);
                     }
                 } else {
-                    $result = new InvalidArgumentException('Error send data!');
+                    $result = Yii::$app->getErrorHandler()->converter(new InvalidArgumentException('Error send data!'), 'convertExceptionToArray');
                 }
 
                 $serv->send($fd, TcpPack::encode($result, 'rpc'));
                 $this->setLog($result);
             } catch (\Exception $e) {
-                $serv->send($fd, TcpPack::encode(Yii::$app->getErrorHandler()->handleException($e), 'rpc'));
+                $serv->send($fd, TcpPack::encode(Yii::$app->getErrorHandler()->converter($e, 'convertExceptionToArray'), 'rpc'));
                 $this->setLog($e);
             }
         }

@@ -88,7 +88,6 @@ class RpcClient extends Component
          */
         if ($this->IsDefer) {
             $client->IsDefer = $this->IsDefer;
-            return $this;
         }
         return $client->$name(...$params);
     }

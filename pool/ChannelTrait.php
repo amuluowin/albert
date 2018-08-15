@@ -47,6 +47,20 @@ trait ChannelTrait
         return $this;
     }
 
+    public function delete(string $connName)
+    {
+        unset($this->connsConfig[$connName]);
+        unset($this->spareConns[$connName]);
+        unset($this->busyConns[$connName]);
+        /**
+         * @var ConfigInterface $center
+         */
+        if (($center = Yii::$app->get('csconf', false)) !== null) {
+            $center->delConfig($connName);
+            unset(Yii::$confKeys[$connName]);
+        }
+    }
+
     public function setConfig(string $connName, array $config)
     {
         $data = ArrayHelper::getValueByArray($this->connsConfig[$connName], ['pool_size', 'busy_size']);

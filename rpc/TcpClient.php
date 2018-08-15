@@ -37,32 +37,37 @@ class TcpClient extends IRpcClient implements ICoroutine
      */
     public $setting = [];
 
+    /**
+     * @var array
+     */
+    private $data = [];
+
     public function recv()
     {
         $result = TcpPack::decode($this->client->recv($this->timeout), 'rpc');
         Yii::$app->rpc->afterRecv($result);
-        $this->release();
-        if ($result instanceof \Exception) {
-            throw $result;
+        if ($result instanceof \stdClass) {
+            throw new \BadFunctionCallException(sprintf('call to service:%s,route:%s,method:%s.error!',
+                $this->data['service'], $this->data['route'], $this->data['method']));
         }
+        $this->release();
         return $result;
     }
 
     public function __call($name, $params)
     {
-        $data = [];
-        list($data['service'], $data['route']) = Yii::$app->rpc->getService();
+        list($this->data['service'], $this->data['route']) = Yii::$app->rpc->getService();
         /**
          * @var ProviderInterface $provider
          */
         $provider = Yii::$app->gr->provider;
-        $server = $provider->getServices($data['service'], $provider->servicePrefix);
+        $server = $provider->getServices($this->data['service'], $provider->servicePrefix);
         if (empty($server)) {
-            $provider->delService($data['service']);
-            throw new NotFoundHttpException(sprintf('No service %s alive.', $data['service']));
+            $provider->delService($this->data['service']);
+            throw new NotFoundHttpException(sprintf('No service %s alive.', $this->data['service']));
         }
-        list($server, $port) = Yii::$app->gr->balance->select($data['service'])->getCurrentService($server);
-        $data['toHost'] = $server . ':' . $port;
+        list($server, $port) = Yii::$app->gr->balance->select($this->data['service'])->getCurrentService($server);
+        $this->data['toHost'] = $server . ':' . $port;
         $key = sprintf('rpc:%s:%d', $server, $port);
         if (!Yii::$container->hasSingleton('tcpclient')) {
             Yii::$container->setSingleton('tcpclient', [
@@ -83,18 +88,19 @@ class TcpClient extends IRpcClient implements ICoroutine
                     ->fetch($key);
             }
 
-            $data['method'] = $name;
-            $data['params'] = array_shift($params);
-            $data['fastCall'] = Yii::$app->rpc->fastCall;
-            $data = Yii::$app->rpc->beforeSend($data);
-            $this->client->send(TcpPack::encode($data, 'rpc'));
+            $this->data['method'] = $name;
+            $this->data['params'] = array_shift($params);
+            $this->data['fastCall'] = Yii::$app->rpc->fastCall;
+            $this->data = Yii::$app->rpc->beforeSend($this->data);
+            $this->client->send(TcpPack::encode($this->data, 'rpc'));
             if ($this->IsDefer) {
                 $this->IsDefer = false;
                 return $this;
             }
             return $this->recv();
         } catch (Exception $e) {
-            $provider->delService($data['service']);
+            $provider->delService($this->data['service']);
+            Yii::$container->get('tcpclient')->delete($key);
             throw $e;
         }
     }
@@ -104,6 +110,7 @@ class TcpClient extends IRpcClient implements ICoroutine
         if (Yii::$container->hasSingleton('tcpclient') && $this->client) {
             Yii::$container->get('tcpclient')->recycle($this->client);
             $this->client = null;
+            $this->data = [];
         }
     }
 }

@@ -207,7 +207,9 @@ class ErrorHandler extends \yii\web\ErrorHandler
 
     public function converter($exception, $method)
     {
-        return $this->{$method}($exception);
+        $array = $this->{$method}($exception);
+        $array = json_decode(json_encode($array));
+        return $array;
     }
 
 }
