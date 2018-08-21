@@ -13,7 +13,7 @@ use yii\helpers\VarDumper;
 use yii\httpclient\Client;
 use yii\swoole\base\Output;
 use yii\swoole\consul\ConsulClient;
-use yii\swoole\web\Response;
+use yii\swoole\httpclient\Response;
 
 class ConsulProvider extends BaseProvider implements ProviderInterface
 {
@@ -97,37 +97,45 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
     private function get(string $serviceName, string $preFix)
     {
         $url = $this->getDiscoveryUrl($serviceName, $preFix);
-        $services = Yii::$app->httpclient->get($url)->send()->getData();
         $nodes = [];
-        if (is_array($services)) {
-            // 数据格式化
-            foreach ($services as $service) {
-                if (!isset($service['Service'])) {
-                    Yii::warning("consul[Service] 服务健康节点集合，数据格式不不正确，Data=" . VarDumper::export($services));
-                    continue;
-                }
-                $serviceInfo = $service['Service'];
-                if (!isset($serviceInfo['Address'], $serviceInfo['Port'])) {
-                    Yii::warning("consul[Address] Or consul[Port] 服务健康节点集合，数据格式不不正确，Data=" . VarDumper::export($services));
-                    continue;
-                }
-                if (isset($service['Checks'])) {
-                    foreach ($service['Checks'] as $check) {
-                        if ($check['ServiceName'] === $preFix . $serviceName) {
-                            if ($check['Status'] === 'passing') {
-                                $address = $serviceInfo['Address'];
-                                $port = $serviceInfo['Port'];
-                                $nodes[] = [$address, $port];
-                            } else {
-                                $url = sprintf('%s:%d%s%s', $this->client->address, $this->client->port, self::DEREGISTER_PATH, $check['ServiceID']);
-                                $this->deRegisterService($url);
+        /**
+         * @var Response $response
+         */
+        $response = Yii::$app->httpclient->get($url)->send();
+        if ($response->getIsOk()) {
+            $services = $response->getData();
+            if (is_array($services)) {
+                // 数据格式化
+                foreach ($services as $service) {
+                    if (!isset($service['Service'])) {
+                        Yii::warning("consul[Service] 服务健康节点集合，数据格式不不正确，Data=" . VarDumper::export($services));
+                        continue;
+                    }
+                    $serviceInfo = $service['Service'];
+                    if (!isset($serviceInfo['Address'], $serviceInfo['Port'])) {
+                        Yii::warning("consul[Address] Or consul[Port] 服务健康节点集合，数据格式不不正确，Data=" . VarDumper::export($services));
+                        continue;
+                    }
+                    if (isset($service['Checks'])) {
+                        foreach ($service['Checks'] as $check) {
+                            if ($check['ServiceName'] === $preFix . $serviceName) {
+                                if ($check['Status'] === 'passing') {
+                                    $address = $serviceInfo['Address'];
+                                    $port = $serviceInfo['Port'];
+                                    $nodes[] = [$address, $port];
+                                } else {
+                                    $url = sprintf('%s:%d%s%s', $this->client->address, $this->client->port, self::DEREGISTER_PATH, $check['ServiceID']);
+                                    $this->deRegisterService($url);
+                                }
                             }
                         }
                     }
                 }
+            } else {
+                Output::writeln(sprintf("can not find service %s from consul:%s:%d", $serviceName, $this->client->address, $this->client->port), Output::LIGHT_RED);
             }
         } else {
-            Output::writeln(sprintf("can not find service %s from consul:%s:%d", $serviceName, $this->client->address, $this->client->port), Output::LIGHT_RED);
+            Output::writeln(sprintf("consul:%s:%d error,message=", $response->getContent()), Output::LIGHT_RED);
         }
         return $nodes;
     }
