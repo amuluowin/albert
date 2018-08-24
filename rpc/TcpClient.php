@@ -42,6 +42,16 @@ class TcpClient extends IRpcClient implements ICoroutine
      */
     private $data = [];
 
+    /**
+     * @var int
+     */
+    public $retryTotal = 3;
+
+    /**
+     * @var int
+     */
+    private $retryCount = 0;
+
     public function recv()
     {
         $result = TcpPack::decode($this->client->recv($this->timeout), 'rpc');
@@ -89,7 +99,7 @@ class TcpClient extends IRpcClient implements ICoroutine
             }
 
             $this->data['method'] = $name;
-            $this->data['params'] = array_shift($params);
+            $this->data['params'] = $params[0];
             $this->data['fastCall'] = Yii::$app->rpc->fastCall;
             $this->data = Yii::$app->rpc->beforeSend($this->data);
             $this->client->send(TcpPack::encode($this->data, 'rpc'));
@@ -101,7 +111,13 @@ class TcpClient extends IRpcClient implements ICoroutine
         } catch (Exception $e) {
             $provider->delService($this->data['service']);
             Yii::$container->get('tcpclient')->delete($key);
-            throw $e;
+            $this->retryCount++;
+            if ($this->retryCount === $this->retryTotal) {
+                $this->retryCount = 0;
+                throw $e;
+            } else {
+                $this->__call($name, $params);
+            }
         }
     }
 

@@ -97,7 +97,6 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
     private function get(string $serviceName, string $preFix)
     {
         $url = $this->getDiscoveryUrl($serviceName, $preFix);
-        var_dump($url);
         $nodes = [];
         /**
          * @var Response $response
@@ -117,24 +116,20 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
                         Yii::warning("consul[Address] Or consul[Port] 服务健康节点集合，数据格式不不正确，Data=" . VarDumper::export($services));
                         continue;
                     }
-                    $address = $serviceInfo['Address'];
-                    $port = $serviceInfo['Port'];
-                    $nodes[] = [$address, $port];
-//                    if (isset($service['Checks'])) {
-//                        foreach ($service['Checks'] as $check) {
-//                            if ($check['ServiceName'] === $preFix . $serviceName) {
-//                                if ($check['Status'] === 'passing') {
-//                                    $address = $serviceInfo['Address'];
-//                                    $port = $serviceInfo['Port'];
-//                                    $nodes[] = [$address, $port];
-//                                }
-//                                else {
-//                                    $url = sprintf('%s:%d%s%s', $this->client->address, $this->client->port, self::DEREGISTER_PATH, $check['ServiceID']);
-//                                    $this->deRegisterService($url);
-//                                }
-//                            }
-//                        }
-//                    }
+                    if (isset($service['Checks'])) {
+                        foreach ($service['Checks'] as $check) {
+                            if ($check['ServiceName'] === $preFix . $serviceName) {
+                                if ($check['Status'] === 'passing') {
+                                    $address = $serviceInfo['Address'];
+                                    $port = $serviceInfo['Port'];
+                                    $nodes[] = [$address, $port];
+                                } else {
+                                    $url = sprintf('%s:%d%s%s', $this->client->address, $this->client->port, self::DEREGISTER_PATH, $check['ServiceID']);
+                                    $this->deRegisterService($url);
+                                }
+                            }
+                        }
+                    }
                 }
             } else {
                 Output::writeln(sprintf("can not find service %s from consul:%s:%d", $serviceName, $this->client->address, $this->client->port), Output::LIGHT_RED);
@@ -158,7 +153,7 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
         $result = true;
         foreach ($this->services as $service) {
             $service = $this->servicePrefix . $service;
-            $id = sprintf('%s-%s', APP_NAME, $service);
+            $id = sprintf('%s-%s-%s', APP_NAME, $service, LocalIP);
             $this->register['ID'] = $id;
             $this->register['Name'] = $service;
             $this->register['Port'] = intval(Yii::$app->params['swoole']['rpc']['port']);
@@ -170,7 +165,7 @@ class ConsulProvider extends BaseProvider implements ProviderInterface
 
         foreach ($this->apis as $api) {
             $api = $this->apiPrefix . $api;
-            $id = sprintf('%s-%s', APP_NAME, $api);
+            $id = sprintf('%s-%s-%s', APP_NAME, $api, LocalIP);
             $this->register['ID'] = $id;
             $this->register['Name'] = $api;
             $this->register['Port'] = intval(Yii::$app->params['swoole']['web']['port']);
