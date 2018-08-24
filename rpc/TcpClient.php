@@ -111,6 +111,7 @@ class TcpClient extends IRpcClient implements ICoroutine
         } catch (Exception $e) {
             $provider->delService($this->data['service']);
             Yii::$container->get('tcpclient')->delete($key);
+            $this->client->close();
             $this->retryCount++;
             if ($this->retryCount === $this->retryTotal) {
                 $this->retryCount = 0;
