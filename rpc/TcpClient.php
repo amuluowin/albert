@@ -5,6 +5,7 @@ namespace yii\swoole\rpc;
 use Swoole\Coroutine\Client;
 use Yii;
 use yii\base\Exception;
+use yii\helpers\VarDumper;
 use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\governance\provider\ProviderInterface;
 use yii\swoole\pack\TcpPack;
@@ -55,10 +56,12 @@ class TcpClient extends IRpcClient implements ICoroutine
     public function recv()
     {
         $result = TcpPack::decode($this->client->recv($this->timeout), 'rpc');
-        Yii::$app->rpc->afterRecv($result);
         if ($result instanceof \stdClass) {
+            Yii::$app->rpc->afterRecv(VarDumper::dumpAsString($result));
             throw new \BadFunctionCallException(sprintf('call to service:%s,route:%s,method:%s.error!message=%s',
                 $this->data['service'], $this->data['route'], $this->data['method'], $result->message));
+        } else {
+            Yii::$app->rpc->afterRecv($result);
         }
         $this->release();
         return $result;
