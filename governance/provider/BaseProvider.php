@@ -13,6 +13,8 @@ use yii\base\Component;
 
 class BaseProvider extends Component
 {
+    public $duration = 10;
+
     public function getServiceFromCache(string $service): array
     {
         $result = Yii::$app->cache->get($service);
@@ -23,7 +25,7 @@ class BaseProvider extends Component
     {
         if ($services && is_array($services)) {
             foreach ($services as $service => $node) {
-                Yii::$app->cache->set($service, $node);
+                Yii::$app->cache->set($service, $node, $this->duration);
             }
         }
     }

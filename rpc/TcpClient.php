@@ -47,8 +47,8 @@ class TcpClient extends IRpcClient implements ICoroutine
         $result = TcpPack::decode($this->client->recv($this->timeout), 'rpc');
         Yii::$app->rpc->afterRecv($result);
         if ($result instanceof \stdClass) {
-            throw new \BadFunctionCallException(sprintf('call to service:%s,route:%s,method:%s.error!',
-                $this->data['service'], $this->data['route'], $this->data['method']));
+            throw new \BadFunctionCallException(sprintf('call to service:%s,route:%s,method:%s.error!message=%s',
+                $this->data['service'], $this->data['route'], $this->data['method'], $result->message));
         }
         $this->release();
         return $result;
