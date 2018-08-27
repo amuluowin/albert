@@ -6,6 +6,7 @@ use Yii;
 use yii\base\InvalidArgumentException;
 use yii\swoole\db\DBHelper;
 use yii\swoole\db\Query;
+use yii\swoole\helpers\ArrayHelper;
 use yii\web\ServerErrorHttpException;
 
 class UpdateExt extends \yii\base\Object

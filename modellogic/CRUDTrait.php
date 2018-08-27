@@ -2,7 +2,7 @@
 
 namespace yii\swoole\modellogic;
 
-use yii;
+use Yii;
 use yii\swoole\db\DBHelper;
 use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\rest\CreateExt;
@@ -96,7 +96,7 @@ trait CRUDTrait
                     }
                 }
                 $model->load($body, '');
-                yii::$app->BaseHelper->validate($model, $transaction);
+                Yii::$app->BaseHelper->validate($model, $transaction);
                 if ($model->save(false) === false && !$model->hasErrors()) {
                     throw new ServerErrorHttpException('Failed to update the object for unknown reason.');
                 } else {
@@ -127,7 +127,6 @@ trait CRUDTrait
                 throw $ex;
             }
         } else {
-            $modelClass = ($modelClass ? $modelClass : static::$modelClass);
             $modelClass = new $modelClass();
             return UpdateExt::actionDo($modelClass, $body);
         }
