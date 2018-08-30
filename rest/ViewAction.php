@@ -9,6 +9,7 @@
 namespace yii\swoole\rest;
 
 use Yii;
+use yii\swoole\helpers\ArrayHelper;
 
 /**
  * ViewAction implements the API endpoint for returning the detailed information about a model.
