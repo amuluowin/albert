@@ -35,9 +35,9 @@ class Logger extends \yii\log\Logger
     {
         $time = microtime(true);
         $traces = [];
-        if ($this->traceLevel > 0) {
+        if ($this->traceLevel > 0 && is_callable('\Co::getBackTrace')) {
             $count = 0;
-            $ts = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+            $ts = \Co::getBackTrace(CoroHelper::getId(), DEBUG_BACKTRACE_IGNORE_ARGS);
             array_pop($ts); // remove the last trace since it would be the entry script, not very useful
             foreach ($ts as $trace) {
                 if (isset($trace['file'], $trace['line']) && strpos($trace['file'], YII2_PATH) !== 0) {
