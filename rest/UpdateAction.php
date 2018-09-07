@@ -52,12 +52,12 @@ class UpdateAction extends Action
             $model->scenario = $this->scenario;
             $transaction = $model->getDb()->beginTransaction();
             try {
-                $bscenes = ArrayHelper::remove($filter, 'beforeUpdate', '');
-                $ascenes = ArrayHelper::remove($filter, 'afterUpdate', '');
+                $bscenes = ArrayHelper::remove($body, 'beforeUpdate', '');
+                $ascenes = ArrayHelper::remove($body, 'afterUpdate', '');
                 if (key_exists($bscenes, $modelClass->sceneList) && method_exists($modelClass, $modelClass->sceneList[$bscenes])) {
-                    list($status, $filter) = $modelClass->{$modelClass->sceneList[$bscenes]}($filter);
+                    list($status, $body) = $modelClass->{$modelClass->sceneList[$bscenes]}($body);
                     if ($status >= $modelClass::ACTION_RETURN) {
-                        return $filter;
+                        return $body;
                     }
                 }
                 $model->load($body, '');
@@ -66,9 +66,9 @@ class UpdateAction extends Action
                     throw new ServerErrorHttpException('Failed to update the object for unknown reason.');
                 } else {
                     if (key_exists($ascenes, $modelClass->sceneList) && method_exists($modelClass, $modelClass->sceneList[$ascenes])) {
-                        list($status, $filter) = $modelClass->{$modelClass->sceneList[$ascenes]}($filter);
+                        list($status, $body) = $modelClass->{$modelClass->sceneList[$ascenes]}($body);
                         if ($status >= $modelClass::ACTION_RETURN) {
-                            return $filter;
+                            return $body;
                         }
                     }
                     $model = UpdateExt::saveRealation($model, $body, $transaction);
@@ -89,8 +89,8 @@ class UpdateAction extends Action
                 call_user_func($this->checkAccess, $this->id);
             }
             $modelClass = new $this->modelClass();
-            $filter = Yii::$app->getRequest()->getBodyParams();
-            return UpdateExt::actionDo($modelClass, $filter);
+            $body = Yii::$app->getRequest()->getBodyParams();
+            return UpdateExt::actionDo($modelClass, $body);
         }
     }
 

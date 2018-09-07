@@ -16,21 +16,21 @@ class UpdateExt extends \yii\base\Object
     {
         $transaction = $transaction ? $transaction : $model->getDb()->beginTransaction();
         if ($body) {
-            $bscenes = ArrayHelper::remove($filter, 'beforeUpdate', '');
-            $ascenes = ArrayHelper::remove($filter, 'afterUpdate', '');
+            $bscenes = ArrayHelper::remove($body, 'beforeUpdate', '');
+            $ascenes = ArrayHelper::remove($body, 'afterUpdate', '');
             if (isset($body['batch'])) {
                 if (key_exists($bscenes, $model->sceneList) && method_exists($model, $model->sceneList[$bscenes])) {
-                    list($status, $filter) = $model->{$model->sceneList[$bscenes]}($filter);
+                    list($status, $body) = $model->{$model->sceneList[$bscenes]}($body);
                     if ($status >= $model::ACTION_RETURN) {
-                        return $filter;
+                        return $body;
                     }
                 }
                 $result = $model::getDb()->updateSeveral($model, $body['batch']);
 
                 if (key_exists($ascenes, $model->sceneList) && method_exists($model, $model->sceneList[$ascenes])) {
-                    list($status, $filter) = $model->{$model->sceneList[$ascenes]}($filter);
+                    list($status, $body) = $model->{$model->sceneList[$ascenes]}($body);
                     if ($status >= $model::ACTION_RETURN) {
-                        return $filter;
+                        return $body;
                     }
                 }
             } elseif (isset($body['batchMTC'])) {
@@ -53,18 +53,18 @@ class UpdateExt extends \yii\base\Object
                 }
             } else {
                 if (key_exists($bscenes, $model->sceneList) && method_exists($model, $model->sceneList[$bscenes])) {
-                    list($status, $filter) = $model->{$model->sceneList[$bscenes]}($filter);
+                    list($status, $body) = $model->{$model->sceneList[$bscenes]}($body);
                     if ($status >= $model::ACTION_RETURN) {
-                        return $filter;
+                        return $body;
                     }
                 }
                 $result = self::updateSeveral($model, $body, $transaction);
 
 
                 if (key_exists($ascenes, $model->sceneList) && method_exists($model, $model->sceneList[$ascenes])) {
-                    list($status, $filter) = $model->{$model->sceneList[$ascenes]}($filter);
+                    list($status, $body) = $model->{$model->sceneList[$ascenes]}($body);
                     if ($status >= $model::ACTION_RETURN) {
-                        return $filter;
+                        return $body;
                     }
                 }
             }
@@ -103,12 +103,12 @@ class UpdateExt extends \yii\base\Object
                     $model = $exit;
                 }
             }
-            $bscenes = ArrayHelper::remove($filter, 'beforeUpdate', '');
-            $ascenes = ArrayHelper::remove($filter, 'afterUpdate', '');
+            $bscenes = ArrayHelper::remove($body, 'beforeUpdate', '');
+            $ascenes = ArrayHelper::remove($body, 'afterUpdate', '');
             if (key_exists($bscenes, $model->sceneList) && method_exists($model, $model->sceneList[$bscenes])) {
-                list($status, $filter) = $model->{$model->sceneList[$bscenes]}($filter);
+                list($status, $body) = $model->{$model->sceneList[$bscenes]}($body);
                 if ($status >= $model::ACTION_RETURN) {
-                    return $filter;
+                    return $body;
                 }
             }
 
@@ -118,9 +118,9 @@ class UpdateExt extends \yii\base\Object
                 throw new ServerErrorHttpException('Failed to update the object for unknown reason.');
             } else {
                 if (key_exists($ascenes, $model->sceneList) && method_exists($model, $model->sceneList[$ascenes])) {
-                    list($status, $filter) = $model->{$model->sceneList[$ascenes]}($filter);
+                    list($status, $body) = $model->{$model->sceneList[$ascenes]}($body);
                     if ($status >= $model::ACTION_RETURN) {
-                        return $filter;
+                        return $body;
                     }
                 }
                 $model = self::saveRealation($model, $body, $transaction);

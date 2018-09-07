@@ -39,12 +39,12 @@ class DeleteAction extends Action
             if ($this->checkAccess) {
                 call_user_func($this->checkAccess, $this->id, $model);
             }
-            $bscenes = ArrayHelper::remove($filter, 'beforeDelete', '');
-            $ascenes = ArrayHelper::remove($filter, 'afterDelete', '');
+            $bscenes = ArrayHelper::remove($body, 'beforeDelete', '');
+            $ascenes = ArrayHelper::remove($body, 'afterDelete', '');
             if (key_exists($bscenes, $modelClass->sceneList) && method_exists($modelClass, $modelClass->sceneList[$bscenes])) {
-                list($status, $filter) = $modelClass->{$modelClass->sceneList[$bscenes]}($filter);
+                list($status, $body) = $modelClass->{$modelClass->sceneList[$bscenes]}($body);
                 if ($status >= $modelClass::ACTION_RETURN) {
-                    return $filter;
+                    return $body;
                 }
             }
 
@@ -53,9 +53,9 @@ class DeleteAction extends Action
             }
 
             if (key_exists($ascenes, $modelClass->sceneList) && method_exists($modelClass, $modelClass->sceneList[$ascenes])) {
-                list($status, $filter) = $modelClass->{$modelClass->sceneList[$ascenes]}($filter);
+                list($status, $body) = $modelClass->{$modelClass->sceneList[$ascenes]}($body);
                 if ($status >= $modelClass::ACTION_RETURN) {
-                    return $filter;
+                    return $body;
                 }
             }
 
@@ -65,8 +65,8 @@ class DeleteAction extends Action
                 call_user_func($this->checkAccess, $this->id);
             }
             $modelClass = new $this->modelClass();
-            $filter = Yii::$app->getRequest()->getBodyParams();
-            $result = DeleteExt::actionDo($modelClass, $filter);
+            $body = Yii::$app->getRequest()->getBodyParams();
+            $result = DeleteExt::actionDo($modelClass, $body);
         }
         return $result;
     }

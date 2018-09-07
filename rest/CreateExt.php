@@ -15,19 +15,19 @@ class CreateExt extends \yii\base\Object
         $transaction = $transaction ? $transaction : $model->getDb()->beginTransaction();
         try {
             if (isset($body["batch"])) {
-                $bscenes = ArrayHelper::remove($filter, 'beforeCreate', '');
-                $ascenes = ArrayHelper::remove($filter, 'afertCreate', '');
+                $bscenes = ArrayHelper::remove($body, 'beforeCreate', '');
+                $ascenes = ArrayHelper::remove($body, 'afertCreate', '');
                 if (key_exists($bscenes, $model->sceneList) && method_exists($model, $model->sceneList[$bscenes])) {
-                    list($status, $filter) = $model->{$model->sceneList[$bscenes]}($filter);
+                    list($status, $body) = $model->{$model->sceneList[$bscenes]}($body);
                     if ($status >= $model::ACTION_RETURN) {
-                        return $filter;
+                        return $body;
                     }
                 }
                 $result = $model::getDb()->insertSeveral($model, $body['batch']);
                 if (key_exists($ascenes, $model->sceneList) && method_exists($model, $model->sceneList[$ascenes])) {
-                    list($status, $filter) = $model->{$model->sceneList[$ascenes]}($filter);
+                    list($status, $body) = $model->{$model->sceneList[$ascenes]}($body);
                     if ($status >= $model::ACTION_RETURN) {
-                        return $filter;
+                        return $body;
                     }
                 }
             } elseif (isset($body["batchMTC"])) {
@@ -57,21 +57,21 @@ class CreateExt extends \yii\base\Object
     public static function createSeveral($model, $body, $transaction)
     {
         $model->load($body, '');
-        $bscenes = ArrayHelper::remove($filter, 'beforeCreate', '');
-        $ascenes = ArrayHelper::remove($filter, 'afterCreate', '');
+        $bscenes = ArrayHelper::remove($body, 'beforeCreate', '');
+        $ascenes = ArrayHelper::remove($body, 'afterCreate', '');
         if (key_exists($bscenes, $model->sceneList) && method_exists($model, $model->sceneList[$bscenes])) {
-            list($status, $filter) = $model->{$model->sceneList[$bscenes]}($filter);
+            list($status, $body) = $model->{$model->sceneList[$bscenes]}($body);
             if ($status >= $model::ACTION_RETURN) {
-                return $filter;
+                return $body;
             }
         }
         Yii::$app->BaseHelper->validate($model, $transaction);
         if ($model->save(false)) {
 
             if (key_exists($ascenes, $model->sceneList) && method_exists($model, $model->sceneList[$ascenes])) {
-                list($status, $filter) = $model->{$model->sceneList[$ascenes]}($filter);
+                list($status, $body) = $model->{$model->sceneList[$ascenes]}($body);
                 if ($status >= $model::ACTION_RETURN) {
-                    return $filter;
+                    return $body;
                 }
             }
             $model = self::saveRealation($model, $body, $transaction);
