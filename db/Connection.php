@@ -3,67 +3,9 @@
 namespace yii\swoole\db;
 
 use yii\base\ModelEvent;
-use yii\swoole\coroutine\ICoroutine;
 
-class Connection extends \yii\db\Connection implements ICoroutine
+class Connection extends \yii\db\Connection
 {
-    /**
-     * @var string driver name
-     */
-    private $_driverName;
-
-    /**
-     * @var Transaction the currently active transaction
-     */
-//    private $_transaction;
-
-    /**
-     * @var string
-     */
-    public $commandClass = 'yii\swoole\db\Command';
-
-    // add function for pool
-    public function release($conn = null)
-    {
-        // USE_POOL 为开关 可以定义在index.php文件中
-        if (defined("USE_POOL") && USE_POOL === true) {
-            $transaction = $this->getTransaction();
-            if (!empty($transaction) && $transaction->getIsActive()) {//事务里面不释放连接
-                return;
-            }
-            $this->pdo->release();
-        }
-    }
-
-    protected function createPdoInstance()
-    {
-        $pdoClass = $this->pdoClass;
-        if ($pdoClass === null) {
-            $pdoClass = 'PDO';
-            if (defined("USE_POOL") && USE_POOL === true) {
-                $pdoClass = 'pdoProxy';
-            }
-            if ($this->_driverName !== null) {
-                $driver = $this->_driverName;
-            } elseif (($pos = strpos($this->dsn, ':')) !== false) {
-                $driver = strtolower(substr($this->dsn, 0, $pos));
-            }
-            if (isset($driver)) {
-                if ($driver === 'mssql' || $driver === 'dblib') {
-                    $pdoClass = 'yii\db\mssql\PDO';
-                } elseif ($driver === 'sqlsrv') {
-                    $pdoClass = 'yii\db\mssql\SqlsrvPDO';
-                }
-            }
-        }
-
-        $dsn = $this->dsn;
-        if (strncmp('sqlite:@', $dsn, 8) === 0) {
-            $dsn = 'sqlite:' . Yii::getAlias(substr($dsn, 7));
-        }
-        return new $pdoClass($dsn, $this->username, $this->password, $this->attributes);
-    }
-
     /**
      * 批量插入自增主键
      * */

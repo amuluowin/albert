@@ -1,24 +1,31 @@
 <?php
 
-namespace yii\swoole\mysql;
+namespace yii\swoole\db;
 
 use Yii;
-use yii\base\Exception;
 use yii\base\InvalidConfigException;
+use yii\base\ModelEvent;
 use yii\base\NotSupportedException;
+use yii\swoole\Application;
 use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\helpers\CoroHelper;
-use yii\swoole\pool\MysqlPool;
+use yii\swoole\pool\PdoPool;
 
-class Connection extends \yii\swoole\db\ConnectionPool implements ICoroutine
+class ConnectionPool extends Connection implements ICoroutine
 {
-    public $timeout = 0;
+    public $maxPoolSize = 30;
+    public $busy_pool = 30;
+    /**
+     * @var string driver name
+     */
+    private $_driverName;
 
-    public $strict_type = false;
+    /**
+     * @var Transaction the currently active transaction
+     */
+    private $_transaction;
 
-    public $fetch_more = false;
-
-    private $key;
+    public $pdo = [];
 
     private $_master = false;
 
@@ -26,16 +33,18 @@ class Connection extends \yii\swoole\db\ConnectionPool implements ICoroutine
 
     private $_schema;
 
-    /**
-     * @var Transaction the currently active transaction
-     */
-    private $_transaction;
+    public $insertId = [];
 
     /**
      * @var string
      */
-    public $commandClass = 'yii\swoole\mysql\Command';
+    public $commandClass = 'yii\swoole\db\Command';
 
+    public $schemaMap = [
+        'mysql' => 'yii\swoole\db\mysql\Schema', // MySQL
+    ];
+
+    // add function for pool
     public function release($conn = null)
     {
         $id = CoroHelper::getId();
@@ -45,8 +54,8 @@ class Connection extends \yii\swoole\db\ConnectionPool implements ICoroutine
             if (!empty($transaction) && $transaction->getIsActive()) {//事务里面不释放连接
                 return;
             }
-            if (Yii::$container->hasSingleton('mysqlclient')) {
-                Yii::$container->get('mysqlclient')->recycle($this->pdo[$id]);
+            if (Yii::$container->hasSingleton('pdoclient')) {
+                Yii::$container->get('pdoclient')->recycle($this->pdo[$id]);
                 unset($this->pdo[$id]);
                 $this->_master->release();
                 $this->_slave->release();
@@ -56,85 +65,85 @@ class Connection extends \yii\swoole\db\ConnectionPool implements ICoroutine
         }
     }
 
-    public function getTransaction()
+    public function open()
     {
         $id = CoroHelper::getId();
-        return isset($this->_transaction[$id]) && $this->_transaction[$id]->getIsActive() ? $this->_transaction[$id] : null;
-    }
-
-    public function beginTransaction($isolationLevel = null)
-    {
-        $id = CoroHelper::getId();
-        $this->open();
-
-        if (($transaction = $this->getTransaction()) === null) {
-            $transaction = $this->_transaction[$id] = new Transaction(['db' => $this]);
+        if (isset($this->pdo[$id]) && $this->pdo[$id] !== null) {
+            return;
         }
-        $transaction->begin($isolationLevel);
 
-        return $transaction;
-    }
+        if (!empty($this->masters)) {
+            $db = $this->getMaster();
+            if ($db !== null) {
+                $this->pdo[$id] = $db->pdo;
+                return;
+            } else {
+                throw new InvalidConfigException('None of the master DB servers is available.');
+            }
+        }
 
-    public function begin()
-    {
-        $id = CoroHelper::getId();
-        $this->pdo[$id]->query('START TRANSACTION');
-    }
-
-    public function commit()
-    {
-        $id = CoroHelper::getId();
-        $this->pdo[$id]->query('COMMIT');
-    }
-
-    public function rollBack()
-    {
-        $id = CoroHelper::getId();
-        $this->pdo[$id]->query('ROLLBACK');
+        if (empty($this->dsn)) {
+            throw new InvalidConfigException('Connection::dsn cannot be empty.');
+        }
+        $token = 'Opening DB connection: ' . $this->dsn;
+        try {
+            Yii::info($token, __METHOD__);
+            Yii::beginProfile($token, __METHOD__);
+            $this->pdo[$id] = $this->createPdoInstance();
+            $this->initConnection();
+            Yii::endProfile($token, __METHOD__);
+        } catch (\PDOException $e) {
+            Yii::endProfile($token, __METHOD__);
+            throw new Exception($e->getMessage(), $e->errorInfo, (int)$e->getCode(), $e);
+        }
     }
 
     protected function createPdoInstance()
     {
-        return $this->getFromPool();
-    }
+        $pdoClass = $this->pdoClass;
+        if ($pdoClass === null) {
+            $pdoClass = 'PDO';
+            if ($this->_driverName !== null) {
+                $driver = $this->_driverName;
+            } elseif (($pos = strpos($this->dsn, ':')) !== false) {
+                $driver = strtolower(substr($this->dsn, 0, $pos));
+            }
+            if (isset($driver)) {
+                if ($driver === 'mssql' || $driver === 'dblib') {
+                    $pdoClass = 'yii\db\mssql\PDO';
+                } elseif ($driver === 'sqlsrv') {
+                    $pdoClass = 'yii\db\mssql\SqlsrvPDO';
+                }
+            }
+        }
 
-    public function getFromPool()
-    {
-        if (!Yii::$container->hasSingleton('mysqlclient')) {
-            Yii::$container->setSingleton('mysqlclient', [
-                'class' => MysqlPool::class,
+        $dsn = $this->dsn;
+        if (strncmp('sqlite:@', $dsn, 8) === 0) {
+            $dsn = 'sqlite:' . Yii::getAlias(substr($dsn, 7));
+        }
+        if (!Yii::$container->hasSingleton('pdoclient')) {
+            Yii::$container->setSingleton('pdoclient', [
+                'class' => PdoPool::class,
             ]);
-            $uri = str_replace('mysql:', '', $this->dsn);
-            $uri = str_replace('host=', '', $uri);
-            $uri = str_replace('dbname=', '', $uri);
-            $uri = explode(';', $uri);
-            $hostAndport = explode(':', array_shift($uri));
-            $dbname = array_shift($uri);
-            $host = array_shift($hostAndport);
-            $port = $hostAndport ?: 3306;
-            $this->key = sprintf('mysql:%s:%s:%d', $dbname, $host, $port);
-            return Yii::$container->get('mysqlclient')->create($this->key,
+
+            return Yii::$container->get('pdoclient')->create($this->dsn,
                 [
-                    'host' => $host,
-                    'port' => $port,
-                    'database' => $dbname,
-                    'user' => $this->username,
+                    'class' => $pdoClass,
+                    'dsn' => $dsn,
+                    'username' => $this->username,
                     'password' => $this->password,
-                    'charset' => $this->charset,
-                    'strict_type' => $this->strict_type,
-                    'fetch_more' => $this->fetch_more,
-                    'timeout' => $this->timeout,
+                    'attributes' => $this->attributes,
                     'pool_size' => $this->maxPoolSize,
                     'busy_size' => $this->busy_pool
                 ])->fetch($this->key);
         }
-        return Yii::$container->get('mysqlclient')->fetch($this->key);
-
+        return Yii::$container->get('pdoclient')->fetch($this->key);
     }
 
-    protected function initConnection()
+    public function getIsActive()
     {
-        $this->trigger(self::EVENT_AFTER_OPEN);
+        $id = CoroHelper::getId();
+        return isset($this->pdo[$id]) || isset($this->insertId[$id]);
     }
 
     public function getSchema()
@@ -194,6 +203,25 @@ class Connection extends \yii\swoole\db\ConnectionPool implements ICoroutine
         } else {
             return $db->pdo[$id];
         }
+    }
+
+    public function getTransaction()
+    {
+        $id = CoroHelper::getId();
+        return isset($this->_transaction[$id]) && $this->_transaction[$id]->getIsActive() ? $this->_transaction[$id] : null;
+    }
+
+    public function beginTransaction($isolationLevel = null)
+    {
+        $id = CoroHelper::getId();
+        $this->open();
+
+        if (($transaction = $this->getTransaction()) === null) {
+            $transaction = $this->_transaction[$id] = new Transaction(['db' => $this]);
+        }
+        $transaction->begin($isolationLevel);
+
+        return $transaction;
     }
 
     public function close()

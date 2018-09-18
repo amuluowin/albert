@@ -29,9 +29,6 @@ class DataReader extends \yii\db\DataReader {
     }
 
     public function nextResult() {
-        if (defined("USE_POOL") && USE_POOL === true) {
-            throw new Exception("cp not support foreach stmt");
-        }
         if (($result = $this->_statement->nextRowset()) !== false) {
             $this->_index = -1;
         }
@@ -58,16 +55,10 @@ class DataReader extends \yii\db\DataReader {
     }
 
     public function current() {
-        if (defined("USE_POOL") && USE_POOL === true) {
-            throw new Exception("cp not support foreach stmt");
-        }
         return $this->_row;
     }
 
     public function next() {
-        if (defined("USE_POOL") && USE_POOL === true) {
-            throw new Exception("cp not support foreach stmt");
-        }
         $this->_row = $this->_statement->fetch();
         $this->_index++;
     }

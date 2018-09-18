@@ -36,6 +36,14 @@ trait CRUDTrait
     {
         $modelClass = ($modelClass ?: static::$modelClass);
         $modelClass = new $modelClass();
+        $bscenes = ArrayHelper::remove($filter, 'beforeView', '');
+        $ascenes = ArrayHelper::remove($filter, 'afterView', '');
+        if (key_exists($bscenes, $modelClass->sceneList) && method_exists($modelClass, $modelClass->sceneList[$bscenes])) {
+            list($status, $filter) = $modelClass->{$modelClass->sceneList[$bscenes]}($filter);
+            if ($status >= $modelClass::ACTION_RETURN) {
+                return $filter;
+            }
+        }
         $keys = $modelClass::primaryKey();
         foreach ($keys as $index => $key) {
             $keys[$index] = $modelClass::tableName() . '.' . $key;
@@ -82,16 +90,11 @@ trait CRUDTrait
 
             $transaction = $model->getDb()->beginTransaction();
             try {
-                if (method_exists($model, 'before_AUpdate')) {
-                    $class = ArrayHelper::remove($body, 'before');
-                    list($status, $body) = $model->before_AUpdate($body, $class);
-                    if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN_COMMIT) {
-                        if ($transaction->getIsActive()) {
-                            $transaction->commit();
-                        }
-
-                        return $body;
-                    } elseif ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
+                $bscenes = ArrayHelper::remove($body, 'beforeUpdate', '');
+                $ascenes = ArrayHelper::remove($body, 'afterUpdate', '');
+                if (key_exists($bscenes, $model->sceneList) && method_exists($model, $model->sceneList[$bscenes])) {
+                    list($status, $body) = $model->{$model->sceneList[$bscenes]}($body);
+                    if ($status >= $model::ACTION_RETURN) {
                         return $body;
                     }
                 }
@@ -100,16 +103,9 @@ trait CRUDTrait
                 if ($model->save(false) === false && !$model->hasErrors()) {
                     throw new ServerErrorHttpException('Failed to update the object for unknown reason.');
                 } else {
-                    if (method_exists($model, 'after_AUpdate')) {
-                        $class = ArrayHelper::remove($body, 'after');
-                        list($status, $body) = $model->after_AUpdate($body, $class);
-                        if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN_COMMIT) {
-                            if ($transaction->getIsActive()) {
-                                $transaction->commit();
-                            }
-
-                            return $body;
-                        } elseif ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
+                    if (key_exists($ascenes, $model->sceneList) && method_exists($model, $model->sceneList[$ascenes])) {
+                        list($status, $body) = $model->{$model->sceneList[$ascenes]}($body);
+                        if ($status >= $model::ACTION_RETURN) {
                             return $body;
                         }
                     }
@@ -138,11 +134,12 @@ trait CRUDTrait
         if ($id) {
             $model = self::findModel($id, $modelClass);
 
-            if (method_exists($model, 'before_ADelete')) {
-                $class = ArrayHelper::remove($body, 'before');
-                list($status, $model) = $model->before_ADelete($model, $class);
-                if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
-                    return $model;
+            $bscenes = ArrayHelper::remove($body, 'beforeDelete', '');
+            $ascenes = ArrayHelper::remove($body, 'afterDelete', '');
+            if (key_exists($bscenes, $model->sceneList) && method_exists($model, $model->sceneList[$bscenes])) {
+                list($status, $body) = $model->{$model->sceneList[$bscenes]}($body);
+                if ($status >= $model::ACTION_RETURN) {
+                    return $body;
                 }
             }
 
@@ -150,11 +147,10 @@ trait CRUDTrait
                 throw new ServerErrorHttpException('Failed to delete the object for unknown reason.');
             }
 
-            if (method_exists($model, 'after_ADelete')) {
-                $class = ArrayHelper::remove($body, 'after');
-                list($status, $model) = $model->after_ADelete($model, $class);
-                if ($status == \yii\swoole\db\ActiveRecord::ACTION_RETURN) {
-                    return $model;
+            if (key_exists($ascenes, $model->sceneList) && method_exists($model, $model->sceneList[$ascenes])) {
+                list($status, $body) = $model->{$model->sceneList[$ascenes]}($body);
+                if ($status >= $model::ACTION_RETURN) {
+                    return $body;
                 }
             }
 
