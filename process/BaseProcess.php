@@ -4,7 +4,6 @@ namespace yii\swoole\process;
 
 use Yii;
 use yii\swoole\base\Output;
-use yii\swoole\files\FileIO;
 
 abstract class BaseProcess extends \yii\base\Component
 {
@@ -37,6 +36,7 @@ abstract class BaseProcess extends \yii\base\Component
             $this->start();
         } else {
             $p = new \swoole_process(function ($process) {
+                \Swoole\Runtime::enableCoroutine();
                 $process->name((APP_NAME ?: 'swoole') . '-' . $this->name);
                 go(function () {
                     $this->start();
@@ -52,7 +52,7 @@ abstract class BaseProcess extends \yii\base\Component
     {
         if (!$this->server && $this->pidFile && $this->pids) {
             go(function () {
-                FileIO::write($this->pidFile, implode(',', $this->pids));
+                file_put_contents($this->pidFile, implode(',', $this->pids));
             });
 
         }
@@ -88,7 +88,7 @@ abstract class BaseProcess extends \yii\base\Component
                 foreach ($this->processArray as $pid => $process) {
                     $process->exit($status);
                 }
-                $content = FileIO::read($this->pidFile);
+                $content = file_get_contents($this->pidFile);
                 if (is_string($content)) {
                     $pids = explode(',', $content);
                 }
@@ -113,7 +113,7 @@ abstract class BaseProcess extends \yii\base\Component
     public function memoryExceeded($pid, $name)
     {
         if ((memory_get_usage() / 1024 / 1024) >= $this->memory) {
-            FileIO::write(Yii::getAlias($this->log_path . '/' . $name . '.log'), 'out of memory!', FILE_APPEND);
+            file_put_contents(Yii::getAlias($this->log_path . '/' . $name . '.log'), 'out of memory!', FILE_APPEND);
             $this->release();
             $this->stop($pid);
         }

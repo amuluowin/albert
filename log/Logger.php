@@ -37,14 +37,16 @@ class Logger extends \yii\log\Logger
         $traces = [];
         if ($this->traceLevel > 0 && is_callable('\Co::getBackTrace')) {
             $count = 0;
-            $ts = \Co::getBackTrace(CoroHelper::getId(), DEBUG_BACKTRACE_IGNORE_ARGS);
-            array_pop($ts); // remove the last trace since it would be the entry script, not very useful
-            foreach ($ts as $trace) {
-                if (isset($trace['file'], $trace['line']) && strpos($trace['file'], YII2_PATH) !== 0) {
-                    unset($trace['object'], $trace['args']);
-                    $traces[] = $trace;
-                    if (++$count >= $this->traceLevel) {
-                        break;
+            $ts = \Co::getBackTrace(CoroHelper::getId());
+            if ($ts !== false) {
+                array_pop($ts); // remove the last trace since it would be the entry script, not very useful
+                foreach ($ts as $trace) {
+                    if (isset($trace['file'], $trace['line']) && strpos($trace['file'], YII2_PATH) !== 0) {
+                        unset($trace['object'], $trace['args']);
+                        $traces[] = $trace;
+                        if (++$count >= $this->traceLevel) {
+                            break;
+                        }
                     }
                 }
             }

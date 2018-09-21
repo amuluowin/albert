@@ -97,6 +97,7 @@ abstract class Server extends Component
      */
     public function onStart($server)
     {
+        \Swoole\Runtime::enableCoroutine();
         $this->setProcessTitle($this->name . ': master');
         if ($this->pidFile) {
             file_put_contents($this->pidFile, $server->master_pid);

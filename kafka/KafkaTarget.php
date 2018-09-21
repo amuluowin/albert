@@ -10,8 +10,6 @@ namespace yii\swoole\kafka;
 
 use Yii;
 use yii\log\Target;
-use yii\swoole\Application;
-use yii\swoole\kafka\Kafka;
 
 class KafkaTarget extends Target
 {

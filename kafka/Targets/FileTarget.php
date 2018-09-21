@@ -9,7 +9,6 @@
 namespace yii\swoole\kafka\Targets;
 
 use Yii;
-use yii\swoole\files\FileIO;
 
 class FileTarget extends Target
 {

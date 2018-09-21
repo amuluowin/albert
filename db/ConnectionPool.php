@@ -4,9 +4,7 @@ namespace yii\swoole\db;
 
 use Yii;
 use yii\base\InvalidConfigException;
-use yii\base\ModelEvent;
 use yii\base\NotSupportedException;
-use yii\swoole\Application;
 use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\helpers\CoroHelper;
 use yii\swoole\pool\PdoPool;

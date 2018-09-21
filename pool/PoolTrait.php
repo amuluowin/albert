@@ -8,8 +8,8 @@ use yii\base\InvalidArgumentException;
 use yii\helpers\VarDumper;
 use yii\swoole\base\Output;
 use yii\swoole\configcenter\ConfigInterface;
-use yii\web\ServerErrorHttpException;
 use yii\swoole\helpers\ArrayHelper;
+use yii\web\ServerErrorHttpException;
 
 trait PoolTrait
 {

@@ -3,8 +3,6 @@
 namespace yii\swoole\mysql;
 
 use Yii;
-use yii\base\Exception;
-use yii\base\InvalidConfigException;
 use yii\base\NotSupportedException;
 use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\helpers\CoroHelper;

@@ -4,7 +4,6 @@ namespace yii\swoole\process;
 
 use Yii;
 use yii\queue\Job;
-use yii\swoole\files\FileIO;
 use yii\swoole\redis\coredis\Connection;
 
 class QueueProcess extends BaseProcess
@@ -30,6 +29,7 @@ class QueueProcess extends BaseProcess
             for ($i = 0; $i < $config['worker']; $i++) {
                 $queue_process = new \swoole_process(function ($process) use ($class, $config, $i) {
                     $process->name('swoole-' . $this->name . '-' . $class . '-' . $i);
+                    \Swoole\Runtime::enableCoroutine();
                     if ($config['sleep'] > 0) {
                         swoole_timer_tick($config['sleep'] * 1000, function () use ($process, $class, $config) {
                             $this->doWork($process, $class, $config);
@@ -74,7 +74,7 @@ class QueueProcess extends BaseProcess
             $this->memoryExceeded($process->pid, $class);
             $this->release();
         } catch (\Exception $e) {
-            FileIO::write($this->log_path . '/' . $class . '.log', (string)$e, FILE_APPEND);
+            file_put_contents($this->log_path . '/' . $class . '.log', (string)$e, FILE_APPEND);
             $this->release();
             $this->stop($process->pid);
         }
