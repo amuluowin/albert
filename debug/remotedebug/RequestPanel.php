@@ -1,13 +1,13 @@
 <?php
 
-namespace yii\swoole\debug\filedebug;
+namespace yii\swoole\debug\remotedebug;
 
 use Yii;
 
 /**
  * Class RequestPanel
  *
- * @package yii\swoole\debug\filedebug
+ * @package yii\swoole\debug\remotedebug
  */
 class RequestPanel extends \yii\debug\panels\RequestPanel
 {

@@ -13,8 +13,6 @@ use yii\swoole\web\ErrorHandler;
  */
 class Dispatcher extends \yii\log\Dispatcher
 {
-    public $isFlush = true;
-
     /**
      * @inheritdoc
      */
@@ -31,9 +29,12 @@ class Dispatcher extends \yii\log\Dispatcher
                 try {
                     $target->collect($messages, $final);
                 } catch (\Exception $e) {
-                    // 日志记录器出错
-                    $target->enabled = false;
-                    echo 'Unable to send log via ' . get_class($target) . ': ' . ErrorHandler::convertExceptionToString($e) . "\n";
+                    $errorMsg = 'Unable to send log via ' . get_class($target) . ': ' . ErrorHandler::convertExceptionToString($e) . "\n";
+                    if (Yii::getLogger() instanceof \yii\swoole\seaslog\Logger) {
+                        \SeasLog::error($errorMsg);
+                    } else {
+                        echo $errorMsg;
+                    }
                 }
             }
         }

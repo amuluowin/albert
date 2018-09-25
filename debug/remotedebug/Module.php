@@ -1,6 +1,6 @@
 <?php
 
-namespace yii\swoole\debug\filedebug;
+namespace yii\swoole\debug\remotedebug;
 
 use Yii;
 use yii\debug\Panel;
@@ -11,13 +11,13 @@ use yii\swoole\web\View;
 /**
  * Class Module
  *
- * @package yii\swoole\debug\filedebug
+ * @package yii\swoole\debug\remotedebug
  */
 class Module extends \yii\debug\Module implements Refreshable
 {
-    public $controllerNamespace = 'yii\swoole\debug\filedebug\controllers';
+    public $controllerNamespace = 'yii\swoole\debug\remotedebug\controllers';
 
-    public $controllerMap = ['default' => 'yii\swoole\debug\filedebug\controllers\DefaultController'];
+    public $controllerMap = ['default' => 'yii\swoole\debug\remotedebug\controllers\DefaultController'];
 
     public $isService = true;
     /**
@@ -30,7 +30,6 @@ class Module extends \yii\debug\Module implements Refreshable
      */
     public function init()
     {
-        //echo __METHOD__ . " init.\n";
         parent::init();
         $this->setViewPath('@yii/debug/views');
         if (Yii::$app instanceof Application) {
@@ -51,7 +50,7 @@ class Module extends \yii\debug\Module implements Refreshable
         }
         $logTarget = clone self::$logTargetInstance;
         $logTarget->module = $this;
-        $logTarget->tag = uniqid(); // 在高并发情况下可能会重复
+        $logTarget->tag = \SeasLog::getRequestID(); // 在高并发情况下可能会重复
         $this->logTarget = Yii::$app->getLog()->targets['debug'] = $logTarget;
 
         $app->on(Application::EVENT_BEFORE_REQUEST, function () use ($app) {

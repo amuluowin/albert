@@ -18,13 +18,6 @@ class Container extends \yii\di\Container
      * @var array 类的别名
      */
     public static $classAlias = [
-        'yii\db\ActiveRecord' => 'yii\swoole\db\ActiveRecord',
-        'yii\db\Command' => 'yii\swoole\db\Command',
-        'yii\db\Connection' => 'yii\swoole\db\Connection',
-        'yii\log\Dispatcher' => 'yii\swoole\log\Dispatcher',
-        'yii\log\FileTarget' => 'yii\swoole\log\FileTarget',
-        'yii\log\DbTarget' => 'yii\swoole\log\DbTarget',
-        'yii\log\Logger' => 'yii\swoole\log\Logger',
         'yii\web\Request' => 'yii\swoole\web\Request',
         'yii\web\Response' => 'yii\swoole\web\Response',
         'yii\web\Session' => 'yii\swoole\web\Session',
@@ -34,13 +27,7 @@ class Container extends \yii\di\Container
         'yii\web\AssetManager' => 'yii\swoole\web\AssetManager',
         'yii\console\ErrorHandler' => 'yii\swoole\console\ErrorHandler',
         'yii\db\Query' => 'yii\swoole\db\Query',
-        'yii\debug\Module' => 'yii\swoole\debug\filedebug\Module',
-        'yii\debug\panels\RequestPanel' => 'yii\swoole\debug\filedebug\RequestPanel',
-        'yii\debug\panels\ConfigPanel' => 'yii\swoole\debug\filedebug\ConfigPanel',
-        'yii\swoole\debug\Module' => 'yii\swoole\debug\filedebug\Module',
         'yii\swiftmailer\Mailer' => 'yii\swoole\mailer\SwiftMailer',
-        'yii\redis\Connetcion' => 'yii\swoole\redis\Connection',
-        'yii\redis\Session' => 'yii\swoole\redis\Session'
     ];
 
     /**

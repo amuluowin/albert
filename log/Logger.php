@@ -8,6 +8,10 @@ use yii\swoole\helpers\CoroHelper;
 
 class Logger extends \yii\log\Logger
 {
+    /**
+     * @var bool
+     */
+    public $isFlush = true;
 
     /**
      * @inheritdoc

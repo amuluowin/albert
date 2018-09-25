@@ -2,16 +2,39 @@
 
 namespace yii\swoole\seaslog;
 
-use Yii;
 use SeasLog;
-use yii\swoole\Application;
-use yii\swoole\helpers\CoroHelper;
+use Yii;
+use yii\swoole\helpers\ArrayHelper;
 
 class Logger extends \yii\log\Logger
 {
+    /**
+     * @var string
+     */
+    public $path = '@runtime/logs';
+
+    static private $levelList = [
+        self::LEVEL_ERROR => 'error',
+        self::LEVEL_WARNING => 'warning',
+        self::LEVEL_INFO => 'info',
+        self::LEVEL_TRACE => 'debug'
+    ];
+
+    public function init()
+    {
+        parent::init();
+        \SeasLog::setBasePath(Yii::getAlias($this->path));
+    }
+
     public function log($message, $level, $category = 'application')
     {
-
+        \SeasLog::setLogger(APP_NAME);
+        \SeasLog::setRequestID(Yii::$app->getRequest()->getTraceId());
+        if (($method = ArrayHelper::getValue(self::$levelList, $level)) !== null) {
+            \SeasLog::$method($message);
+        } else {
+            \SeasLog::debug($message);
+        }
     }
 
     /**
@@ -19,10 +42,8 @@ class Logger extends \yii\log\Logger
      */
     public function flush($final = false)
     {
-        $messages = $this->getMessages();
-        unset($this->messages[CoroHelper::getId()]);
         if ($this->dispatcher instanceof Dispatcher) {
-            $this->dispatcher->dispatch($messages, $final);
+            $this->dispatcher->dispatch([], $final);
         }
     }
 }

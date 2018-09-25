@@ -75,44 +75,44 @@ class Yii extends \yii\BaseYii
 
     public static function debug($message, $category = 'application')
     {
-        if (YII_DEBUG && static::getLogger()->dispatcher->isFlush) {
+        if (YII_DEBUG && static::getLogger()->isFlush) {
             static::getLogger()->log($message, \yii\log\Logger::LEVEL_TRACE, $category);
         }
     }
 
     public static function error($message, $category = 'application')
     {
-        if (static::getLogger()->dispatcher->isFlush) {
+        if (static::getLogger()->isFlush) {
             static::getLogger()->log($message, \yii\log\Logger::LEVEL_ERROR, $category);
         }
     }
 
     public static function warning($message, $category = 'application')
     {
-        if (static::getLogger()->dispatcher->isFlush) {
+        if (static::getLogger()->isFlush) {
             static::getLogger()->log($message, \yii\log\Logger::LEVEL_WARNING, $category);
         }
     }
 
     public static function info($message, $category = 'application')
     {
-        if (static::getLogger()->dispatcher->isFlush) {
+        if (static::getLogger()->isFlush) {
             static::getLogger()->log($message, \yii\log\Logger::LEVEL_INFO, $category);
         }
     }
 
     public static function beginProfile($token, $category = 'application')
     {
-        if (static::getLogger()->dispatcher->isFlush) {
-            static::getLogger()->log($token, \yii\log\Logger::LEVEL_PROFILE_BEGIN, $category);
-        }
+//        if (static::getLogger()->isFlush) {
+//            static::getLogger()->log($token, \yii\log\Logger::LEVEL_PROFILE_BEGIN, $category);
+//        }
     }
 
     public static function endProfile($token, $category = 'application')
     {
-        if (static::getLogger()->dispatcher->isFlush) {
-            static::getLogger()->log($token, \yii\log\Logger::LEVEL_PROFILE_END, $category);
-        }
+//        if (static::getLogger()->isFlush) {
+//            static::getLogger()->log($token, \yii\log\Logger::LEVEL_PROFILE_END, $category);
+//        }
     }
 }
 
