@@ -73,41 +73,4 @@ class Logger extends \yii\log\Logger
             $this->dispatcher->dispatch($messages, $final);
         }
     }
-
-    public function getProfiling($categories = [], $excludeCategories = [])
-    {
-        $timings = $this->calculateTimings($this->getMessages());
-        if (empty($categories) && empty($excludeCategories)) {
-            return $timings;
-        }
-
-        foreach ($timings as $i => $timing) {
-            $matched = empty($categories);
-            foreach ($categories as $category) {
-                $prefix = rtrim($category, '*');
-                if (($timing['category'] === $category || $prefix !== $category) && strpos($timing['category'], $prefix) === 0) {
-                    $matched = true;
-                    break;
-                }
-            }
-
-            if ($matched) {
-                foreach ($excludeCategories as $category) {
-                    $prefix = rtrim($category, '*');
-                    foreach ($timings as $i => $timing) {
-                        if (($timing['category'] === $category || $prefix !== $category) && strpos($timing['category'], $prefix) === 0) {
-                            $matched = false;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (!$matched) {
-                unset($timings[$i]);
-            }
-        }
-
-        return array_values($timings);
-    }
 }
