@@ -10,7 +10,6 @@ namespace yii\swoole\debug\remotedebug\controllers;
 use Yii;
 use yii\debug\models\search\Debug;
 use yii\swoole\Application;
-use yii\swoole\helpers\CoroHelper;
 use yii\swoole\helpers\SerializeHelper;
 use yii\web\NotFoundHttpException;
 

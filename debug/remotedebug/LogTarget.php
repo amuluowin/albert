@@ -19,11 +19,10 @@ class LogTarget extends \yii\debug\LogTarget
      */
     public function export()
     {
-        \SeasLog::setLogger('summary');
-        \SeasLog::setRequestID(Yii::$app->getRequest()->getTraceId());
+        Yii::getLogger()->setLogger('summary');
         Yii::debug(SerializeHelper::serialize($this->collectSummary()));
         foreach ($this->module->panels as $id => $panel) {
-            \SeasLog::setLogger($id);
+            Yii::getLogger()->setLogger($id);
             try {
                 Yii::debug(SerializeHelper::serialize($panel->save()));
             } catch (\Exception $exception) {

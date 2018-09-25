@@ -5,6 +5,7 @@ namespace yii\swoole\seaslog;
 use SeasLog;
 use Yii;
 use yii\swoole\helpers\ArrayHelper;
+use yii\swoole\web\Request;
 
 class Logger extends \yii\log\Logger
 {
@@ -28,8 +29,8 @@ class Logger extends \yii\log\Logger
 
     public function log($message, $level, $category = 'application')
     {
-        \SeasLog::setLogger(APP_NAME);
-        \SeasLog::setRequestID(Yii::$app->getRequest()->getTraceId());
+        $this->setLogger();
+        $this->setRequestValue();
         if (($method = ArrayHelper::getValue(self::$levelList, $level)) !== null) {
             \SeasLog::$method($message);
         } else {
@@ -45,5 +46,23 @@ class Logger extends \yii\log\Logger
         if ($this->dispatcher instanceof Dispatcher) {
             $this->dispatcher->dispatch([], $final);
         }
+    }
+
+    public function setRequestValue()
+    {
+        /**
+         * @var Request
+         */
+        $request = Yii::$app->getRequest();
+        \SeasLog::setRequestID($request->getTraceId());
+        \SeasLog::setRequestVariable(SEASLOG_REQUEST_VARIABLE_REQUEST_URI, $request->getPathInfo());
+        \SeasLog::setRequestVariable(SEASLOG_REQUEST_VARIABLE_DOMAIN_PORT, $request->getHostInfo());
+        \SeasLog::setRequestVariable(SEASLOG_REQUEST_VARIABLE_REQUEST_METHOD, $request->getMethod());
+        \SeasLog::setRequestVariable(SEASLOG_REQUEST_VARIABLE_CLIENT_IP, $request->getRemoteIP());
+    }
+
+    public function setLogger($module = APP_NAME)
+    {
+        \SeasLog::setLogger($module);
     }
 }
