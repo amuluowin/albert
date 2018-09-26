@@ -22,6 +22,7 @@ class TaskModel extends \yii\swoole\base\Model
     public $method;
     public $ticket = 0;
     public $num = 0;
+    public $retry = 0;
     public $total = 0;
     public $succeceRun = 0;
     public $failRun = 0;

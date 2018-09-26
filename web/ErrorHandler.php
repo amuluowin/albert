@@ -61,7 +61,6 @@ class ErrorHandler extends \yii\web\ErrorHandler
             } else {
                 $response = new Response();
             }
-
         }
 
         $useErrorView = $response->format === Response::FORMAT_HTML && (!YII_DEBUG || $exception instanceof UserException);
@@ -175,10 +174,10 @@ class ErrorHandler extends \yii\web\ErrorHandler
     private function flush($exception)
     {
         $id = CoroHelper::getId();
+        $this->logException($exception);
         if (isset(Yii::$server->currentSwooleResponse[$id])) {
             Yii::$server->currentSwooleResponse[$id]->status(500);
             try {
-                $this->logException($exception);
                 if ($this->discardExistingOutput) {
                     $this->clearOutput();
                 }
@@ -198,10 +197,6 @@ class ErrorHandler extends \yii\web\ErrorHandler
                 Yii::$server->currentSwooleResponse[$id]->header('Content-Type', 'text/html; charset=utf-8');
                 Yii::$server->currentSwooleResponse[$id]->end($html);
             }
-        } else {
-            $message = $this->convertExceptionToArray($exception);
-            Output::writeln($message, Output::LIGHT_RED);
-            return $message;
         }
     }
 
