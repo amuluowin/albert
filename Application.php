@@ -185,9 +185,15 @@ class Application extends Module implements ICoroutine
         $this->_language[$id] = $value;
     }
 
-    public function release()
+    public function release($id = null)
     {
-        $id = CoroHelper::getId();
+        $id = $id ?? CoroHelper::getId();
+        //自定义清理
+        foreach ($this->clean as $name => $clean) {
+            if ($clean instanceof EndInterface) {
+                $clean->clean();
+            }
+        }
         //清理属性
         $this->clearProperty($id);
         //清理组件
@@ -199,14 +205,6 @@ class Application extends Module implements ICoroutine
         unset($_COOKIE[$id]);
         //清理request
         unset(Yii::$server->currentSwooleRequest[$id]);
-
-        //自定义清理
-        $this->initClean();
-        foreach ($this->clean as $name => $clean) {
-            if ($clean instanceof EndInterface) {
-                $clean->clean();
-            }
-        }
     }
 
     private function clearProperty(int $id)
@@ -220,9 +218,12 @@ class Application extends Module implements ICoroutine
 
     private function clearComponent()
     {
-        Yii::$app->getUser()->release();
-        Yii::$app->getRequest()->release();
-        Yii::$app->getResponse()->release();
+        $cmList = ['user', 'request', 'response'];
+        foreach ($cmList as $cmName) {
+            if (($cm = $this->get($cmName, false)) !== null) {
+                $cm->release();
+            }
+        }
     }
 
     public function __construct($config = [])
@@ -647,19 +648,18 @@ class Application extends Module implements ICoroutine
     public function coreComponents()
     {
         return array_merge([
-            'log' => ['class' => 'yii\log\Dispatcher'],
-            'view' => ['class' => 'yii\web\View'],
+            'log' => ['class' => 'yii\swoole\log\Dispatcher'],
             'formatter' => ['class' => 'yii\i18n\Formatter'],
             'i18n' => ['class' => 'yii\i18n\I18N'],
-            'mailer' => ['class' => 'yii\swiftmailer\Mailer'],
+            'mailer' => ['class' => 'yii\swoole\mailer\SwiftMailer'],
             'urlManager' => ['class' => 'yii\web\UrlManager'],
-            'assetManager' => ['class' => 'yii\web\AssetManager'],
+            'assetManager' => ['class' => 'yii\swoole\web\AssetManager'],
             'security' => ['class' => 'yii\base\Security'],
         ], [
-            'request' => ['class' => 'yii\web\Request'],
-            'response' => ['class' => 'yii\web\Response'],
-            'user' => ['class' => 'yii\web\User'],
-            'errorHandler' => ['class' => 'yii\web\ErrorHandler'],
+            'request' => ['class' => 'yii\swoole\web\Request'],
+            'response' => ['class' => 'yii\swoole\web\Response'],
+            'user' => ['class' => 'yii\swoole\web\User'],
+            'errorHandler' => ['class' => 'yii\swoole\web\ErrorHandler'],
         ]);
     }
 
@@ -715,10 +715,6 @@ class Application extends Module implements ICoroutine
      */
     public function run()
     {
-        if (Application::$workerApp) {
-            $this->beforeRun();
-        }
-
         try {
 
             $this->state = self::STATE_BEFORE_REQUEST;

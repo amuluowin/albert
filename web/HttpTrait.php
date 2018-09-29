@@ -15,19 +15,12 @@ trait HttpTrait
      */
     public function onRequest($request, $response)
     {
-        $file = $this->root . '/' . $this->indexFile;
         $id = CoroHelper::getId();
 
         $_GET[$id] = isset($request->get) ? $request->get : [];
         $_POST[$id] = isset($request->post) ? $request->post : [];
         $_FILES[$id] = isset($request->files) ? $request->files : [];
         $_COOKIE[$id] = isset($request->cookie) ? $request->cookie : [];
-
-        $_SERVER['SERVER_ADDR'] = '127.0.0.1';
-        $_SERVER['SERVER_NAME'] = 'localhost';
-        $_SERVER['SCRIPT_FILENAME'] = $file;
-        $_SERVER['DOCUMENT_ROOT'] = $this->root;
-        $_SERVER['DOCUMENT_URI'] = $_SERVER['SCRIPT_NAME'] = '/' . $this->indexFile;
 
         $this->server->currentSwooleRequest[$id] = $request;
         $this->server->currentSwooleResponse[$id] = $response;
@@ -43,7 +36,7 @@ trait HttpTrait
         } finally {
             //结束
             Yii::getLogger()->flush(true);
-            Yii::$app->release();
+            Yii::$app->release($id);
         }
     }
 }

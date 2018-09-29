@@ -18,16 +18,8 @@ class Container extends \yii\di\Container
      * @var array 类的别名
      */
     public static $classAlias = [
-        'yii\web\Request' => 'yii\swoole\web\Request',
-        'yii\web\Response' => 'yii\swoole\web\Response',
         'yii\web\Session' => 'yii\swoole\web\Session',
-        'yii\web\ErrorHandler' => 'yii\swoole\web\ErrorHandler',
-        'yii\web\User' => 'yii\swoole\web\User',
-        'yii\web\View' => 'yii\swoole\web\View',
-        'yii\web\AssetManager' => 'yii\swoole\web\AssetManager',
-        'yii\console\ErrorHandler' => 'yii\swoole\console\ErrorHandler',
-        'yii\db\Query' => 'yii\swoole\db\Query',
-        'yii\swiftmailer\Mailer' => 'yii\swoole\mailer\SwiftMailer',
+        'yii\db\Query' => 'yii\swoole\db\Query'
     ];
 
     public function init()
