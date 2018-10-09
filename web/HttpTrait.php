@@ -27,6 +27,8 @@ trait HttpTrait
         try {
             Yii::$app->beforeRun();
             Yii::$app->run();
+        } catch (\Swoole\ExitException $e) {
+
         } catch (\Exception $e) {
             /**
              * @var ErrorHandler

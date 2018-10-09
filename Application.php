@@ -8,6 +8,7 @@ use yii\base\Component;
 use yii\base\InvalidConfigException;
 use yii\base\InvalidRouteException;
 use yii\swoole\base\BootInterface;
+use yii\swoole\base\Context;
 use yii\swoole\base\EndInterface;
 use yii\swoole\coroutine\ICoroutine;
 use yii\swoole\helpers\CoroHelper;
@@ -105,84 +106,79 @@ class Application extends Module implements ICoroutine
 
     public $charset = 'UTF-8';
 
-    private $_language = [];
+    private $_language = 'en-US';
 
     public $sourceLanguage = 'en-US';
 
     public $layout = 'main';
 
-    private $_requestedRoute = [];
+    private $_requestedRoute;
 
-    private $_requestedAction = [];
+    private $_requestedAction;
 
-    private $_requestedParams = [];
+    private $_requestedParams;
 
     public $extensions;
 
     public $bootstrap = [];
 
-    private $_state = [];
+    private $_state;
 
     public $loadedModules = [];
 
     public function getRequestedRoute()
     {
-        $id = CoroHelper::getId();
-        return isset($this->_requestedRoute[$id]) ? $this->_requestedRoute[$id] : null;
+        $this->_requestedRoute = Context::get('_requestedRoute');
+        return $this->_requestedRoute;
     }
 
     public function setRequestedRoute($value)
     {
-        $id = CoroHelper::getId();
-        $this->_requestedRoute[$id] = $value;
+        Context::set('_requestedRoute', $value);
     }
 
     public function getRequestedAction()
     {
-        $id = CoroHelper::getId();
-        return isset($this->_requestedAction[$id]) ? $this->_requestedAction[$id] : null;
+        $this->_requestedAction = Context::get('_requestedAction');
+        return $this->_requestedAction;
     }
 
     public function setRequestedAction($value)
     {
-        $id = CoroHelper::getId();
-        $this->_requestedAction[$id] = $value;
+        Context::set('_requestedAction', $value);
     }
 
     public function getRequestedParams()
     {
-        $id = CoroHelper::getId();
-        return isset($this->_requestedParams[$id]) ? $this->_requestedParams[$id] : null;
+        $this->_requestedParams = Context::get('_requestedParams');
+        return $this->_requestedParams;
     }
 
     public function setRequestedParams($value)
     {
-        $id = CoroHelper::getId();
-        $this->_requestedParams[$id] = $value;
+        Context::set('_requestedParams', $value);
     }
 
     public function getState()
     {
-        $id = CoroHelper::getId();
-        return isset($this->_state[$id]) ? $this->_state[$id] : null;
+        $this->_state = Context::get('_state');
+        return $this->_state;
     }
 
     public function setState($value)
     {
-        $id = CoroHelper::getId();
-        $this->_state[$id] = $value;
+        Context::set('_state', $value);
     }
 
     public function getLanguage()
     {
-        $id = CoroHelper::getId();
-        return isset($this->_language[$id]) ? $this->_language[$id] : isset($this->_language[0]) ? $this->_language[0] : 'en-US';
+        $this->_language = Context::get('_language');
+        return $this->_language ?? 'en-US';
     }
 
     public function setLanguage($value)
     {
-        $id = CoroHelper::getId();
-        $this->_language[$id] = $value;
+        Context::set('_language', $value);
     }
 
     public function release($id = null)
@@ -194,8 +190,6 @@ class Application extends Module implements ICoroutine
                 $clean->clean();
             }
         }
-        //清理属性
-        $this->clearProperty($id);
         //清理组件
         $this->clearComponent();
         //清理环境变量
@@ -205,15 +199,6 @@ class Application extends Module implements ICoroutine
         unset($_COOKIE[$id]);
         //清理request
         unset(Yii::$server->currentSwooleRequest[$id]);
-    }
-
-    private function clearProperty(int $id)
-    {
-        unset($this->_requestedRoute[$id]);
-        unset($this->_requestedParams[$id]);
-        unset($this->_requestedAction[$id]);
-        unset($this->_state[$id]);
-        unset($this->_language[$id]);
     }
 
     private function clearComponent()
@@ -237,6 +222,11 @@ class Application extends Module implements ICoroutine
 
         $this->registerErrorHandler($config);
 
+        $components = $config['components'];
+        unset($config['components']);
+        if (!empty($components)) {
+            Context::setAll($components);
+        }
         Component::__construct($config);
     }
 
@@ -375,6 +365,21 @@ class Application extends Module implements ICoroutine
     {
         parent::setBasePath($path);
         Yii::setAlias('@app', $this->getBasePath());
+    }
+
+    public function has($id, $checkInstance = false)
+    {
+        return Context::has($id);
+    }
+
+    public function get($id, $throwException = true)
+    {
+        return Context::get($id);
+    }
+
+    public function set($id, $definition)
+    {
+        Context::set($id, $definition);
     }
 
     protected function registerErrorHandler(&$config)

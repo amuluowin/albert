@@ -45,7 +45,7 @@ class Container extends \yii\di\Container
         }
 
         // 构造方法参数为空才走这个流程
-        if ($class && array_key_exists($class, Yii::$classMap)) {
+        if ($class && in_array($class, Yii::$classMap)) {
             /* @var $reflection ReflectionClass */
             list ($reflection, $dependencies) = $this->getDependencies($class);
             if (!isset(self::$persistInstances[$class])) {

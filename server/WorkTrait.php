@@ -12,7 +12,7 @@ trait WorkTrait
     public function workerStart($server = null, $worker_id)
     {
         //开启Hook
-        \Swoole\Runtime::enableCoroutine();
+//        \Swoole\Runtime::enableCoroutine();
         // 关闭Yii2自己实现的异常错误
         defined('YII_ENABLE_ERROR_HANDLER') || define('YII_ENABLE_ERROR_HANDLER', false);
         // 加载文件和一些初始化配置
@@ -30,14 +30,6 @@ trait WorkTrait
         if (isset($this->config['bootstrapRefresh'])) {
             $config['bootstrapRefresh'] = $this->config['bootstrapRefresh'];
         }
-
-        // 为Yii分配一个新的DI容器
-        if (isset($this->config['persistClasses'])) {
-            Container::$persistClasses = ArrayHelper::merge(Container::$persistClasses, $this->config['persistClasses']);
-            Container::$persistClasses = array_unique(Container::$persistClasses);
-        }
-
-        Yii::$container = new Container();
 
         $config['aliases']['@webroot'] = $this->root;
         $config['aliases']['@web'] = '/';

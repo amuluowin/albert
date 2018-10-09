@@ -28,8 +28,6 @@ class Yii extends \yii\BaseYii
 
     public static $rpcList = [];
 
-    private static $_includeFile = [];
-
     public static function configure($object, $properties)
     {
         foreach ($properties as $name => $value) {
@@ -45,28 +43,20 @@ class Yii extends \yii\BaseYii
 
     public static function autoload($className)
     {
-        if (isset(static::$classMap[$className])) {
-            $classFile = static::$classMap[$className];
-            if ($classFile[0] === '@') {
-                $classFile = static::getAlias($classFile);
-            }
-        } elseif (strpos($className, '\\') !== false) {
+        if (strpos($className, '\\') !== false) {
             $classFile = static::getAlias('@' . str_replace('\\', '/', $className) . '.php', false);
-            if ($classFile === false || !is_file($classFile)) {
+            if ($classFile === false || !is_file($classFile) && !in_array($classFile, $include) && !in_array($classFile, $require)) {
                 return;
             }
         } else {
             return;
         }
 
-        if (!in_array($classFile, static::$_includeFile)) {
-            static::$_includeFile[] = $classFile;
-            include($classFile);
+        if (!in_array($className, static::$classMap)) {
+            static::$classMap[] = $className;
         }
 
-        if (!isset(static::$classMap[$className])) {
-            static::$classMap[$className] = $classFile;
-        }
+        include($classFile);
 
         if (YII_DEBUG && !class_exists($className, false) && !interface_exists($className, false) && !trait_exists($className, false)) {
             throw new \yii\base\UnknownClassException("Unable to find '$className' in file: $classFile. Namespace missing?");
@@ -117,5 +107,4 @@ class Yii extends \yii\BaseYii
 }
 
 spl_autoload_register(['Yii', 'autoload'], true, true);
-Yii::$classMap = require(__DIR__ . '/../../yiisoft/yii2/classes.php');
-Yii::$container = new yii\di\Container();
+Yii::$container = new \yii\swoole\Container();
