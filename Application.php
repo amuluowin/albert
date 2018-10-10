@@ -10,7 +10,9 @@ use yii\base\InvalidRouteException;
 use yii\swoole\base\BootInterface;
 use yii\swoole\base\Context;
 use yii\swoole\base\EndInterface;
+use yii\swoole\base\SLTrait;
 use yii\swoole\coroutine\ICoroutine;
+use yii\swoole\helpers\ArrayHelper;
 use yii\swoole\process\BaseProcess;
 use yii\swoole\server\ProcessServer;
 use yii\swoole\server\Server;
@@ -23,6 +25,7 @@ use yii\web\UrlNormalizerRedirectException;
 
 class Application extends Module implements ICoroutine
 {
+    use SLTrait;
 
     /**
      * @var string
@@ -180,7 +183,7 @@ class Application extends Module implements ICoroutine
         Context::set('_language', $value);
     }
 
-    public function release($id = null)
+    public function release()
     {
         //自定义清理
         foreach ($this->clean as $name => $clean) {
@@ -201,6 +204,12 @@ class Application extends Module implements ICoroutine
         $this->preInit($config);
 
         $this->registerErrorHandler($config);
+
+        $components = ArrayHelper::getValueByArray($config['components'], ['request', 'response', 'user', 'session', 'db']);
+
+        Context::setComponents($components);
+
+        unset($config['components']['request'], $config['components']['response'], $config['components']['user'], $config['components']['session'], $config['components']['db']);
 
         Component::__construct($config);
     }
@@ -514,7 +523,7 @@ class Application extends Module implements ICoroutine
 
     public function getLog()
     {
-        return Context::get('log');
+        return $this->get('log');
     }
 
     public function getCache()

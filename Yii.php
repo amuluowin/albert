@@ -28,13 +28,22 @@ class Yii extends \yii\BaseYii
 
     public static $rpcList = [];
 
+    private static $_logger;
+
     public static function getLogger()
     {
-        if (($logger = \yii\swoole\base\Context::get('yii\log\Logger')) !== null) {
+        if (self::$_logger !== null) {
+            return self::$_logger;
+        }
+        if (($logger = \yii\swoole\base\Context::get('logger')) !== null) {
             return $logger;
         }
-        $logger = static::createObject('yii\log\Logger');
-        \yii\swoole\base\Context::set('yii\log\Logger', $logger);
+        $logger = isset(static::$app->getComponents()['log']['logger']) ? static::createObject(static::$app->getComponents()['log']['logger']) : static::createObject('yii\log\Logger');
+        if ($logger instanceof \yii\swoole\seaslog\Logger) {
+            self::$_logger = $logger;
+        } else {
+            \yii\swoole\base\Context::set('logger', $logger);
+        }
         return $logger;
     }
 

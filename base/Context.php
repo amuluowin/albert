@@ -15,6 +15,18 @@ class Context
 {
     private static $context = [];
 
+    private static $components = [];
+
+    public static function setComponents(array $components)
+    {
+        self::$components = $components;
+    }
+
+    public static function getComponents(): array
+    {
+        return self::$components;
+    }
+
     public static function getAll()
     {
         return self::$context[CoroHelper::getId()];
@@ -34,17 +46,9 @@ class Context
             if (is_array(self::$context[$id][$name]) && isset(self::$context[$id][$name]['class'])) {
                 self::$context[$id][$name] = Yii::createObject(self::$context[$id][$name]);
             }
-        } elseif (isset(self::$context[0][$name])) {
-            if (is_array(self::$context[0][$name]) && isset(self::$context[0][$name]['class'])) {
-                self::$context[0][$name] = Yii::createObject(self::$context[0][$name]);
-            }
-            self::$context[$id][$name] = is_object(self::$context[0][$name]) ? clone self::$context[0][$name] : self::$context[0][$name];
-
         } else {
-            $obj = Yii::$app->get($name, false);
-            self::$context[$id][$name] = is_object($obj) ? clone $obj : $obj;
+            self::$context[$id][$name] = key_exists($name, self::$components) ? Yii::createObject(self::$components[$name]) : null;
         }
-
         return self::$context[$id][$name];
     }
 
@@ -55,7 +59,7 @@ class Context
 
     public static function has($name): bool
     {
-        return isset(self::$context[CoroHelper::getId()][$name]) || isset(self::$context[0][$name]);
+        return isset(self::$context[CoroHelper::getId()][$name]);
     }
 
     public static function release()

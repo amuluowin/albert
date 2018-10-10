@@ -20,9 +20,6 @@ class ArrayHelper extends \yii\helpers\ArrayHelper
 
     public static function getValueByList(array $array, array $keys, $default = null)
     {
-//        if (extension_loaded('array_helper')) {
-//            $result = \ArrayHelper::getValueByList($array, $keys, [$default]);
-//        } else {
         if (!is_array($array) || !is_array($keys)) {
             return null;
         }
@@ -40,16 +37,11 @@ class ArrayHelper extends \yii\helpers\ArrayHelper
                 }
             }
         }
-
-//        }
         return $result;
     }
 
     public static function getValueByArray(array $array, array $keys, $default = null)
     {
-//        if (extension_loaded('array_helper')) {
-//            $result = \ArrayHelper::getValueByArray($array, $keys, [$default]);
-//        } else {
         if (!is_array($array) || !is_array($keys)) {
             return null;
         }
@@ -67,8 +59,6 @@ class ArrayHelper extends \yii\helpers\ArrayHelper
                 }
             }
         }
-
-//        }
         return $result;
     }
 

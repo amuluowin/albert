@@ -22,11 +22,6 @@ class Container extends \yii\di\Container
         'yii\db\Query' => 'yii\swoole\db\Query'
     ];
 
-    public function init()
-    {
-        self::$classAlias['yii\log\Logger'] = getenv('LOGGER') ? getenv('LOGGER') : 'yii\swoole\log\Logger';
-    }
-
     /**
      * @var array 持久化的类实例
      */
