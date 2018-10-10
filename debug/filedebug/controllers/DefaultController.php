@@ -10,7 +10,6 @@ namespace yii\swoole\debug\filedebug\controllers;
 use Yii;
 use yii\debug\models\search\Debug;
 use yii\swoole\Application;
-use yii\swoole\helpers\CoroHelper;
 use yii\swoole\helpers\SerializeHelper;
 use yii\web\NotFoundHttpException;
 
@@ -31,7 +30,7 @@ class DefaultController extends \yii\debug\controllers\DefaultController
             return parent::actionIndex();
         }
         $searchModel = new Debug();
-        $dataProvider = $searchModel->search($_GET[CoroHelper::getId()], $this->getManifest());
+        $dataProvider = $searchModel->search(Yii::$app->request->getQueryParams(), $this->getManifest());
 
         // load latest request
         $tags = array_keys($this->getManifest());

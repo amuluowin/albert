@@ -4,7 +4,6 @@ namespace yii\swoole\server;
 
 use Yii;
 use yii\swoole\Application;
-use yii\swoole\Container;
 use yii\swoole\helpers\ArrayHelper;
 
 trait WorkTrait

@@ -3,7 +3,6 @@
 namespace yii\swoole\log;
 
 use Yii;
-use yii\swoole\Application;
 use yii\swoole\web\ErrorHandler;
 
 /**
@@ -18,11 +17,6 @@ class Dispatcher extends \yii\log\Dispatcher
      */
     public function dispatch($messages, $final)
     {
-        if (!Application::$workerApp) {
-            parent::dispatch($messages, $final);
-            return;
-        }
-
         // 日志一般在请求结束后写入, 不需要再抛出异常, 直接echo即可
         foreach ($this->targets as $target) {
             if ($target->enabled) {

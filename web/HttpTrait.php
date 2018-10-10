@@ -3,7 +3,6 @@
 namespace yii\swoole\web;
 
 use Yii;
-use yii\swoole\helpers\CoroHelper;
 
 trait HttpTrait
 {
@@ -15,16 +14,9 @@ trait HttpTrait
      */
     public function onRequest($request, $response)
     {
-        $id = CoroHelper::getId();
-
-        $_GET[$id] = isset($request->get) ? $request->get : [];
-        $_POST[$id] = isset($request->post) ? $request->post : [];
-        $_FILES[$id] = isset($request->files) ? $request->files : [];
-        $_COOKIE[$id] = isset($request->cookie) ? $request->cookie : [];
-
-        $this->server->currentSwooleRequest[$id] = $request;
-        $this->server->currentSwooleResponse[$id] = $response;
         try {
+            Yii::$app->getRequest()->setSwooleRequest($request);
+            Yii::$app->getResponse()->setSwooleResponse($response);
             Yii::$app->beforeRun();
             Yii::$app->run();
         } catch (\Swoole\ExitException $e) {
@@ -38,7 +30,7 @@ trait HttpTrait
         } finally {
             //结束
             Yii::getLogger()->flush(true);
-            Yii::$app->release($id);
+            Yii::$app->release();
         }
     }
 }

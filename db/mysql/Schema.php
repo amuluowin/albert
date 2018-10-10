@@ -8,7 +8,6 @@
 namespace yii\swoole\db\mysql;
 
 use yii\base\InvalidCallException;
-use yii\swoole\helpers\CoroHelper;
 
 /**
  * Schema is the class for retrieving metadata from a MySQL database (version 4.1.x and 5.x).
@@ -20,10 +19,9 @@ class Schema extends \yii\db\mysql\Schema
 {
     public function getLastInsertID($sequenceName = '')
     {
-        $id = CoroHelper::getId();
         if ($this->db->isActive) {
-            $insertId = $this->db->insertId[$id];
-            unset($this->db->insertId[$id]);
+            $insertId = $this->db->insertId;
+            $this->db->insertId = null;
             return $insertId;
         } else {
             throw new InvalidCallException('DB Connection is not active.');

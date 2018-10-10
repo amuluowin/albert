@@ -28,6 +28,16 @@ class Yii extends \yii\BaseYii
 
     public static $rpcList = [];
 
+    public static function getLogger()
+    {
+        if (($logger = \yii\swoole\base\Context::get('yii\log\Logger')) !== null) {
+            return $logger;
+        }
+        $logger = static::createObject('yii\log\Logger');
+        \yii\swoole\base\Context::set('yii\log\Logger', $logger);
+        return $logger;
+    }
+
     public static function configure($object, $properties)
     {
         foreach ($properties as $name => $value) {
@@ -45,7 +55,7 @@ class Yii extends \yii\BaseYii
     {
         if (strpos($className, '\\') !== false) {
             $classFile = static::getAlias('@' . str_replace('\\', '/', $className) . '.php', false);
-            if ($classFile === false || !is_file($classFile) && !in_array($classFile, $include) && !in_array($classFile, $require)) {
+            if ($classFile === false || !is_file($classFile)) {
                 return;
             }
         } else {

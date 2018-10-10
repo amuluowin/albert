@@ -3,9 +3,6 @@
 namespace yii\swoole\web;
 
 use Yii;
-use yii\swoole\Application;
-use yii\swoole\coroutine\ICoroutine;
-use yii\swoole\helpers\CoroHelper;
 use yii\swoole\helpers\SerializeHelper;
 use yii\web\Cookie;
 
@@ -15,7 +12,7 @@ use yii\web\Cookie;
  * @property string sessionKey
  * @property swoole_http_response swooleResponse
  */
-class Session extends \yii\web\Session implements ICoroutine
+class Session extends \yii\web\Session
 {
     /**
      * @var string
@@ -23,6 +20,8 @@ class Session extends \yii\web\Session implements ICoroutine
     protected $_sessionKey = 'JSESSIONID';
 
     protected $_sessionName = 'PHPSESSID';
+
+    protected $_session;
 
     /**
      * @return string
@@ -45,9 +44,6 @@ class Session extends \yii\web\Session implements ICoroutine
      */
     public function getName()
     {
-        if (!Application::$workerApp) {
-            return parent::getName();
-        }
         return $this->_sessionName;
     }
 
@@ -56,9 +52,6 @@ class Session extends \yii\web\Session implements ICoroutine
      */
     public function setName($value)
     {
-        if (!Application::$workerApp) {
-            return parent::setName();
-        }
         $this->_sessionName = $value;
     }
 
@@ -74,12 +67,8 @@ class Session extends \yii\web\Session implements ICoroutine
      */
     public function getId()
     {
-        if (!Application::$workerApp) {
-            return parent::getId();
-        }
-        $id = CoroHelper::getId();
-        if (isset($this->_id[$id])) {
-            return $this->_id[$id];
+        if (isset($this->_id)) {
+            return $this->_id;
         }
         $cookie = Yii::$app->getRequest()->getCookies()->get($this->sessionKey);
         if ($cookie) {
@@ -93,15 +82,11 @@ class Session extends \yii\web\Session implements ICoroutine
      */
     public function setId($value)
     {
-        if (!Application::$workerApp) {
-            return parent::setId($value);
-        }
         $cookie = new Cookie([
             'name' => $this->sessionKey,
             'value' => $value
         ]);
-        $id = CoroHelper::getId();
-        $this->_id[$id] = $value;
+        $this->_id = $value;
         Yii::$app->response->getCookies()->add($cookie);
     }
 
@@ -115,11 +100,7 @@ class Session extends \yii\web\Session implements ICoroutine
      */
     public function getIsActive()
     {
-        if (!Application::$workerApp) {
-            return parent::getIsActive();
-        }
-        $id = CoroHelper::getId();
-        return isset($this->_isActive[$id]) ? $this->_isActive[$id] : false;
+        return isset($this->_isActive) ? $this->_isActive : false;
     }
 
     /**
@@ -127,8 +108,7 @@ class Session extends \yii\web\Session implements ICoroutine
      */
     public function setIsActive($isActive)
     {
-        $id = CoroHelper::getId();
-        $this->_isActive[$id] = $isActive;
+        $this->_isActive = $isActive;
     }
 
     /**
@@ -138,9 +118,6 @@ class Session extends \yii\web\Session implements ICoroutine
      */
     public function open()
     {
-        if (!Application::$workerApp) {
-            return parent::open();
-        }
         if ($this->getIsActive()) {
             Yii::info('Session started', __METHOD__);
             return;
@@ -151,9 +128,8 @@ class Session extends \yii\web\Session implements ICoroutine
         }
         $sid = $this->getId();
         if (!empty($sid)) {
-            $id = CoroHelper::getId();
             $data = SerializeHelper::unserialize($this->readSession($sid));
-            $_SESSION[$id] = is_array($data) ? $data : [];
+            $this->_session = is_array($data) ? $data : [];
         }
     }
 
@@ -164,22 +140,14 @@ class Session extends \yii\web\Session implements ICoroutine
      */
     public function close()
     {
-        if (!Application::$workerApp) {
-            return parent::close();
-        }
-        $id = CoroHelper::getId();
         // 如果当前会话激活了, 则写session
         if ($this->getIsActive()) {
             // 将session数据存放到redis咯
             $sid = $this->getId();
-            $this->writeSession($sid, SerializeHelper::serialize($_SESSION[$id]));
+            $this->writeSession($sid, SerializeHelper::serialize($this->_session));
             // 清空当前会话数据
-            unset($_SESSION[$id]);
         }
         $this->setIsActive(false);
-        unset($this->_id[$id]);
-        unset($this->_isActive[$id]);
-        unset($this->_hasSessionId[$id]);
         Yii::info('Session closed', __METHOD__);
     }
 
@@ -190,9 +158,6 @@ class Session extends \yii\web\Session implements ICoroutine
      */
     public function regenerateID($deleteOldSession = false)
     {
-        if (!Application::$workerApp) {
-            return parent::regenerateID($deleteOldSession);
-        }
         if ($deleteOldSession) {
             $id = $this->getId();
             $this->destroySession($id);
@@ -209,17 +174,11 @@ class Session extends \yii\web\Session implements ICoroutine
      */
     public function getUseCookies()
     {
-        if (!Application::$workerApp) {
-            return parent::getUseCookies();
-        }
         return true;
     }
 
     public function destroy()
     {
-        if (!Application::$workerApp) {
-            return parent::destroy();
-        }
         if ($this->getIsActive()) {
             $sessionId = $this->getId();
             $this->close();
@@ -233,56 +192,38 @@ class Session extends \yii\web\Session implements ICoroutine
 
     public function getHasSessionId()
     {
-        $id = CoroHelper::getId();
-        if (!isset($this->_hasSessionId[$id])) {
+        if ($this->_hasSessionId === null) {
             $name = $this->getName();
             $request = Yii::$app->getRequest();
-            if (!empty($_COOKIE[$id][$name]) && ini_get('session.use_cookies')) {
-                $this->_hasSessionId[$id] = true;
-            } elseif (!ini_get('session.use_only_cookies') && ini_get('session.use_trans_sid')) {
-                $this->_hasSessionId[$id] = $request->get($name) != '';
-            } else {
-                $this->_hasSessionId[$id] = false;
-            }
+            $this->_hasSessionId = $request->get($name) != '';
         }
-
-        return $this->_hasSessionId[$id];
-    }
-
-    public function setHasSessionId($value)
-    {
-        $id = CoroHelper::getId();
-        $this->_hasSessionId[$id] = $value;
+        return $this->_hasSessionId;
     }
 
     public function getCount()
     {
-        $id = CoroHelper::getId();
         $this->open();
-        return count($_SESSION[$id]);
+        return count($this->_session);
     }
 
     public function get($key, $defaultValue = null)
     {
-        $id = CoroHelper::getId();
         $this->open();
-        return isset($_SESSION[$id][$key]) ? $_SESSION[$id][$key] : $defaultValue;
+        return isset($this->_session[$key]) ? $this->_session[$key] : $defaultValue;
     }
 
     public function set($key, $value)
     {
-        $id = CoroHelper::getId();
         $this->open();
-        $_SESSION[$id][$key] = $value;
+        $this->_session[$key] = $value;
     }
 
     public function remove($key)
     {
-        $id = CoroHelper::getId();
         $this->open();
-        if (isset($_SESSION[$id][$key])) {
-            $value = $_SESSION[$id][$key];
-            unset($_SESSION[$id][$key]);
+        if (isset($this->_session[$key])) {
+            $value = $this->_session[$key];
+            unset($this->_session[$key]);
 
             return $value;
         } else {
@@ -292,42 +233,38 @@ class Session extends \yii\web\Session implements ICoroutine
 
     public function removeAll()
     {
-        $id = CoroHelper::getId();
         $this->open();
-        foreach (array_keys($_SESSION[$id]) as $key) {
-            unset($_SESSION[$id][$key]);
+        foreach (array_keys($this->_session) as $key) {
+            unset($this->_session[$key]);
         }
     }
 
     public function has($key)
     {
-        $id = CoroHelper::getId();
         $this->open();
-        return isset($_SESSION[$id][$key]);
+        return isset($this->_session[$key]);
     }
 
     protected function updateFlashCounters()
     {
-        $id = CoroHelper::getId();
         $counters = $this->get($this->flashParam, []);
         if (is_array($counters)) {
             foreach ($counters as $key => $count) {
                 if ($count > 0) {
-                    unset($counters[$key], $_SESSION[$id][$key]);
+                    unset($counters[$key], $this->_session[$key]);
                 } elseif ($count == 0) {
                     $counters[$key]++;
                 }
             }
-            $_SESSION[$id][$this->flashParam] = $counters;
+            $this->_session[$this->flashParam] = $counters;
         } else {
             // fix the unexpected problem that flashParam doesn't return an array
-            unset($_SESSION[$id][$this->flashParam]);
+            unset($this->_session[$this->flashParam]);
         }
     }
 
     public function getFlash($key, $defaultValue = null, $delete = false)
     {
-        $id = CoroHelper::getId();
         $counters = $this->get($this->flashParam, []);
         if (isset($counters[$key])) {
             $value = $this->get($key, $defaultValue);
@@ -336,7 +273,7 @@ class Session extends \yii\web\Session implements ICoroutine
             } elseif ($counters[$key] < 0) {
                 // mark for deletion in the next request
                 $counters[$key] = 1;
-                $_SESSION[$id][$this->flashParam] = $counters;
+                $this->_session[$this->flashParam] = $counters;
             }
 
             return $value;
@@ -347,14 +284,13 @@ class Session extends \yii\web\Session implements ICoroutine
 
     public function getAllFlashes($delete = false)
     {
-        $id = CoroHelper::getId();
         $counters = $this->get($this->flashParam, []);
         $flashes = [];
         foreach (array_keys($counters) as $key) {
-            if (array_key_exists($key, $_SESSION[$id])) {
-                $flashes[$key] = $_SESSION[$id][$key];
+            if (array_key_exists($key, $this->_session)) {
+                $flashes[$key] = $this->_session[$key];
                 if ($delete) {
-                    unset($counters[$key], $_SESSION[$id][$key]);
+                    unset($counters[$key], $this->_session[$key]);
                 } elseif ($counters[$key] < 0) {
                     // mark for deletion in the next request
                     $counters[$key] = 1;
@@ -364,86 +300,78 @@ class Session extends \yii\web\Session implements ICoroutine
             }
         }
 
-        $_SESSION[$id][$this->flashParam] = $counters;
+        $this->_session[$this->flashParam] = $counters;
 
         return $flashes;
     }
 
     public function setFlash($key, $value = true, $removeAfterAccess = true)
     {
-        $id = CoroHelper::getId();
         $counters = $this->get($this->flashParam, []);
         $counters[$key] = $removeAfterAccess ? -1 : 0;
-        $_SESSION[$id][$key] = $value;
-        $_SESSION[$id][$this->flashParam] = $counters;
+        $this->_session[$key] = $value;
+        $this->_session[$this->flashParam] = $counters;
     }
 
     public function addFlash($key, $value = true, $removeAfterAccess = true)
     {
-        $id = CoroHelper::getId();
         $counters = $this->get($this->flashParam, []);
         $counters[$key] = $removeAfterAccess ? -1 : 0;
-        $_SESSION[$id][$this->flashParam] = $counters;
-        if (empty($_SESSION[$id][$key])) {
-            $_SESSION[$id][$key] = [$value];
+        $this->_session[$this->flashParam] = $counters;
+        if (empty($this->_session[$key])) {
+            $this->_session[$key] = [$value];
         } else {
-            if (is_array($_SESSION[$id][$key])) {
-                $_SESSION[$id][$key][] = $value;
+            if (is_array($this->_session[$key])) {
+                $this->_session[$key][] = $value;
             } else {
-                $_SESSION[$id][$key] = [$_SESSION[$id][$key], $value];
+                $this->_session[$key] = [$this->_session[$key], $value];
             }
         }
     }
 
     public function removeFlash($key)
     {
-        $id = CoroHelper::getId();
         $counters = $this->get($this->flashParam, []);
-        $value = isset($_SESSION[$id][$key], $counters[$key]) ? $_SESSION[$id][$key] : null;
-        unset($counters[$key], $_SESSION[$id][$key]);
-        $_SESSION[$id][$this->flashParam] = $counters;
+        $value = isset($this->_session[$key], $counters[$key]) ? $this->_session[$key] : null;
+        unset($counters[$key], $this->_session[$key]);
+        $this->_session[$this->flashParam] = $counters;
 
         return $value;
     }
 
     public function removeAllFlashes()
     {
-        $id = CoroHelper::getId();
         $counters = $this->get($this->flashParam, []);
         foreach (array_keys($counters) as $key) {
-            unset($_SESSION[$id][$key]);
+            unset($this->_session[$key]);
         }
-        unset($_SESSION[$id][$this->flashParam]);
+        unset($this->_session[$this->flashParam]);
     }
 
     public function offsetExists($offset)
     {
-        $id = CoroHelper::getId();
         $this->open();
 
-        return isset($_SESSION[$id][$offset]);
+        return isset($this->_session[$offset]);
     }
 
     public function offsetGet($offset)
     {
-        $id = CoroHelper::getId();
         $this->open();
 
-        return isset($_SESSION[$id][$offset]) ? $_SESSION[$id][$offset] : null;
+        return isset($this->_session[$offset]) ? $this->_session[$offset] : null;
     }
 
     public function offsetSet($offset, $item)
     {
-        $id = CoroHelper::getId();
         $this->open();
-        $_SESSION[$id][$offset] = $item;
+        $this->_session[$offset] = $item;
     }
 
     public function offsetUnset($offset)
     {
-        $id = CoroHelper::getId();
         $this->open();
-        unset($_SESSION[$id][$offset]);
+        unset($this->_session[$offset]);
     }
 
     public function release()

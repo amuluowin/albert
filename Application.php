@@ -11,7 +11,6 @@ use yii\swoole\base\BootInterface;
 use yii\swoole\base\Context;
 use yii\swoole\base\EndInterface;
 use yii\swoole\coroutine\ICoroutine;
-use yii\swoole\helpers\CoroHelper;
 use yii\swoole\process\BaseProcess;
 use yii\swoole\server\ProcessServer;
 use yii\swoole\server\Server;
@@ -183,32 +182,13 @@ class Application extends Module implements ICoroutine
 
     public function release($id = null)
     {
-        $id = $id ?? CoroHelper::getId();
         //自定义清理
         foreach ($this->clean as $name => $clean) {
             if ($clean instanceof EndInterface) {
                 $clean->clean();
             }
         }
-        //清理组件
-        $this->clearComponent();
-        //清理环境变量
-        unset($_GET[$id]);
-        unset($_POST[$id]);
-        unset($_FILES[$id]);
-        unset($_COOKIE[$id]);
-        //清理request
-        unset(Yii::$server->currentSwooleRequest[$id]);
-    }
-
-    private function clearComponent()
-    {
-        $cmList = ['user', 'request', 'response'];
-        foreach ($cmList as $cmName) {
-            if (($cm = $this->get($cmName, false)) !== null) {
-                $cm->release();
-            }
-        }
+        Context::release();
     }
 
     public function __construct($config = [])
@@ -222,11 +202,6 @@ class Application extends Module implements ICoroutine
 
         $this->registerErrorHandler($config);
 
-        $components = $config['components'];
-        unset($config['components']);
-        if (!empty($components)) {
-            Context::setAll($components);
-        }
         Component::__construct($config);
     }
 
@@ -365,21 +340,6 @@ class Application extends Module implements ICoroutine
     {
         parent::setBasePath($path);
         Yii::setAlias('@app', $this->getBasePath());
-    }
-
-    public function has($id, $checkInstance = false)
-    {
-        return Context::has($id);
-    }
-
-    public function get($id, $throwException = true)
-    {
-        return Context::get($id);
-    }
-
-    public function set($id, $definition)
-    {
-        Context::set($id, $definition);
     }
 
     protected function registerErrorHandler(&$config)
@@ -549,12 +509,12 @@ class Application extends Module implements ICoroutine
 
     public function getDb()
     {
-        return $this->get('db');
+        return Context::get('db');
     }
 
     public function getLog()
     {
-        return $this->get('log');
+        return Context::get('log');
     }
 
     public function getCache()
@@ -617,7 +577,7 @@ class Application extends Module implements ICoroutine
      */
     public function getRequest()
     {
-        return $this->get('request');
+        return Context::get('request');
     }
 
     /**
@@ -626,7 +586,7 @@ class Application extends Module implements ICoroutine
      */
     public function getResponse()
     {
-        return $this->get('response');
+        return Context::get('response');
     }
 
     /**
@@ -635,7 +595,7 @@ class Application extends Module implements ICoroutine
      */
     public function getSession()
     {
-        return $this->get('session');
+        return Context::get('session');
     }
 
     /**
@@ -644,7 +604,7 @@ class Application extends Module implements ICoroutine
      */
     public function getUser()
     {
-        return $this->get('user');
+        return Context::get('user');
     }
 
     /**
@@ -690,9 +650,6 @@ class Application extends Module implements ICoroutine
      */
     public function beforeRun()
     {
-        $response = $this->getResponse();
-        $response->setStatusCode(200, 'OK');
-        $response->isSent = false;
         $this->refresh();
     }
 
@@ -769,7 +726,7 @@ class Application extends Module implements ICoroutine
         }
         try {
             Yii::trace("Route requested: '$route'", __METHOD__);
-            $this->requestedRoute = $route;
+            $this->setRequestedRoute($route);
             $result = $this->runAction($route, $params);
             if ($result instanceof Response) {
                 return $result;

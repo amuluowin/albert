@@ -6,8 +6,6 @@ use Yii;
 use yii\base\ErrorException;
 use yii\base\UserException;
 use yii\swoole\Application;
-use yii\swoole\base\Output;
-use yii\swoole\helpers\CoroHelper;
 use yii\web\HttpException;
 
 class ErrorHandler extends \yii\web\ErrorHandler
@@ -46,8 +44,7 @@ class ErrorHandler extends \yii\web\ErrorHandler
      */
     protected function renderException($exception)
     {
-        if (Yii::$app->has('response')) {
-            $response = Yii::$app->getResponse();
+        if (($response = Yii::$app->getResponse()) !== null) {
             // reset parameters of response to avoid interference with partially created response data
             // in case the error occurred while sending the response.
             $response->isSent = false;
@@ -56,11 +53,7 @@ class ErrorHandler extends \yii\web\ErrorHandler
             $response->content = null;
 
         } else {
-            if (!Application::$workerApp) {
-                $response = new \yii\web\Response();
-            } else {
-                $response = new Response();
-            }
+            return;
         }
 
         $useErrorView = $response->format === Response::FORMAT_HTML && (!YII_DEBUG || $exception instanceof UserException);
@@ -111,11 +104,6 @@ class ErrorHandler extends \yii\web\ErrorHandler
      */
     public function handleException($exception)
     {
-        if (!Application::$workerApp) {
-            parent::handleException($exception);
-            return;
-        }
-
         $this->exception = $exception;
 
         $this->flush($exception);
@@ -173,10 +161,9 @@ class ErrorHandler extends \yii\web\ErrorHandler
 
     private function flush($exception)
     {
-        $id = CoroHelper::getId();
         $this->logException($exception);
-        if (isset(Yii::$server->currentSwooleResponse[$id])) {
-            Yii::$server->currentSwooleResponse[$id]->status(500);
+        if (($response = Yii::$app->getResponse()) && ($response = $response->getSwooleResponse())) {
+            $response->status = 500;
             try {
                 if ($this->discardExistingOutput) {
                     $this->clearOutput();
@@ -194,8 +181,8 @@ class ErrorHandler extends \yii\web\ErrorHandler
                     $html = 'An internal server error occurred.';
                 }
 
-                Yii::$server->currentSwooleResponse[$id]->header('Content-Type', 'text/html; charset=utf-8');
-                Yii::$server->currentSwooleResponse[$id]->end($html);
+                $response->header('Content-Type', 'text/html; charset=utf-8');
+                $response->end($html);
             }
         }
     }

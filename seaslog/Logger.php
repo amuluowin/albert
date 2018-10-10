@@ -29,7 +29,6 @@ class Logger extends \yii\log\Logger
 
     public function init()
     {
-        parent::init();
         \SeasLog::setBasePath(Yii::getAlias($this->path));
     }
 
