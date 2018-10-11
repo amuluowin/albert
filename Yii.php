@@ -82,45 +82,45 @@ class Yii extends \yii\BaseYii
         }
     }
 
-    public static function debug($message, $category = 'application')
+    public static function debug($message, $category = 'application', $module = APP_NAME)
     {
         if (YII_DEBUG && static::getLogger()->isFlush) {
-            static::getLogger()->log($message, \yii\log\Logger::LEVEL_TRACE, $category);
+            static::getLogger()->log($message, \yii\log\Logger::LEVEL_TRACE, $category, $module);
         }
     }
 
-    public static function error($message, $category = 'application')
+    public static function error($message, $category = 'application', $module = APP_NAME)
     {
         if (static::getLogger()->isFlush) {
-            static::getLogger()->log($message, \yii\log\Logger::LEVEL_ERROR, $category);
+            static::getLogger()->log($message, \yii\log\Logger::LEVEL_ERROR, $category, $module);
         }
     }
 
-    public static function warning($message, $category = 'application')
+    public static function warning($message, $category = 'application', $module = APP_NAME)
     {
         if (static::getLogger()->isFlush) {
-            static::getLogger()->log($message, \yii\log\Logger::LEVEL_WARNING, $category);
+            static::getLogger()->log($message, \yii\log\Logger::LEVEL_WARNING, $category, $module);
         }
     }
 
-    public static function info($message, $category = 'application')
+    public static function info($message, $category = 'application', $module = APP_NAME)
     {
         if (static::getLogger()->isFlush) {
-            static::getLogger()->log($message, \yii\log\Logger::LEVEL_INFO, $category);
+            static::getLogger()->log($message, \yii\log\Logger::LEVEL_INFO, $category, $module);
         }
     }
 
-    public static function beginProfile($token, $category = 'application')
+    public static function beginProfile($token, $category = 'application', $module = APP_NAME)
     {
 //        if (static::getLogger()->isFlush) {
-//            static::getLogger()->log($token, \yii\log\Logger::LEVEL_PROFILE_BEGIN, $category);
+//            static::getLogger()->log($token, \yii\log\Logger::LEVEL_PROFILE_BEGIN, $category,$module);
 //        }
     }
 
-    public static function endProfile($token, $category = 'application')
+    public static function endProfile($token, $category = 'application', $module = APP_NAME)
     {
 //        if (static::getLogger()->isFlush) {
-//            static::getLogger()->log($token, \yii\log\Logger::LEVEL_PROFILE_END, $category);
+//            static::getLogger()->log($token, \yii\log\Logger::LEVEL_PROFILE_END, $category,$module);
 //        }
     }
 }

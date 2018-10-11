@@ -32,8 +32,9 @@ class Logger extends \yii\log\Logger
         \SeasLog::setBasePath(Yii::getAlias($this->path));
     }
 
-    public function log($message, $level, $category = 'application')
+    public function log($message, $level, $category = 'application', $module = APP_NAME)
     {
+        $this->setLogger($module);
         $this->setRequestValue();
         if (!is_string($message)) {
             // exceptions may not be serializable if in the call stack somewhere is a Closure

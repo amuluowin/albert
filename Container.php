@@ -19,7 +19,8 @@ class Container extends \yii\di\Container
      */
     public static $classAlias = [
         'yii\web\Session' => 'yii\swoole\web\Session',
-        'yii\db\Query' => 'yii\swoole\db\Query'
+        'yii\db\Query' => 'yii\swoole\db\Query',
+        'yii\log\Logger' => 'yii\swoole\log\Logger'
     ];
 
     /**
