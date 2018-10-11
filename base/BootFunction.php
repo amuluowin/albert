@@ -19,7 +19,6 @@ class BootFunction implements BootInterface
 
     public function handle(Server $server = null)
     {
-        Yii::$app->initProcess();
         //创建缓存内存表
         $server->server->cacheTable = Cache::initCacheTable(1024);
 
@@ -28,5 +27,8 @@ class BootFunction implements BootInterface
 
         //设置原子计数
         $server->server->atomic = new Atomic(0);
+
+        //启动进程
+        Yii::$app->initProcess();
     }
 }

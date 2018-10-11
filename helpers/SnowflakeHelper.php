@@ -19,20 +19,31 @@ class SnowflakeHelper extends Component
      */
     public $machineId;
 
-    const TWEPOCH = 1288834974657;
+    /**
+     * @var int
+     */
+    public $epoch = 1288834974657;
+
+    const TYPE_DB = 0;
+    const TYPE_TRACE = 1;
+
+    /**
+     * 预留2位做类型区分
+     */
+    const MAX_MACHINEID = 1020;
 
 
     public function init()
     {
-        if ($this->machineId > 1023 || $this->machineId < 0) {
-            $this->machineId = rand(0, 1023);
+        if ($this->machineId > self::MAX_MACHINEID || $this->machineId < 0) {
+            $this->machineId = rand(0, self::MAX_MACHINEID);
         }
         Yii::$app->cache->set('lastTimestamp', -1);
     }
 
-    public function nextId(?int $mId = null): float
+    public function nextId(int $mId = self::TYPE_DB): int
     {
-        $mId = $mId ?? $this->machineId;
+        $mId = ($this->machineId << 2) + $mId;
         /*
         * Time - 42 bits
         */
@@ -60,7 +71,7 @@ class SnowflakeHelper extends Component
         /*
         * Substract custom epoch from current time
         */
-        $time -= self::TWEPOCH;
+        $time -= $this->epoch;
 
         /*
         * Create a base and add time to it
