@@ -302,7 +302,7 @@ class Request extends \yii\web\Request
     public function getTraceId()
     {
         if (!isset($this->_traceId)) {
-            $this->_traceId = Yii::$app->BaseHelper->guid();
+            $this->_traceId = Yii::$app->snowflake->nextId();
         }
         return $this->_traceId;
     }
