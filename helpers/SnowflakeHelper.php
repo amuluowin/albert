@@ -30,8 +30,9 @@ class SnowflakeHelper extends Component
         Yii::$app->cache->set('lastTimestamp', -1);
     }
 
-    public function nextId()
+    public function nextId(?int $mId = null): float
     {
+        $mId = $mId ?? $this->machineId;
         /*
         * Time - 42 bits
         */
@@ -70,7 +71,7 @@ class SnowflakeHelper extends Component
         /*
         * Configured machineId id - 5 bits - up to 1023 machineId
         */
-        $bit2 = str_pad(decbin($this->machineId), 10, '0', STR_PAD_LEFT);
+        $bit2 = str_pad(decbin($mId), 10, '0', STR_PAD_LEFT);
 
         /*
         * sequence number - 12 bits - up to 4096 random numbers per machine
