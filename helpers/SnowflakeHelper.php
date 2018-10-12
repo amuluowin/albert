@@ -64,8 +64,7 @@ class SnowflakeHelper extends Component
          */
         Yii::$app->cache->set('lastTimestamp', $time);
         if ($time < $lastTimestamp) {
-            //暂时把这种情况当做同时并发
-            $time = $lastTimestamp;
+            throw new \RuntimeException(sprintf("Clock moved backwards. Refusing to generate id for %d milliseconds", $lastTimestamp - $time));
         }
 
         //如果是同一毫秒内生成的，则进行毫秒序列化
