@@ -12,7 +12,7 @@ use http\Exception\RuntimeException;
 use Yii;
 use yii\base\Component;
 
-class SnowflakeHelper extends Component
+class Snowflake extends Component
 {
     //开始时间截 (2018-01-01)
     const twepoch = 1514736000000;
@@ -52,19 +52,20 @@ class SnowflakeHelper extends Component
 
     public function nextId(int $mId = self::TYPE_DB): int
     {
+        //申请自旋锁
+        Yii::$server->spLock->lock();
         //工作ID+类型ID
         $mId += $this->workerId;
-        //获取上一次生成id时的毫秒时间戳，从内存缓存中获取，跨进程共享
-        $lastTimestamp = floor((float)Yii::$app->cache->get('lastTimestamp'));
+        //获取上一次生成id时的毫秒时间戳，需要跨进程共享属性
+        $lastTimestamp = Yii::$server->lastTimestamp;
         //获取当前毫秒时间戳
         $time = floor(microtime(true) * 1000);
         /**
          * 高并发下，多进程模式会出现当前时间小于上一次ID生成的时间戳，不一定是时钟回退。工作ID加入进程ID即可解决，但是进程ID不好预留
          * 暂时先立即更新最后一次生成的时间戳
          */
-        Yii::$app->cache->set('lastTimestamp', $time);
         if ($time < $lastTimestamp) {
-            throw new \RuntimeException(sprintf("Clock moved backwards. Refusing to generate id for %d milliseconds", $lastTimestamp - $time));
+            throw new \RuntimeException("Clock moved backwards. Refusing to generate id for lastTimestamp {$lastTimestamp} milliseconds");
         }
 
         //如果是同一毫秒内生成的，则进行毫秒序列化
@@ -83,10 +84,11 @@ class SnowflakeHelper extends Component
             $sequence = 0;
         }
 
-        //设置最后生成时间前，先判断此次生成时间是否比上次大，是则重置最后一次生成的时间戳
-        if ($time > floor((float)Yii::$app->cache->get('lastTimestamp'))) {
-            Yii::$app->cache->set('lastTimestamp', $time);
-        }
+        //重置最后一次生成的时间戳
+        Yii::$server->lastTimestamp = $time;
+
+        //释放锁
+        Yii::$server->spLock->unlock();
 
         return
             //时间戳左移 22 位

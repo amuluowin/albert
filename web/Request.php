@@ -5,6 +5,7 @@ namespace yii\swoole\web;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\swoole\helpers\ArrayHelper;
+use yii\swoole\helpers\Snowflake;
 use yii\swoole\helpers\SnowflakeHelper;
 use yii\web\Cookie;
 use yii\web\CookieCollection;
@@ -303,7 +304,7 @@ class Request extends \yii\web\Request
     public function getTraceId()
     {
         if (!isset($this->_traceId)) {
-            $this->_traceId = Yii::$app->snowflake->nextId(SnowflakeHelper::TYPE_TRACE);
+            $this->_traceId = Yii::$app->snowflake->nextId(Snowflake::TYPE_TRACE);
         }
         return $this->_traceId;
     }
