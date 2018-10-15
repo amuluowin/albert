@@ -22,7 +22,6 @@ class BackendProcess extends BaseProcess
                 $process->name('swoole-' . $this->name . '-' . $obj->processName);
                 $process->retry = 0;
                 swoole_timer_tick($obj->ticket * 1000, function () use ($process, $obj) {
-                    \Swoole\Runtime::enableCoroutine();
                     if ($obj->use_coro) {
                         \Swoole\Coroutine::Create(function () use ($process, $obj) {
                             $this->doWork($process, $obj);

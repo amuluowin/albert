@@ -23,11 +23,8 @@ class LogBufferflush extends Component implements BootInterface
     public function handle(Server $server = null)
     {
         if (!$server->server->taskworker) {
-            //        \Swoole\Runtime::enableCoroutine();
             \Swoole\Timer::tick($this->ticket * 1000, function (int $tick_id) {
-//                go(function () {
-                    \Seaslog::flushBuffer();
-//                });
+                \Seaslog::flushBuffer();
             });
         }
     }

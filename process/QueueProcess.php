@@ -29,7 +29,6 @@ class QueueProcess extends BaseProcess
             for ($i = 0; $i < $config['worker']; $i++) {
                 $queue_process = new \swoole_process(function ($process) use ($class, $config, $i) {
                     $process->name('swoole-' . $this->name . '-' . $class . '-' . $i);
-                    \Swoole\Runtime::enableCoroutine();
                     if ($config['sleep'] > 0) {
                         swoole_timer_tick($config['sleep'] * 1000, function () use ($process, $class, $config) {
                             $this->doWork($process, $class, $config);

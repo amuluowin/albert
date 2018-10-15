@@ -19,6 +19,8 @@ class BootFunction implements BootInterface
 
     public function handle(Server $server = null)
     {
+        //开启hook
+        \Swoole\Runtime::enableCoroutine();
         //创建缓存内存表
         $server->server->cacheTable = Cache::initCacheTable(1024);
 

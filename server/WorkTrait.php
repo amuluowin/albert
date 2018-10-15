@@ -10,8 +10,6 @@ trait WorkTrait
 {
     public function workerStart($server = null, $worker_id)
     {
-        //开启Hook
-//        \Swoole\Runtime::enableCoroutine();
         // 关闭Yii2自己实现的异常错误
         defined('YII_ENABLE_ERROR_HANDLER') || define('YII_ENABLE_ERROR_HANDLER', false);
         // 加载文件和一些初始化配置
